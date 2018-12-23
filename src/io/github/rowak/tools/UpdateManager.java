@@ -10,27 +10,28 @@ import java.net.URISyntaxException;
 
 import javax.swing.JButton;
 
+import org.json.JSONArray;
+
+import com.github.kevinsawicki.http.HttpRequest;
+
 import io.github.rowak.ui.dialog.OptionDialog;
 import io.github.rowak.ui.dialog.TextDialog;
 
 public class UpdateManager
 {
-	private final String HOST = "";
+	private String host, repo;
 	
-	public boolean updateAvailable(String currentVersion)
+	public UpdateManager(String host, String repo)
 	{
-//		String[] currentVersionData = currentVersion.split("\\.");
-//		String[] latestVersion = new String[]{"1", "0", "0"};        // GET FROM DOWNLOAD SERVER
-//		for (int i = 0; i < latestVersion.length; i++)
-//		{
-//			int current = Integer.parseInt(currentVersionData[i]);
-//			int latest = Integer.parseInt(latestVersion[i]);
-//			if (latest > current)
-//			{
-//				return true;
-//			}
-//		}
-		return false;
+		this.host = host;
+		this.repo = repo + "/releases";
+	}
+	
+	public boolean updateAvailable(Version current)
+	{
+		JSONArray json = new JSONArray(HttpRequest.get(host).body());
+		Version latest = new Version(json.getJSONObject(0));
+		return latest.greater(current);
 	}
 	
 	public void showUpdateMessage(Component parent)
@@ -51,13 +52,13 @@ public class UpdateManager
 							dialog.dispose();
 							try
 							{
-								Desktop.getDesktop().browse(new URI(HOST));
+								Desktop.getDesktop().browse(new URI(repo));
 							}
 							catch (IOException e1)
 							{
 								TextDialog error = new TextDialog(parent,
 										"Failed to automatically redirect. Go to " +
-										HOST + " to download the update.");
+										repo + " to download the update.");
 								error.setVisible(true);
 							}
 							catch (URISyntaxException e1)
@@ -72,7 +73,7 @@ public class UpdateManager
 						{
 							TextDialog error = new TextDialog(parent,
 									"Failed to automatically redirect. Go to " +
-									HOST + " to download the update.");
+									repo + " to download the update.");
 							error.setVisible(true);
 						}
 					}

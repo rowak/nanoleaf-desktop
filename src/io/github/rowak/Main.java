@@ -21,6 +21,7 @@ import javax.swing.border.LineBorder;
 import io.github.rowak.Aurora;
 import io.github.rowak.tools.PropertyManager;
 import io.github.rowak.tools.UpdateManager;
+import io.github.rowak.tools.Version;
 import io.github.rowak.ui.button.*;
 import io.github.rowak.ui.dialog.AuroraFinder;
 import io.github.rowak.ui.dialog.LoadingSpinner;
@@ -57,7 +58,10 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final String VERSION = "1.0.0";
+	public static final Version VERSION = new Version("v1.0", false);
+	public static final String VERSION_HOST =
+			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
+	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
 	public static final String PROPERTIES_FILEPATH = "properties.txt";
 	
 	private boolean adjustingColor;
@@ -105,7 +109,7 @@ public class Main extends JFrame
 	{
 		new Thread(() ->
 		{
-			UpdateManager manager = new UpdateManager();
+			UpdateManager manager = new UpdateManager(VERSION_HOST, GIT_REPO);
 			if (manager.updateAvailable(VERSION))
 			{
 				manager.showUpdateMessage(this);
