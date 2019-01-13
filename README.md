@@ -12,7 +12,11 @@ Simply download the latest release from the [releases page](https://github.com/r
 - Custom dark modern UI
 
 ## Screenshots
+The primary window in the application (below).
 ![](images/appMain.png)
+
+An example of a custom effect being displayed on the live preview (below).
+![](https://media.giphy.com/media/1rL3wxupQ6YqNoqT4Q/giphy.gif)
 
 ## Planned Features
 - Support for the Nanoleaf Canvas
