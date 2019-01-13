@@ -29,12 +29,15 @@ public class Discovery
 		{
 			try
 			{
-				return new JSONObject(HttpRequest.get(String.format(
-						"%s/effects/%s?page=%d", BASE_ENDPOINT, type, page)).body());
+				HttpRequest request = HttpRequest.get(String.format(
+						"%s/effects/%s?page=%d", BASE_ENDPOINT, type, page));
+				request.connectTimeout(5000);
+				request.readTimeout(5000);
+				return new JSONObject(request.body());
 			}
 			catch (JSONException je)
 			{
-				
+				// do nothing, get json again
 			}
 		}
 		return null;
@@ -54,7 +57,10 @@ public class Discovery
 	
 	public static Effect downloadEffect(String key)
 	{
-		return Effect.fromJSON(HttpRequest.get(String.format("%s/effects/download/%s",
-				BASE_ENDPOINT, key)).body());
+		HttpRequest request = HttpRequest.get(String.format("%s/effects/download/%s",
+				BASE_ENDPOINT, key));
+		request.connectTimeout(5000);
+		request.readTimeout(5000);
+		return Effect.fromJSON(request.body());
 	}
 }

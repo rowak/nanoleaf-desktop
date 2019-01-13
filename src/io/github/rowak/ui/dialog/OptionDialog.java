@@ -39,9 +39,6 @@ public class OptionDialog extends BasicDialog
 		JLabel spacer = new JLabel(" ");
 		contentPanel.add(spacer, "cell 0 3");
 		
-		pack();
-		
-		setSize(getWidth() + 15, getHeight());
-		setLocationRelativeTo(parent);
+		finalize(parent);
 	}
 }

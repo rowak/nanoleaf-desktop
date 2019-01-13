@@ -6,7 +6,7 @@ import java.awt.event.ActionListener;
 import javax.swing.Timer;
 
 import io.github.rowak.ui.panel.DiscoveryPanel;
-import io.github.rowak.ui.panel.PanelCanvas;
+import io.github.rowak.ui.panel.panelcanvas.PanelCanvas;
 
 public class AuroraNullListener extends Timer
 {

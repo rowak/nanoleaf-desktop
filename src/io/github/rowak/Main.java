@@ -32,7 +32,7 @@ import io.github.rowak.ui.dialog.colorpicker.ColorPicker;
 import io.github.rowak.ui.dialog.colorpicker.ColorWheel;
 import io.github.rowak.ui.listener.*;
 import io.github.rowak.ui.panel.DiscoveryPanel;
-import io.github.rowak.ui.panel.PanelCanvas;
+import io.github.rowak.ui.panel.panelcanvas.PanelCanvas;
 import io.github.rowak.ui.scrollbar.ModernScrollBarUI;
 import io.github.rowak.ui.slider.ModernSliderUI;
 
@@ -49,6 +49,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.plaf.InsetsUIResource;
 
+import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
+
 import java.awt.Component;
 import javax.swing.JTabbedPane;
 import javax.swing.UIManager;
@@ -58,7 +60,7 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.1", true);
+	public static final Version VERSION = new Version("v0.2.0", true);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
@@ -79,7 +81,7 @@ public class Main extends JFrame
 	private JScrollPane scrlPaneRhythEffects;
 	private JList<String> regularEffectsList;
 	private JList<String> rhythmEffectsList;
-
+	
 	public Main()
 	{
 		regularEffects = new DefaultListModel<String>();
@@ -109,10 +111,21 @@ public class Main extends JFrame
 	{
 		new Thread(() ->
 		{
-			UpdateManager manager = new UpdateManager(VERSION_HOST, GIT_REPO);
-			if (manager.updateAvailable(VERSION))
+			try
 			{
-				manager.showUpdateMessage(this);
+				UpdateManager manager = new UpdateManager(VERSION_HOST, GIT_REPO);
+				if (manager.updateAvailable(VERSION))
+				{
+					manager.showUpdateMessage(this);
+				}
+			}
+			catch (HttpRequestException hre)
+			{
+				/*
+				 * If the update server cannot be reached, ignore it (don't notify the user).
+				 * The user will be notified about an update the next time they
+				 * connect to the network and open the application.
+				 */
 			}
 		}).start();
 	}
@@ -208,7 +221,8 @@ public class Main extends JFrame
 		}
 		catch (NumberFormatException nfe)
 		{
-			new OptionDialog(this, "The data file has been modified or has become corrupt. " +
+			OptionDialog error = new OptionDialog(this,
+					"The data file has been modified or has become corrupt. " +
 					"Would you like to fix this now?", "Yes", "No",
 					new ActionListener()
 					{
@@ -218,7 +232,7 @@ public class Main extends JFrame
 							new PropertyManager(PROPERTIES_FILEPATH)
 								.removeProperty("lastSession");
 							OptionDialog dialog = (OptionDialog)((JButton)e.getSource())
-										.getFocusCycleRootAncestor();
+										.getTopLevelAncestor();
 							dialog.dispose();
 							new TextDialog(Main.this, "Relaunch the application to setup a new Aurora.")
 								.setVisible(true);
@@ -230,12 +244,17 @@ public class Main extends JFrame
 						public void actionPerformed(ActionEvent e)
 						{
 							OptionDialog dialog = (OptionDialog)((JButton)e.getSource())
-									.getFocusCycleRootAncestor();
+									.getTopLevelAncestor();
 							dialog.dispose();
 						}
 					});
+			error.setVisible(true);
+			EventQueue.invokeLater(() ->
+			{
+				error.requestFocus();
+			});
 		}
-		catch (StatusCodeException sce)
+		catch (StatusCodeException | HttpRequestException schre)
 		{
 			new TextDialog(Main.this, "Failed to connect to the Aurora. " +
 					"Please try again.").setVisible(true);
@@ -267,7 +286,7 @@ public class Main extends JFrame
 									aurora.getAccessToken());
 							loadAuroraData();
 						}
-						catch (StatusCodeException sce)
+						catch (StatusCodeException | HttpRequestException schre)
 						{
 							new TextDialog(Main.this, "An error occurred while connecting to the Aurora." +
 									"Please try again.").setVisible(true);
@@ -284,7 +303,6 @@ public class Main extends JFrame
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1000, 800);
 		setUndecorated(true);
-		//setIconImage(Toolkit.getDefaultToolkit().getImage("icons/icon.png"));
 		URL iconPath = getClass().getResource("resources/images/icon.png");
 		setIconImage(new ImageIcon(iconPath).getImage());
 		
@@ -292,7 +310,8 @@ public class Main extends JFrame
 		contentPane.setBackground(Color.DARK_GRAY);
 		contentPane.setBorder(new LineBorder(new Color(128, 128, 128), 3, true));
 		setContentPane(contentPane);
-		contentPane.setLayout(new MigLayout("", "[-27.00,grow][755.00,grow]", "[][680.00,growprio 105,grow][grow]"));
+		contentPane.setLayout(new MigLayout("", "[-27.00,grow][755.00,grow]",
+				"[][680.00,growprio 105,grow][grow]"));
 		
 		ComponentResizer cr = new ComponentResizer();
 		cr.registerComponent(this);
@@ -355,7 +374,6 @@ public class Main extends JFrame
 				}
 			}
 		});
-		//scrlPaneRegEffects.setViewportView(regularEffectsList);
 		LoadingSpinner regEffectsSpinner = new LoadingSpinner(Color.DARK_GRAY);
 		scrlPaneRegEffects.setViewportView(regEffectsSpinner);
 		
@@ -402,7 +420,6 @@ public class Main extends JFrame
 				}
 			}
 		});
-		//scrlPaneRhythEffects.setViewportView(rhythmEffectsList);
 		LoadingSpinner rhythEffectsSpinner = new LoadingSpinner(Color.DARK_GRAY);
 		scrlPaneRhythEffects.setViewportView(rhythEffectsSpinner);
 		
@@ -432,7 +449,7 @@ public class Main extends JFrame
 					{
 						public void run()
 						{
-							discoveryPanel.addTopEffects(1);
+							discoveryPanel.addTopEffects(1, Main.this);
 						}
 					});
 				}

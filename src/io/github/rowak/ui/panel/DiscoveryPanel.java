@@ -1,6 +1,7 @@
 package io.github.rowak.ui.panel;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -16,6 +17,8 @@ import javax.swing.JScrollPane;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
+import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
 import io.github.rowak.Aurora;
 import io.github.rowak.Effect;
@@ -53,7 +56,6 @@ public class DiscoveryPanel extends JScrollPane
 		list.setBackground(Color.DARK_GRAY);
 		list.setForeground(Color.WHITE);
 		setBorder(new LineBorder(Color.GRAY, 1, true));
-		//setViewportView(list);
 		
 		getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener()
 		{
@@ -72,7 +74,7 @@ public class DiscoveryPanel extends JScrollPane
 							{
 								// Update the discovery effects concurrently
 								// by evading the EDT
-								addTopEffects(++topPage);
+								addTopEffects(++topPage, DiscoveryPanel.this.getTopLevelAncestor());
 								DefaultListModel<EffectMetadata> dlm =
 										new DefaultListModel<EffectMetadata>();
 								for (int i = 0; i < discoveryEffects.size(); i++)
@@ -121,7 +123,7 @@ public class DiscoveryPanel extends JScrollPane
 											JButton source = (JButton)e.getSource();
 											((OptionDialog)source.getFocusCycleRootAncestor()).dispose();
 											Effect ef = ((EffectMetadata)list.getSelectedValue()).getEffect();
-											panel.aurora.effects().previewEffect(ef);
+											panel.aurora.effects().displayEffect(ef);
 											
 											updateMain(list);
 										}
@@ -208,14 +210,32 @@ public class DiscoveryPanel extends JScrollPane
 		this.recentPage = page;
 	}
 	
-	public void addTopEffects(int page)
+	public void addTopEffects(int page, Component component)
 	{
-		addEffects(Discovery.getTopEffects(page));
+		try
+		{
+			addEffects(Discovery.getTopEffects(page));
+		}
+		catch (HttpRequestException hre)
+		{
+			new TextDialog(component,
+					"Failed to get discovery data from the Nanoleaf server.")
+					.setVisible(true);
+		}
 	}
 	
-	public void addRecentEffects(int page)
+	public void addRecentEffects(int page, Component component)
 	{
-		addEffects(Discovery.getRecentEffects(page));
+		try
+		{
+			addEffects(Discovery.getRecentEffects(page));
+		}
+		catch (HttpRequestException hre)
+		{
+			new TextDialog(component,
+					"Failed to get discovery data from the Nanoleaf server.")
+					.setVisible(true);
+		}
 	}
 	
 	private void addEffects(EffectMetadata[] effects)

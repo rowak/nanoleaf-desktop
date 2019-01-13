@@ -1,12 +1,10 @@
-package io.github.rowak.ui.panel;
+package io.github.rowak.ui.panel.panelcanvas;
 
 import java.awt.BasicStroke;
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.RenderingHints;
@@ -20,15 +18,15 @@ import io.github.rowak.Aurora;
 import io.github.rowak.StatusCodeException;
 import io.github.rowak.ui.dialog.LoadingSpinner;
 import io.github.rowak.ui.dialog.TextDialog;
-import io.github.rowak.Aurora.Panel;
+import io.github.rowak.Panel;
 import io.github.rowak.Effect;
-import io.github.rowak.Main;
 
 public class PanelCanvas extends JPanel
 {
 	private Aurora aurora;
 	private Panel[] panels;
 	private HashMap<Panel, Point> panelLocations;
+	private CustomEffectDisplay customEffectDisplay;
 	private LoadingSpinner spinner;
 	
 	public PanelCanvas(Aurora aurora)
@@ -60,6 +58,7 @@ public class PanelCanvas extends JPanel
 			panelLocations.put(p, new Point(p.getX() + getWidth()/2 + DEFAULT_X_OFFSET,
 					-p.getY() + getHeight()/2 + DEFAULT_Y_OFFSET));
 		}
+		customEffectDisplay = new CustomEffectDisplay(this);
 		toggleOn();
 		PanelDragListener pdl = new PanelDragListener(this, panels, panelLocations);
 		addMouseListener(pdl);
@@ -95,6 +94,11 @@ public class PanelCanvas extends JPanel
 		return this.aurora;
 	}
 	
+	public Panel[] getPanels()
+	{
+		return this.panels;
+	}
+	
 	public void checkAuroraState() throws StatusCodeException
 	{
 		if (aurora != null)
@@ -111,28 +115,38 @@ public class PanelCanvas extends JPanel
 			}
 			else if (colorMode.equals("effects"))
 			{
-				String currentEffect = aurora.effects().getCurrentEffectName();
-				if (currentEffect.equals("*Static*") ||
-						aurora.effects().getEffect(currentEffect).getAnimType().equals(Effect.Type.STATIC))
+				String currentEffectName = aurora.effects().getCurrentEffectName();
+				Effect currentEffect = aurora.effects().getCurrentEffect();
+				if (currentEffectName.equals("*Static*") ||
+						currentEffect.getAnimType().equals(Effect.Type.STATIC))
 				{
-					setStaticEffect(aurora.effects().getEffect(currentEffect));
+					customEffectDisplay.stop();
+					setStaticEffect(currentEffect);
 				}
-				else if (!aurora.effects().getEffect(currentEffect).getAnimType().equals(Effect.Type.STATIC))
+				else if (currentEffect.getAnimType().equals(Effect.Type.CUSTOM))
 				{
+					customEffectDisplay.changeEffect(currentEffect);
+				}
+				else if (!currentEffect.getAnimType().equals(Effect.Type.STATIC))
+				{
+					customEffectDisplay.stop();
 					io.github.rowak.Color[] palette =
-							aurora.effects().getEffect(currentEffect).getPalette();
+							currentEffect.getPalette();
 					int[] avgRgb = new int[3];
-					for (io.github.rowak.Color c : palette)
+					if (palette != null)
 					{
-						Color rgb = new Color(Color.HSBtoRGB(c.getHue()/360f,
-								c.getSaturation()/100f, c.getBrightness()/100f));
-						avgRgb[0] += rgb.getRed();
-						avgRgb[1] += rgb.getGreen();
-						avgRgb[2] += rgb.getBlue();
+						for (io.github.rowak.Color c : palette)
+						{
+							Color rgb = new Color(Color.HSBtoRGB(c.getHue()/360f,
+									c.getSaturation()/100f, c.getBrightness()/100f));
+							avgRgb[0] += rgb.getRed();
+							avgRgb[1] += rgb.getGreen();
+							avgRgb[2] += rgb.getBlue();
+						}
+						Color avgColor = new Color(avgRgb[0]/palette.length,
+								avgRgb[1]/palette.length, avgRgb[2]/palette.length);
+						setColor(avgColor);
 					}
-					Color avgColor = new Color(avgRgb[0]/palette.length,
-							avgRgb[1]/palette.length, avgRgb[2]/palette.length);
-					setColor(avgColor);
 				}
 			}
 		}
@@ -224,7 +238,8 @@ public class PanelCanvas extends JPanel
 			Color rgb = null;
 			try
 			{
-				rgb = new Color(Color.HSBtoRGB(hsb[0], hsb[1], aurora.state().getBrightness()/100f));
+				rgb = new Color(Color.HSBtoRGB(hsb[0], hsb[1],
+						aurora.state().getBrightness()/100f));
 			}
 			catch (StatusCodeException sce)
 			{
@@ -237,12 +252,41 @@ public class PanelCanvas extends JPanel
 			
 			if (panelNum <= panels.length)
 			{
-				//getPanelById(panelId).setRGBW(r, g, b, w);
 				getPanelById(panelId).setRGBW(r, g, b, w);
 			}
 			panelNum++;
 		}
 		repaint();
+	}
+	
+	public void transitionToColor(Panel p, Color color, int time)
+			throws InterruptedException
+	{
+		final int NUM_COLORS = 300;
+		int deltaRed = color.getRed() - p.getRed();
+		int deltaGreen = color.getGreen() - p.getGreen();
+		int deltaBlue = color.getBlue() - p.getBlue();
+		
+		if (deltaRed != 0 || deltaGreen != 0 || deltaBlue != 0)
+		{
+			for (int i = 0; i < NUM_COLORS; i++)
+			{
+				int red = p.getRed() + ((deltaRed * i) / NUM_COLORS);
+				int green = p.getGreen() + ((deltaGreen * i) / NUM_COLORS);
+				int blue = p.getBlue() + ((deltaBlue * i) / NUM_COLORS);
+				
+				if (red < 0 || red > 255 ||
+						green < 0 || green > 255 ||
+						blue < 0 || blue > 255)
+				{
+					break;
+				}
+				
+				p.setRGB(red, green, blue);
+				repaint();
+				Thread.sleep(time/30);
+			}
+		}
 	}
 	
 	private Panel getPanelById(int id)

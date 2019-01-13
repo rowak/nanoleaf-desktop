@@ -9,9 +9,11 @@ import java.awt.Component;
 
 import javax.swing.border.LineBorder;
 
+import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
+
 import io.github.rowak.Aurora;
-import io.github.rowak.Main;
 import io.github.rowak.Setup;
+import io.github.rowak.StatusCodeException;
 import io.github.rowak.ui.button.CloseButton;
 import io.github.rowak.ui.listener.WindowDragListener;
 
@@ -22,11 +24,8 @@ import net.miginfocom.swing.MigLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -70,25 +69,18 @@ public class AuroraFinder extends JDialog
 	
 	private void findAuroras()
 	{
-		List<InetSocketAddress> auroras = new ArrayList<InetSocketAddress>();
-		try
-		{
-			auroras = Setup.findAuroras(5000);
-		}
-		catch (SocketTimeoutException sto)
-		{
-			new TextDialog(this, "Timed out while searching for Auroras." +
-					"Please try again.").setVisible(true);
-		}
-		catch (IOException ioe)
-		{
-			new TextDialog(this, "An unknown error has occurred." +
-					"Please try again.").setVisible(true);
-		}
+		List<InetSocketAddress> auroras = Setup.quickFindAuroras();
 		
 		for (InetSocketAddress address : auroras)
 		{
 			listModel.addElement(address.getHostName() + ":" + address.getPort());
+		}
+		
+		if (auroras.isEmpty())
+		{
+			new TextDialog(this, "Couldn't locate any devices. " +
+					"Please try again or create an issue on GitHub.")
+					.setVisible(true);
 		}
 	}
 	
@@ -126,6 +118,22 @@ public class AuroraFinder extends JDialog
 			}
 		}, 1000, 1000);
 		return aurora;
+	}
+	
+	private Aurora connectToExternalAurora(String ip, int port, String accessToken)
+	{
+		try
+		{
+			Aurora aurora = new Aurora(ip, port, "v1", accessToken);
+			this.hostName = ip;
+			this.port = port;
+			this.accessToken = accessToken;
+			return aurora;
+		}
+		catch (StatusCodeException | HttpRequestException schre)
+		{
+			return null;
+		}
 	}
 	
 	private void initUI(Component parent)
@@ -181,5 +189,69 @@ public class AuroraFinder extends JDialog
 			}
 		});
 		contentPane.add(btnConnect, "cell 1 2,alignx right");
+		
+		JButton btnAddExternalDevice = new JButton("Add External Device");
+		btnAddExternalDevice.setContentAreaFilled(false);
+		btnAddExternalDevice.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		btnAddExternalDevice.setForeground(Color.WHITE);
+		btnAddExternalDevice.setBackground(Color.DARK_GRAY);
+		btnAddExternalDevice.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				TripleEntryDialog entryDialog = new TripleEntryDialog(AuroraFinder.this, "IP Address",
+						"Port (Default is 16021)", "Access Token", "Add Device", new ActionListener()
+						{
+							@Override
+							public void actionPerformed(ActionEvent e)
+							{
+								JButton button = (JButton)e.getSource();
+								TripleEntryDialog thisDialog =
+										(TripleEntryDialog)button.getFocusCycleRootAncestor();
+								String entry1Text = thisDialog.getEntry1().getText();
+								String entry2Text = thisDialog.getEntry2().getText();
+								String entry3Text = thisDialog.getEntry3().getText();
+								if (!entry1Text.equals("IP Address") &&
+										!entry2Text.equals("Port (Default is 16021)"))
+								{
+									String ip = entry1Text;
+									int port = -1;
+									String accessToken = entry3Text;
+									try
+									{
+										port = Integer.parseInt(entry2Text);
+										Aurora aurora = connectToExternalAurora(ip, port, accessToken);
+										if (aurora != null)
+										{
+											thisDialog.dispose();
+											AuroraFinder.this.dispose();
+										}
+										else
+										{
+											new TextDialog(AuroraFinder.this,
+													"Couldn't connect to the external device.")
+													.setVisible(true);
+										}
+									}
+									catch (NumberFormatException nfe)
+									{
+										new TextDialog(AuroraFinder.this,
+												"The port can only consist of numbers.")
+												.setVisible(true);
+									}
+								}
+								else
+								{
+									new TextDialog(AuroraFinder.this,
+											"You must fill out all entry fields.")
+											.setVisible(true);
+								}
+							}
+						});
+				entryDialog.setVisible(true);
+			}
+		});
+		contentPane.add(btnAddExternalDevice, "cell 0 2,alignx left");
 	}
 }

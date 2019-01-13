@@ -21,6 +21,7 @@ public class Version
 	public Version(JSONObject json)
 	{
 		parseVersion(json.getString("name"));
+		name = json.getString("name");
 		preRelease = json.getBoolean("prerelease");
 	}
 	

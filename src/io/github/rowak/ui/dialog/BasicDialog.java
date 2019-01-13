@@ -1,10 +1,12 @@
 package io.github.rowak.ui.dialog;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
 
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 
@@ -33,5 +35,13 @@ public class BasicDialog extends JDialog
 		
 		CloseButton btnClose = new CloseButton(this, JFrame.DISPOSE_ON_CLOSE);
 		contentPanel.add(btnClose, "cell 0 0,alignx right,gapx 0 15");
+	}
+	
+	protected void finalize(Component parent)
+	{
+		pack();
+		
+		setSize(getWidth() + 15, getHeight());
+		setLocationRelativeTo(parent);
 	}
 }
