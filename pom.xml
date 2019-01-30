@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>nanoleaf-desktop</groupId>
   <artifactId>nanoleaf-desktop</artifactId>
-  <version>1.0.0</version>
+  <version>0.3.0</version>
   <build>
     <sourceDirectory>src</sourceDirectory>
     <plugins>
@@ -20,7 +20,7 @@
     <dependency>
       <groupId>io.github.rowak</groupId>
       <artifactId>nanoleaf-aurora</artifactId>
-      <version>1.2.1</version>
+      <version>1.3.1</version>
     </dependency>
   </dependencies>
 </project>

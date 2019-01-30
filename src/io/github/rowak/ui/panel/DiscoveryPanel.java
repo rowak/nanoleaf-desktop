@@ -8,6 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -15,8 +17,6 @@ import javax.swing.JList;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.border.LineBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
@@ -97,70 +97,73 @@ public class DiscoveryPanel extends JScrollPane
 		});
 		
 		DiscoveryPanel panel = this;
-		list.addListSelectionListener(new ListSelectionListener()
+		list.addMouseListener(new MouseAdapter()
 		{
 			@Override
-			public void valueChanged(ListSelectionEvent e)
+			public void mouseClicked(MouseEvent e)
 			{
-				if (!e.getValueIsAdjusting())
+				if (panel.activeDialog != null)
 				{
-					if (panel.activeDialog != null)
-					{
-						panel.activeDialog.dispose();
-					}
-					
-					JList<EffectMetadata> list = (JList<EffectMetadata>)e.getSource();
-					OptionDialog dialog = new OptionDialog(list.getTopLevelAncestor(),
-							"Preview or download this effect?", "Preview", "Download",
-							new ActionListener()
-							{
-								public void actionPerformed(ActionEvent e)
-								{
-									new Thread(() ->
-									{
-										try
-										{
-											JButton source = (JButton)e.getSource();
-											((OptionDialog)source.getFocusCycleRootAncestor()).dispose();
-											Effect ef = ((EffectMetadata)list.getSelectedValue()).getEffect();
-											panel.aurora.effects().displayEffect(ef);
-											
-											updateMain(list);
-										}
-										catch (StatusCodeException sce)
-										{
-											new TextDialog(panel, "Lost connection to the Aurora. " +
-													"Please try again.").setVisible(true);
-										}
-									}).start();
-								}
-							},
-							new ActionListener()
-							{
-								public void actionPerformed(ActionEvent e)
-								{
-									new Thread(() ->
-									{
-										try
-										{
-											JButton source = (JButton)e.getSource();
-											((OptionDialog)source.getFocusCycleRootAncestor()).dispose();
-											Effect ef = ((EffectMetadata)list.getSelectedValue()).getEffect();
-											panel.aurora.effects().addEffect(ef);
-											
-											updateMain(list);
-										}
-										catch (StatusCodeException sce)
-										{
-											new TextDialog(panel, "Lost connection to the Aurora. " +
-													"Please try again.").setVisible(true);
-										}
-									}).start();
-								}
-							});
-					dialog.setVisible(true);
-					activeDialog = dialog;
+					panel.activeDialog.dispose();
 				}
+				
+				JList<EffectMetadata> list = (JList<EffectMetadata>)e.getSource();
+				OptionDialog dialog = new OptionDialog(list.getTopLevelAncestor(),
+						"Preview or download this effect?", "Preview", "Download",
+						new ActionListener()
+						{
+							public void actionPerformed(ActionEvent e)
+							{
+								new Thread(() ->
+								{
+									try
+									{
+										JButton source = (JButton)e.getSource();
+										((OptionDialog)source.getFocusCycleRootAncestor()).dispose();
+										Effect ef = ((EffectMetadata)list.getSelectedValue()).getEffect();
+										panel.aurora.effects().displayEffect(ef);
+										
+										updateMain(list);
+									}
+									catch (HttpRequestException hre)
+									{
+										new TextDialog(panel, "Lost connection to the device. " +
+												"Please try again.").setVisible(true);
+									}
+									catch (StatusCodeException sce)
+									{
+										new TextDialog(panel,
+												"The requested action could not be completed. " +
+												"Please try again.").setVisible(true);
+									}
+								}).start();
+							}
+						},
+						new ActionListener()
+						{
+							public void actionPerformed(ActionEvent e)
+							{
+								new Thread(() ->
+								{
+									try
+									{
+										JButton source = (JButton)e.getSource();
+										((OptionDialog)source.getFocusCycleRootAncestor()).dispose();
+										Effect ef = ((EffectMetadata)list.getSelectedValue()).getEffect();
+										panel.aurora.effects().addEffect(ef);
+										
+										updateMain(list);
+									}
+									catch (StatusCodeException sce)
+									{
+										new TextDialog(panel, "Lost connection to the device. " +
+												"Please try again.").setVisible(true);
+									}
+								}).start();
+							}
+						});
+				dialog.setVisible(true);
+				activeDialog = dialog;
 			}
 		});
 	}
@@ -175,7 +178,7 @@ public class DiscoveryPanel extends JScrollPane
 		}
 		catch (StatusCodeException sce)
 		{
-			new TextDialog(frame, "Lost connection to the Aurora. " +
+			new TextDialog(frame, "Lost connection to the device. " +
 					"Please try again.").setVisible(true);
 		}
 	}

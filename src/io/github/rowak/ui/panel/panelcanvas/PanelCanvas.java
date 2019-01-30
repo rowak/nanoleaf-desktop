@@ -7,6 +7,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Polygon;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -14,41 +15,59 @@ import java.util.HashMap;
 
 import javax.swing.JPanel;
 
+import org.json.JSONObject;
+
+import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
+
 import io.github.rowak.Aurora;
 import io.github.rowak.StatusCodeException;
 import io.github.rowak.ui.dialog.LoadingSpinner;
 import io.github.rowak.ui.dialog.TextDialog;
 import io.github.rowak.Panel;
+import io.github.rowak.StaticAnimDataParser;
 import io.github.rowak.Effect;
+import io.github.rowak.Frame;
 
 public class PanelCanvas extends JPanel
 {
-	private Aurora aurora;
+	private Aurora device;
 	private Panel[] panels;
+	private DeviceType deviceType;
 	private HashMap<Panel, Point> panelLocations;
 	private CustomEffectDisplay customEffectDisplay;
 	private LoadingSpinner spinner;
 	
-	public PanelCanvas(Aurora aurora)
+	public PanelCanvas(Aurora device)
 	{
-		this.aurora = aurora;
+		this.device = device;
 		initCanvas();
+	}
+	
+	public enum DeviceType
+	{
+		AURORA, CANVAS
 	}
 	
 	public void initCanvas()
 	{
 		try
 		{
-			panels = aurora.panelLayout().getPanels();
+			panels = device.panelLayout().getPanels();
+			setDeviceType();
 		}
 		catch (NullPointerException npe)
 		{
 			panels = new Panel[0];
 		}
+		catch (HttpRequestException hre)
+		{
+			new TextDialog(this, "Could not connect to the device. " +
+					"Please relaunch the application.").setVisible(true);
+		}
 		catch (StatusCodeException sce)
 		{
-			new TextDialog(this, "Could not connect to the Aurora. " +
-					"Please try again.").setVisible(true);
+			new TextDialog(this, "An error occurred while getting data from the device. " +
+					"Please relaunch the application.").setVisible(true);
 		}
 		panelLocations = new HashMap<Panel, Point>();
 		final int DEFAULT_X_OFFSET = 150;
@@ -58,6 +77,7 @@ public class PanelCanvas extends JPanel
 			panelLocations.put(p, new Point(p.getX() + getWidth()/2 + DEFAULT_X_OFFSET,
 					-p.getY() + getHeight()/2 + DEFAULT_Y_OFFSET));
 		}
+		
 		customEffectDisplay = new CustomEffectDisplay(this);
 		toggleOn();
 		PanelDragListener pdl = new PanelDragListener(this, panels, panelLocations);
@@ -69,7 +89,7 @@ public class PanelCanvas extends JPanel
 	
 	private void startLoadingSpinner()
 	{
-		if (aurora == null)
+		if (device == null)
 		{
 			spinner = new LoadingSpinner(Color.DARK_GRAY);
 			add(spinner);
@@ -78,20 +98,33 @@ public class PanelCanvas extends JPanel
 	
 	private void stopLoadingSpinner()
 	{
-		if (aurora != null && this.isAncestorOf(spinner))
+		if (device != null && this.isAncestorOf(spinner))
 		{
 			remove(spinner);
 		}
 	}
 	
-	public void setAurora(Aurora aurora)
+	private void setDeviceType()
 	{
-		this.aurora = aurora;
+		if (device.getName().toLowerCase().contains("light panels"))
+		{
+			deviceType = DeviceType.AURORA;
+		}
+		else if (device.getName().toLowerCase().contains("canvas"))
+		{
+			deviceType = DeviceType.CANVAS;
+		}
+	}
+	
+	public void setAurora(Aurora device)
+	{
+		this.device = device;
+		setDeviceType();
 	}
 	
 	public Aurora getAurora()
 	{
-		return this.aurora;
+		return this.device;
 	}
 	
 	public Panel[] getPanels()
@@ -101,22 +134,24 @@ public class PanelCanvas extends JPanel
 	
 	public void checkAuroraState() throws StatusCodeException
 	{
-		if (aurora != null)
+		if (device != null)
 		{
 			stopLoadingSpinner();
 			
-			String colorMode = aurora.state().getColorMode();
+			String colorMode = device.state().getColorMode();
 			if (colorMode.equals("hs") || colorMode.equals("ct"))
 			{
-				int hue = aurora.state().getHue();
-				int sat = aurora.state().getSaturation();
-				int bri = aurora.state().getBrightness();
+				customEffectDisplay.stop();
+				
+				int hue = device.state().getHue();
+				int sat = device.state().getSaturation();
+				int bri = device.state().getBrightness();
 				setHSB(hue, sat, bri);
 			}
 			else if (colorMode.equals("effects"))
 			{
-				String currentEffectName = aurora.effects().getCurrentEffectName();
-				Effect currentEffect = aurora.effects().getCurrentEffect();
+				String currentEffectName = device.effects().getCurrentEffectName();
+				Effect currentEffect = device.effects().getCurrentEffect();
 				if (currentEffectName.equals("*Static*") ||
 						currentEffect.getAnimType().equals(Effect.Type.STATIC))
 				{
@@ -156,9 +191,9 @@ public class PanelCanvas extends JPanel
 	{
 		try
 		{
-			if (aurora != null)
+			if (device != null)
 			{
-				Color c = aurora.state().getOn() ?
+				Color c = device.state().getOn() ?
 						Color.WHITE : Color.BLACK;
 				setColor(c);
 				
@@ -170,7 +205,7 @@ public class PanelCanvas extends JPanel
 		}
 		catch (StatusCodeException sce)
 		{
-			new TextDialog(this, "Lost connection to the Aurora. " +
+			new TextDialog(this, "Lost connection to the device. " +
 					"Please try again.").setVisible(true);
 		}
 	}
@@ -199,6 +234,11 @@ public class PanelCanvas extends JPanel
 	
 	public void setColor(Color color)
 	{
+		if (customEffectDisplay.isRunning())
+		{
+			customEffectDisplay.stop();
+		}
+		
 		for (Panel p : panels)
 		{
 			p.setRGBW(color.getRed(), color.getGreen(),
@@ -215,46 +255,11 @@ public class PanelCanvas extends JPanel
 	
 	public void setStaticEffect(Effect ef)
 	{
-		// Animation data parser
-		String animData = ef.getAnimData();
-		String[] dataTemp = animData.split(" ");
-		int[] data = new int[dataTemp.length-1];
-		for (int i = 1; i < dataTemp.length; i++)
+		StaticAnimDataParser sadp = new StaticAnimDataParser(ef);
+		for (Panel p : panels)
 		{
-			data[i-1] = Integer.parseInt(dataTemp[i]);
-		}
-		
-		int panelNum = 1;
-		for (int i = 0; i < data.length; i+=7)
-		{
-			int panelId = data[i];
-			int r = data[i+2];
-			int g = data[i+3];
-			int b = data[i+4];
-			int w = data[i+5];
-			
-			float[] hsb = new float[3];
-			Color.RGBtoHSB(r, g, b, hsb);
-			Color rgb = null;
-			try
-			{
-				rgb = new Color(Color.HSBtoRGB(hsb[0], hsb[1],
-						aurora.state().getBrightness()/100f));
-			}
-			catch (StatusCodeException sce)
-			{
-				new TextDialog(this, "Lost connection to the Aurora. " +
-						"Please try again.").setVisible(true);
-			}
-			r = rgb.getRed();
-			g = rgb.getGreen();
-			b = rgb.getBlue();
-			
-			if (panelNum <= panels.length)
-			{
-				getPanelById(panelId).setRGBW(r, g, b, w);
-			}
-			panelNum++;
+			Frame f = sadp.getFrame(p);
+			p.setRGB(f.getRed(), f.getGreen(), f.getBlue());
 		}
 		repaint();
 	}
@@ -289,18 +294,6 @@ public class PanelCanvas extends JPanel
 		}
 	}
 	
-	private Panel getPanelById(int id)
-	{
-		for (Panel p : panels)
-		{
-			if (p.getId() == id)
-			{
-				return p;
-			}
-		}
-		return null;
-	}
-	
 	@Override
 	public void paintComponent(Graphics g)
 	{
@@ -314,12 +307,7 @@ public class PanelCanvas extends JPanel
 		g.setColor(new Color(0, 0, 0, 187));
 		g.fillRect(0, 0, getWidth(), getHeight());
 		
-//		// Fill in border
-//		Insets insets = getBorder().getBorderInsets(this);
-//		g.setColor(Color.DARK_GRAY);
-//		g.fillRect(0, 0, getWidth(), insets.top);
-		
-		if (aurora != null)
+		if (device != null)
 		{
 			// Draw the panels
 			for (Panel panel : panels)
@@ -332,23 +320,38 @@ public class PanelCanvas extends JPanel
 				// the panel colors are drawn after this line
 				g.drawRect(x, y, 2, 2);
 				
-				// Create the panel outline shapes (regular and inverted)
-				Polygon tri = new Polygon();
-				if (o == 0 || Math.abs(o) % 120 == 0)
+				if (deviceType == DeviceType.AURORA)
 				{
-					tri = new UprightPanel(x, y);
+					// Create the AURORA panel outline shapes (regular and inverted)
+					Polygon tri = new Polygon();
+					if (o == 0 || Math.abs(o) % 120 == 0)
+					{
+						tri = new UprightPanel(x, y);
+					}
+					else
+					{
+						tri = new InvertedPanel(x, y);
+					}
+					g.setColor(new Color(panel.getRed(),
+							panel.getGreen(), panel.getBlue()));
+					g.fillPolygon(tri);
+					g.setColor(Color.BLACK);
+					g2d.setStroke(new BasicStroke(4));
+					g.drawPolygon(tri);
+					g2d.setStroke(new BasicStroke(1));
 				}
-				else
+				else if (deviceType == DeviceType.CANVAS)
 				{
-					tri = new InvertedPanel(x, y);
+					// Create the CANVAS panel outline shape
+					Square sq = new Square(x, y);
+					g.setColor(new Color(panel.getRed(),
+							panel.getGreen(), panel.getBlue()));
+					g.fillPolygon(sq);
+					g.setColor(Color.BLACK);
+					g2d.setStroke(new BasicStroke(4));
+					g.drawPolygon(sq);
+					g2d.setStroke(new BasicStroke(1));
 				}
-				g.setColor(new Color(panel.getRed(),
-						panel.getGreen(), panel.getBlue()));
-				g.fillPolygon(tri);
-				g.setColor(Color.BLACK);
-				g2d.setStroke(new BasicStroke(4));
-				g.drawPolygon(tri);
-				g2d.setStroke(new BasicStroke(1));
 			}
 		}
 	}
@@ -434,6 +437,21 @@ public class PanelCanvas extends JPanel
 			// bottom
 			addPoint(x + 5, y + 80);
 			addPoint(x -5, y + 80);
+		}
+	}
+	
+	private class Square extends Polygon
+	{
+		public Square(int x, int y)
+		{
+			//top-left
+			addPoint(x, y);
+			//top-right
+			addPoint(x + 90, y);
+			//bottom-right
+			addPoint(x + 90, y + 90);
+			//bottom-left
+			addPoint(x, y + 90);
 		}
 	}
 }

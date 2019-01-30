@@ -3,6 +3,8 @@ package io.github.rowak;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.net.URL;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -45,8 +47,6 @@ import javax.swing.JScrollPane;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.plaf.InsetsUIResource;
 
 import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
@@ -60,14 +60,14 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.2.0", true);
+	public static final Version VERSION = new Version("v0.3.0", true);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
 	public static final String PROPERTIES_FILEPATH = "properties.txt";
 	
-	private boolean adjustingColor;
-	private Aurora aurora;
+	private boolean adjusting;
+	private Aurora device;
 	private DefaultListModel<String> regularEffects, rhythmEffects;
 	
 	private JPanel contentPane;
@@ -90,7 +90,7 @@ public class Main extends JFrame
 		PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
 		String lastSession = manager.getProperty("lastSession");
 		
-		// Use the aurora from the last session
+		// Use the device from the last session
 		if (lastSession != null)
 		{
 			setupOldAurora(lastSession);
@@ -98,7 +98,7 @@ public class Main extends JFrame
 		
 		initUI();
 		
-		// Search for a a new aurora
+		// Search for a a new device
 		if (lastSession == null)
 		{
 			setupNewAurora();
@@ -140,7 +140,7 @@ public class Main extends JFrame
 				{
 					try
 					{
-						for (Effect effect : aurora.effects().getAllEffects())
+						for (Effect effect : device.effects().getAllEffects())
 						{
 							if (effect.getAnimType() == Effect.Type.PLUGIN &&
 									effect.getPluginType().equals("rhythm"))
@@ -173,7 +173,7 @@ public class Main extends JFrame
 	
 	public void loadStateComponents() throws StatusCodeException
 	{
-		if (aurora.state().getOn())
+		if (device.state().getOn())
 		{
 			btnOnOff.setText("Turn Off");
 		}
@@ -182,21 +182,21 @@ public class Main extends JFrame
 			btnOnOff.setText("Turn On");
 		}
 		
-		brightnessSlider.setValue(aurora.state().getBrightness());
-		ctSlider.setValue(aurora.state().getColorTemperature());
+		brightnessSlider.setValue(device.state().getBrightness());
+		ctSlider.setValue(device.state().getColorTemperature());
 		
 		loadActiveScene();
 	}
 	
 	public void loadActiveScene() throws StatusCodeException
 	{
-		String currentEffect = aurora.effects().getCurrentEffectName();
+		String currentEffect = device.effects().getCurrentEffectName();
 		lblActiveScene.setText(currentEffect);
 	}
 	
 	private void loadAuroraData()
 	{
-		lblTitle.setText("Connected to " + aurora.getName());
+		lblTitle.setText("Connected to " + device.getName());
 		
 		try
 		{
@@ -215,7 +215,7 @@ public class Main extends JFrame
 		String[] data = lastSession.split(" ");
 		try
 		{
-			aurora = new Aurora(data[0],
+			device = new Aurora(data[0],
 					Integer.parseInt(data[1]),
 					data[2], data[3]);
 		}
@@ -234,8 +234,9 @@ public class Main extends JFrame
 							OptionDialog dialog = (OptionDialog)((JButton)e.getSource())
 										.getTopLevelAncestor();
 							dialog.dispose();
-							new TextDialog(Main.this, "Relaunch the application to setup a new Aurora.")
-								.setVisible(true);
+							new TextDialog(Main.this,
+									"Relaunch the application to setup a new device.")
+									.setVisible(true);
 						}
 					},
 					new ActionListener()
@@ -256,7 +257,7 @@ public class Main extends JFrame
 		}
 		catch (StatusCodeException | HttpRequestException schre)
 		{
-			new TextDialog(Main.this, "Failed to connect to the Aurora. " +
+			new TextDialog(Main.this, "Failed to connect to the device. " +
 					"Please try again.").setVisible(true);
 		}
 	}
@@ -275,23 +276,24 @@ public class Main extends JFrame
 					{
 						try
 						{
-							aurora = new Aurora(finder.getHostName(),
+							device = new Aurora(finder.getHostName(),
 									finder.getPort(), "v1", finder.getAccessToken());
 							this.cancel();
 							
 							PropertyManager manager = new PropertyManager("properties.txt");
 							manager.setProperty("lastSession",
-									aurora.getHostName() + " " +
-									aurora.getPort() + " v1 " +
-									aurora.getAccessToken());
+									device.getHostName() + " " +
+									device.getPort() + " v1 " +
+									device.getAccessToken());
 							loadAuroraData();
 						}
 						catch (StatusCodeException | HttpRequestException schre)
 						{
-							new TextDialog(Main.this, "An error occurred while connecting to the Aurora." +
+							new TextDialog(Main.this,
+									"An error occurred while connecting to the Aurora." +
 									"Please try again.").setVisible(true);
 						}
-						canvas.setAurora(aurora);
+						canvas.setAurora(device);
 					}
 				}
 			}, 0, 1000);
@@ -355,21 +357,22 @@ public class Main extends JFrame
 		regularEffectsList.setBackground(Color.DARK_GRAY);
 		regularEffectsList.setForeground(Color.WHITE);
 		regularEffectsList.setFont(new Font("Tahoma", Font.PLAIN, 19));
-		regularEffectsList.addListSelectionListener(new ListSelectionListener()
+		regularEffectsList.addMouseListener(new MouseAdapter()
 		{
 			@Override
-			public void valueChanged(ListSelectionEvent e)
+			public void mouseClicked(MouseEvent e)
 			{
 				JList<String> list = (JList<String>)e.getSource();
 				try
 				{
-					aurora.effects().setEffect(list.getSelectedValue());
+					device.effects().setEffect(list.getSelectedValue());
 					canvas.checkAuroraState();
 					loadStateComponents();
 				}
 				catch (StatusCodeException sce)
 				{
-					new TextDialog(Main.this, "Lost connection to the Aurora. " +
+					new TextDialog(Main.this,
+							"The requested action could not be completed. " +
 							"Please try again.").setVisible(true);
 				}
 			}
@@ -377,7 +380,7 @@ public class Main extends JFrame
 		LoadingSpinner regEffectsSpinner = new LoadingSpinner(Color.DARK_GRAY);
 		scrlPaneRegEffects.setViewportView(regEffectsSpinner);
 		
-		canvas = new PanelCanvas(aurora);
+		canvas = new PanelCanvas(device);
 		canvas.setLayout(new GridBagLayout());
 		canvas.setBorder(new TitledBorder(new LineBorder(Color.GRAY),
 				"Preview", TitledBorder.LEFT, TitledBorder.TOP, null, Color.WHITE));
@@ -401,21 +404,22 @@ public class Main extends JFrame
 		rhythmEffectsList.setBackground(Color.DARK_GRAY);
 		rhythmEffectsList.setForeground(Color.WHITE);
 		rhythmEffectsList.setFont(new Font("Tahoma", Font.PLAIN, 19));
-		rhythmEffectsList.addListSelectionListener(new ListSelectionListener()
+		rhythmEffectsList.addMouseListener(new MouseAdapter()
 		{
 			@Override
-			public void valueChanged(ListSelectionEvent e)
+			public void mouseClicked(MouseEvent e)
 			{
 				JList<String> list = (JList<String>)e.getSource();
 				try
 				{
-					aurora.effects().setEffect(list.getSelectedValue());
+					device.effects().setEffect(list.getSelectedValue());
 					canvas.checkAuroraState();
 					loadStateComponents();
 				}
 				catch (StatusCodeException sce)
 				{
-					new TextDialog(Main.this, "Lost connection to the Aurora. " +
+					new TextDialog(Main.this,
+							"The requested action could not be completed. " +
 							"Please try again.").setVisible(true);
 				}
 			}
@@ -486,12 +490,19 @@ public class Main extends JFrame
 				
 				try
 				{
-					aurora.state().toggleOn();
+					device.state().toggleOn();
 					canvas.toggleOn();
+				}
+				catch (HttpRequestException hre)
+				{
+					new TextDialog(Main.this,
+							"Lost connection to the device. " +
+							"Please try again.").setVisible(true);
 				}
 				catch (StatusCodeException sce)
 				{
-					new TextDialog(Main.this, "Lost connection to the Aurora. " +
+					new TextDialog(Main.this,
+							"The requested action could not be completed. " +
 							"Please try again.").setVisible(true);
 				}
 			}
@@ -522,23 +533,38 @@ public class Main extends JFrame
 			@Override
 			public void stateChanged(ChangeEvent e)
 			{
-				JSlider slider = (JSlider)e.getSource();
-				try
+				if (!adjusting)
 				{
-					if (slider.getValueIsAdjusting())
+					adjusting = true;
+					new Thread(() ->
 					{
-						aurora.state().setBrightness(slider.getValue());
-					}
-					else
-					{
-						canvas.checkAuroraState();
-						loadActiveScene();
-					}
-				}
-				catch (StatusCodeException sce)
-				{
-					new TextDialog(Main.this, "Lost connection to the Aurora. " +
-							"Please try again.").setVisible(true);
+						try
+						{
+							JSlider slider = (JSlider)e.getSource();
+							if (slider.getValueIsAdjusting())
+							{
+								device.state().setBrightness(slider.getValue());
+							}
+							else
+							{
+								canvas.checkAuroraState();
+								loadActiveScene();
+							}
+							adjusting = false;
+						}
+						catch (HttpRequestException hre)
+						{
+							new TextDialog(Main.this,
+									"Lost connection to the device. " +
+									"Please try again.").setVisible(true);
+						}
+						catch (StatusCodeException sce)
+						{
+							new TextDialog(Main.this,
+									"The requested action could not be completed. " +
+									"Please try again.").setVisible(true);
+						}
+					}).start();
 				}
 			}
 		});
@@ -560,23 +586,38 @@ public class Main extends JFrame
 			@Override
 			public void stateChanged(ChangeEvent e)
 			{
-				JSlider slider = (JSlider)e.getSource();
-				try
+				if (!adjusting)
 				{
-					if (slider.getValueIsAdjusting())
+					adjusting = true;
+					new Thread(() ->
 					{
-						aurora.state().setColorTemperature(slider.getValue());
-					}
-					else
-					{
-						canvas.checkAuroraState();
-						loadActiveScene();
-					}
-				}
-				catch (StatusCodeException sce)
-				{
-					new TextDialog(Main.this, "Lost connection to the Aurora. " +
-							"Please try again.").setVisible(true);
+						try
+						{
+							JSlider slider = (JSlider)e.getSource();
+							if (slider.getValueIsAdjusting())
+							{
+								device.state().setColorTemperature(slider.getValue());
+							}
+							else
+							{
+								canvas.checkAuroraState();
+								loadActiveScene();
+							}
+						}
+						catch (HttpRequestException hre)
+						{
+							new TextDialog(Main.this,
+									"Lost connection to the device. " +
+									"Please try again.").setVisible(true);
+						}
+						catch (StatusCodeException sce)
+						{
+							new TextDialog(Main.this,
+									"The requested action could not be completed. " +
+									"Please try again.").setVisible(true);
+						}
+						adjusting = false;
+					}).start();
 				}
 			}
 		});
@@ -606,9 +647,9 @@ public class Main extends JFrame
 					@Override
 					public void stateChanged(ChangeEvent e)
 					{
-						if (!adjustingColor)
+						if (!adjusting)
 						{
-							adjustingColor = true;
+							adjusting = true;
 							new Thread(() ->
 							{
 								ColorWheel wheel = (ColorWheel)e.getSource();
@@ -619,19 +660,26 @@ public class Main extends JFrame
 								
 								try
 								{
-									aurora.state().setHue((int)(hsb[0]*360));
-									aurora.state().setSaturation((int)(hsb[1]*100));
-									aurora.state().setBrightness((int)(hsb[2]*100));
+									device.state().setHue((int)(hsb[0]*360));
+									device.state().setSaturation((int)(hsb[1]*100));
+									device.state().setBrightness((int)(hsb[2]*100));
 									loadStateComponents();
+								}
+								catch (HttpRequestException hre)
+								{
+									new TextDialog(Main.this,
+											"Lost connection to the device. " +
+											"Please try again.").setVisible(true);
 								}
 								catch (StatusCodeException sce)
 								{
-									new TextDialog(Main.this, "Lost connection to the Aurora. " +
+									new TextDialog(Main.this,
+											"The requested action could not be completed. " +
 											"Please try again.").setVisible(true);
 								}
 								
 								canvas.setColor(color);
-								adjustingColor = false;
+								adjusting = false;
 							}).start();
 						}
 					}
@@ -641,27 +689,33 @@ public class Main extends JFrame
 					@Override
 					public void stateChanged(ChangeEvent e)
 					{
-						if (!adjustingColor)
+						if (!adjusting)
 						{
-							adjustingColor = true;
+							adjusting = true;
 							new Thread(() ->
 							{
 								BrightnessSlider slider = (BrightnessSlider)e.getSource();
 								int brightness = slider.getValue();
 								try
 								{
-									aurora.state().setBrightness(brightness);
-									int hue = aurora.state().getHue();
-									int sat = aurora.state().getSaturation();
+									device.state().setBrightness(brightness);
+									int hue = device.state().getHue();
+									int sat = device.state().getSaturation();
 									canvas.setColor(Color.getHSBColor(hue/360f, sat/100f, brightness/100f));
 									loadStateComponents();
 								}
-								catch (StatusCodeException sce)
+								catch (HttpRequestException hre)
 								{
-									new TextDialog(Main.this, "Lost connection to the Aurora. " +
+									new TextDialog(Main.this,
+											"Lost connection to the device. " +
 											"Please try again.").setVisible(true);
 								}
-								adjustingColor = false;
+								catch (StatusCodeException sce)
+								{
+									new TextDialog(Main.this, "The requested action could not be completed. " +
+											"Please try again.").setVisible(true);
+								}
+								adjusting = false;
 							}).start();
 						}
 					}
@@ -672,13 +726,13 @@ public class Main extends JFrame
 		informationPanel.add(btnSetSolidColor, "cell 1 4");
 		editor.setFont(new Font("Tahoma", Font.BOLD, 17));
 		
-		discoveryPanel = new DiscoveryPanel(aurora);
+		discoveryPanel = new DiscoveryPanel(device);
 		editor.addTab("Discovery", null, discoveryPanel, null);
 		
 		AuroraNullListener anl = new AuroraNullListener(20, null, canvas, discoveryPanel);
 		anl.start();
 		
-		if (aurora != null)
+		if (device != null)
 		{
 			EventQueue.invokeLater(new Runnable()
 			{

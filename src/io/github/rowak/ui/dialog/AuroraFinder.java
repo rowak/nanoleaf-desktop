@@ -37,7 +37,7 @@ public class AuroraFinder extends JDialog
 {
 	private String hostName, accessToken;
 	private int port;
-	private Aurora aurora;
+	private Aurora device;
 	private DefaultListModel<String> listModel;
 	private JPanel contentPane;
 
@@ -117,7 +117,7 @@ public class AuroraFinder extends JDialog
 				}
 			}
 		}, 1000, 1000);
-		return aurora;
+		return device;
 	}
 	
 	private Aurora connectToExternalAurora(String ip, int port, String accessToken)
