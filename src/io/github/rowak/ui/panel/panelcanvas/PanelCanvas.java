@@ -152,35 +152,38 @@ public class PanelCanvas extends JPanel
 			{
 				String currentEffectName = device.effects().getCurrentEffectName();
 				Effect currentEffect = device.effects().getCurrentEffect();
-				if (currentEffectName.equals("*Static*") ||
-						currentEffect.getAnimType().equals(Effect.Type.STATIC))
+				if (currentEffect != null && currentEffect.getAnimType() != null)
 				{
-					customEffectDisplay.stop();
-					setStaticEffect(currentEffect);
-				}
-				else if (currentEffect.getAnimType().equals(Effect.Type.CUSTOM))
-				{
-					customEffectDisplay.changeEffect(currentEffect);
-				}
-				else if (!currentEffect.getAnimType().equals(Effect.Type.STATIC))
-				{
-					customEffectDisplay.stop();
-					io.github.rowak.Color[] palette =
-							currentEffect.getPalette();
-					int[] avgRgb = new int[3];
-					if (palette != null)
+					if (currentEffectName.equals("*Static*") ||
+							currentEffect.getAnimType().equals(Effect.Type.STATIC))
 					{
-						for (io.github.rowak.Color c : palette)
+						customEffectDisplay.stop();
+						setStaticEffect(currentEffect);
+					}
+					else if (currentEffect.getAnimType().equals(Effect.Type.CUSTOM))
+					{
+						customEffectDisplay.changeEffect(currentEffect);
+					}
+					else if (!currentEffect.getAnimType().equals(Effect.Type.STATIC))
+					{
+						customEffectDisplay.stop();
+						io.github.rowak.Color[] palette =
+								currentEffect.getPalette();
+						int[] avgRgb = new int[3];
+						if (palette != null)
 						{
-							Color rgb = new Color(Color.HSBtoRGB(c.getHue()/360f,
-									c.getSaturation()/100f, c.getBrightness()/100f));
-							avgRgb[0] += rgb.getRed();
-							avgRgb[1] += rgb.getGreen();
-							avgRgb[2] += rgb.getBlue();
+							for (io.github.rowak.Color c : palette)
+							{
+								Color rgb = new Color(Color.HSBtoRGB(c.getHue()/360f,
+										c.getSaturation()/100f, c.getBrightness()/100f));
+								avgRgb[0] += rgb.getRed();
+								avgRgb[1] += rgb.getGreen();
+								avgRgb[2] += rgb.getBlue();
+							}
+							Color avgColor = new Color(avgRgb[0]/palette.length,
+									avgRgb[1]/palette.length, avgRgb[2]/palette.length);
+							setColor(avgColor);
 						}
-						Color avgColor = new Color(avgRgb[0]/palette.length,
-								avgRgb[1]/palette.length, avgRgb[2]/palette.length);
-						setColor(avgColor);
 					}
 				}
 			}

@@ -9,7 +9,7 @@ import java.io.IOException;
 
 public class PropertyManager
 {
-	File file;
+	private File file;
 	
 	public PropertyManager(String filePath)
 	{

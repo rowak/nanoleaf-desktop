@@ -60,11 +60,12 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.3.0", true);
+	public static final Version VERSION = new Version("v0.3.1", true);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
-	public static final String PROPERTIES_FILEPATH = "properties.txt";
+	public static final String PROPERTIES_FILEPATH =
+			System.getProperty("user.home") + "/properties.txt";
 	
 	private boolean adjusting;
 	private Aurora device;
@@ -280,7 +281,7 @@ public class Main extends JFrame
 									finder.getPort(), "v1", finder.getAccessToken());
 							this.cancel();
 							
-							PropertyManager manager = new PropertyManager("properties.txt");
+							PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
 							manager.setProperty("lastSession",
 									device.getHostName() + " " +
 									device.getPort() + " v1 " +
@@ -728,6 +729,11 @@ public class Main extends JFrame
 		
 		discoveryPanel = new DiscoveryPanel(device);
 		editor.addTab("Discovery", null, discoveryPanel, null);
+		
+//		JPanel ambilightPanel = new JPanel();
+//		ambilightPanel.setBorder(new LineBorder(Color.GRAY, 1, true));
+//		ambilightPanel.setBackground(Color.DARK_GRAY);
+//		editor.addTab("Ambient Lighting", null, ambilightPanel, null);
 		
 		AuroraNullListener anl = new AuroraNullListener(20, null, canvas, discoveryPanel);
 		anl.start();
