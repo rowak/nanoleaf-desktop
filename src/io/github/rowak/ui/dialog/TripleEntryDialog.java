@@ -13,6 +13,8 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 import javax.swing.border.LineBorder;
 
+import io.github.rowak.ui.button.ModernButton;
+
 public class TripleEntryDialog extends BasicDialog
 {
 	private JTextField entry1, entry2, entry3;
@@ -64,10 +66,7 @@ public class TripleEntryDialog extends BasicDialog
 		entry3.addFocusListener(new TextFieldFocusListener(entry3));
 		contentPanel.add(entry3, "cell 0 3, grow, gapx 2 2");
 		
-		JButton btnConfirm = new JButton(buttonLabel);
-		btnConfirm.setContentAreaFilled(false);
-		btnConfirm.setForeground(Color.WHITE);
-		btnConfirm.setBackground(Color.DARK_GRAY);
+		JButton btnConfirm = new ModernButton(buttonLabel);
 		btnConfirm.setFont(new Font("Tahoma", Font.PLAIN, 18));
 		btnConfirm.addActionListener(buttonListener);
 		contentPanel.add(btnConfirm, "cell 0 4, alignx center");

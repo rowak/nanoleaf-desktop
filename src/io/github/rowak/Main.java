@@ -3,6 +3,8 @@ package io.github.rowak;
 import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
@@ -60,12 +62,15 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.3.1", true);
+	public static final Version VERSION = new Version("v0.3.2", true);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
 	public static final String PROPERTIES_FILEPATH =
 			System.getProperty("user.home") + "/properties.txt";
+	
+	private final int DEFAULT_WINDOW_WIDTH = 1000;
+	private final int DEFAULT_WINDOW_HEIGHT = 800;
 	
 	private boolean adjusting;
 	private Aurora device;
@@ -129,6 +134,29 @@ public class Main extends JFrame
 				 */
 			}
 		}).start();
+	}
+	
+	private int getUserWindowWidth()
+	{
+		PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
+		String width = manager.getProperty("windowWidth");
+		String height = manager.getProperty("windowHeight");
+		if (width != null)
+		{
+			return Integer.parseInt(width);
+		}
+		return DEFAULT_WINDOW_WIDTH;
+	}
+	
+	private int getUserWindowHeight()
+	{
+		PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
+		String height = manager.getProperty("windowHeight");
+		if (height != null)
+		{
+			return Integer.parseInt(height);
+		}
+		return DEFAULT_WINDOW_HEIGHT;
 	}
 	
 	public void loadEffects() throws StatusCodeException
@@ -304,7 +332,7 @@ public class Main extends JFrame
 	private void initUI()
 	{
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 1000, 800);
+		setBounds(100, 100, getUserWindowWidth(), getUserWindowHeight());
 		setUndecorated(true);
 		URL iconPath = getClass().getResource("resources/images/icon.png");
 		setIconImage(new ImageIcon(iconPath).getImage());
@@ -327,6 +355,17 @@ public class Main extends JFrame
 		
 		WindowOpeningListener wol = new WindowOpeningListener(this);
 		addWindowListener(wol);
+		
+		addComponentListener(new ComponentAdapter()
+		{
+			@Override
+			public void componentResized(ComponentEvent e)
+			{
+				PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
+				manager.setProperty("windowWidth", getWidth());
+				manager.setProperty("windowHeight", getHeight());
+			}
+		});
 		
 		lblTitle = new JLabel("Not Connected");
 		lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -473,11 +512,7 @@ public class Main extends JFrame
 		lblOnOff.setForeground(Color.WHITE);
 		informationPanel.add(lblOnOff, "cell 0 0,aligny center");
 		
-		btnOnOff = new JToggleButton("Turn On");
-		btnOnOff.setContentAreaFilled(false);
-		btnOnOff.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		btnOnOff.setBackground(Color.DARK_GRAY);
-		btnOnOff.setForeground(Color.WHITE);
+		btnOnOff = new ModernToggleButton("Turn On");
 		btnOnOff.addActionListener(new ActionListener()
 		{
 			@Override
@@ -630,10 +665,7 @@ public class Main extends JFrame
 		lblSolidColor.setForeground(Color.WHITE);
 		informationPanel.add(lblSolidColor, "cell 0 4");
 		
-		JButton btnSetSolidColor = new JButton("Set Solid Color");
-		btnSetSolidColor.setContentAreaFilled(false);
-		btnSetSolidColor.setBackground(Color.DARK_GRAY);
-		btnSetSolidColor.setForeground(Color.WHITE);
+		JButton btnSetSolidColor = new ModernButton("Set Solid Color");
 		btnSetSolidColor.addActionListener(new ActionListener()
 		{
 			@Override
@@ -723,7 +755,6 @@ public class Main extends JFrame
 				});
 			}
 		});
-		btnSetSolidColor.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		informationPanel.add(btnSetSolidColor, "cell 1 4");
 		editor.setFont(new Font("Tahoma", Font.BOLD, 17));
 		

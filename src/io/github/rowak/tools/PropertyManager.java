@@ -71,7 +71,6 @@ public class PropertyManager
 		{
 			String properties = "";
 			reader = new BufferedReader(new FileReader(file));
-			writer = new BufferedWriter(new FileWriter(file));
 			String line;
 			while ((line = reader.readLine()) != null)
 			{
@@ -81,8 +80,9 @@ public class PropertyManager
 					properties += line + "\n";
 				}
 			}
-			properties += (key + (char)28 + value);
+			properties += (key + (char)28 + value) + "\n";
 			
+			writer = new BufferedWriter(new FileWriter(file));
 			writer.write(properties);
 		}
 		catch (IOException ioe)

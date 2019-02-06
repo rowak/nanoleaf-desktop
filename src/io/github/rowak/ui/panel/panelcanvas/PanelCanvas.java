@@ -11,9 +11,12 @@ import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import org.json.JSONObject;
 
@@ -21,19 +24,24 @@ import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
 import io.github.rowak.Aurora;
 import io.github.rowak.StatusCodeException;
+import io.github.rowak.tools.PropertyManager;
 import io.github.rowak.ui.dialog.LoadingSpinner;
 import io.github.rowak.ui.dialog.TextDialog;
 import io.github.rowak.Panel;
 import io.github.rowak.StaticAnimDataParser;
 import io.github.rowak.Effect;
 import io.github.rowak.Frame;
+import io.github.rowak.Main;
 
 public class PanelCanvas extends JPanel
 {
+	private int rotation;
 	private Aurora device;
 	private Panel[] panels;
 	private DeviceType deviceType;
+	private HashMap<Panel, Point> originalPanelLocations;
 	private HashMap<Panel, Point> panelLocations;
+	private HashMap<Panel, Point> temp;
 	private CustomEffectDisplay customEffectDisplay;
 	private LoadingSpinner spinner;
 	
@@ -70,12 +78,20 @@ public class PanelCanvas extends JPanel
 					"Please relaunch the application.").setVisible(true);
 		}
 		panelLocations = new HashMap<Panel, Point>();
+		temp = new HashMap<Panel, Point>();
 		final int DEFAULT_X_OFFSET = 150;
 		final int DEFAULT_Y_OFFSET = 150;
 		for (Panel p : panels)
 		{
 			panelLocations.put(p, new Point(p.getX() + getWidth()/2 + DEFAULT_X_OFFSET,
 					-p.getY() + getHeight()/2 + DEFAULT_Y_OFFSET));
+			temp.put(p,  new Point(p.getX(), p.getY()));
+		}
+		originalPanelLocations = new HashMap<Panel, Point>(panelLocations);
+		
+		if (device != null)
+		{
+			loadUserPanelRotation();
 		}
 		
 		customEffectDisplay = new CustomEffectDisplay(this);
@@ -85,6 +101,17 @@ public class PanelCanvas extends JPanel
 		addMouseMotionListener(pdl);
 		
 		startLoadingSpinner();
+	}
+	
+	private void loadUserPanelRotation()
+	{
+		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+		String defaultRotation = manager.getProperty("panelRotation");
+		System.out.println("panelRotation = " + defaultRotation);
+		if (defaultRotation != null)
+		{
+			rotatePanels(Integer.parseInt(defaultRotation));
+		}
 	}
 	
 	private void startLoadingSpinner()
@@ -120,6 +147,7 @@ public class PanelCanvas extends JPanel
 	{
 		this.device = device;
 		setDeviceType();
+		loadUserPanelRotation();
 	}
 	
 	public Aurora getAurora()
@@ -130,6 +158,11 @@ public class PanelCanvas extends JPanel
 	public Panel[] getPanels()
 	{
 		return this.panels;
+	}
+	
+	public int getRotation()
+	{
+		return this.rotation;
 	}
 	
 	public void checkAuroraState() throws StatusCodeException
@@ -297,6 +330,28 @@ public class PanelCanvas extends JPanel
 		}
 	}
 	
+	public void rotatePanels(int angle)
+	{
+		Point origin = new Point(getWidth()/2, getHeight()/2);
+		double radAngle = Math.toRadians(angle);
+		
+		for (Panel p : panels)
+		{
+			Point loc = originalPanelLocations.get(p);
+			int x = loc.x - origin.x;
+			int y = loc.y - origin.y;
+			
+			double newX = x * Math.cos(radAngle) - y * Math.sin(radAngle);
+			double newY = x * Math.sin(radAngle) + y * Math.cos(radAngle);
+			
+			x = (int)(newX + origin.x);
+			y = (int)(newY + origin.y);
+			panelLocations.put(p, new Point(x, y));
+		}
+		
+		rotation = angle;
+	}
+	
 	@Override
 	public void paintComponent(Graphics g)
 	{
@@ -329,11 +384,11 @@ public class PanelCanvas extends JPanel
 					Polygon tri = new Polygon();
 					if (o == 0 || Math.abs(o) % 120 == 0)
 					{
-						tri = new UprightPanel(x, y);
+						tri = new UprightPanel(x, y, this);
 					}
 					else
 					{
-						tri = new InvertedPanel(x, y);
+						tri = new InvertedPanel(x, y, this);
 					}
 					g.setColor(new Color(panel.getRed(),
 							panel.getGreen(), panel.getBlue()));
@@ -346,7 +401,7 @@ public class PanelCanvas extends JPanel
 				else if (deviceType == DeviceType.CANVAS)
 				{
 					// Create the CANVAS panel outline shape
-					Square sq = new Square(x, y);
+					SquarePanel sq = new SquarePanel(x, y, this);
 					g.setColor(new Color(panel.getRed(),
 							panel.getGreen(), panel.getBlue()));
 					g.fillPolygon(sq);
@@ -356,105 +411,6 @@ public class PanelCanvas extends JPanel
 					g2d.setStroke(new BasicStroke(1));
 				}
 			}
-		}
-	}
-	
-	private class PanelDragListener extends MouseAdapter
-	{
-		private Panel[] panels;
-		private HashMap<Panel, Point> panelLocations, tempPanelLocations;
-		private Point mouseLast;
-		private PanelCanvas canvas;
-		
-		public PanelDragListener(PanelCanvas canvas,
-				Panel[] panels, HashMap<Panel, Point> panelLocations)
-		{
-			this.canvas = canvas;
-			this.panels = panels;
-			this.panelLocations = panelLocations;
-			tempPanelLocations = new HashMap<Panel, Point>(panelLocations);
-		}
-		
-		@Override
-		public void mousePressed(MouseEvent e)
-		{
-			mouseLast = e.getPoint();
-			canvas.setCursor(new Cursor(Cursor.MOVE_CURSOR));
-		}
-		
-		@Override
-		public void mouseReleased(MouseEvent e)
-		{
-			mouseLast = null;
-			tempPanelLocations = new HashMap<Panel, Point>(panelLocations);
-			canvas.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-		}
-		
-		@Override
-		public void mouseDragged(MouseEvent e)
-		{
-			if (mouseLast != null)
-			{
-				Point mouse = e.getPoint();
-				
-				int xdiff = mouse.x - mouseLast.x;
-				int ydiff = mouse.y - mouseLast.y;
-				
-				for (Panel p : panels)
-				{
-					int x = tempPanelLocations.get(p).x + xdiff;
-					int y = tempPanelLocations.get(p).y + ydiff;
-					panelLocations.put(p, new Point(x, y));
-				}
-				canvas.repaint();
-			}
-		}
-	}
-	
-	private class UprightPanel extends Polygon
-	{
-		public UprightPanel(int x, int y)
-		{
-			// top
-			addPoint(x + 7, y -60);
-			addPoint(x -7, y -60);
-			// bottom-left
-			addPoint(x -60, y + 40);
-			addPoint(x -55, y + 50);
-			// bottom-right
-			addPoint(x + 55, y + 50);
-			addPoint(x + 60, y + 40);
-		}
-	}
-	
-	private class InvertedPanel extends Polygon
-	{
-		public InvertedPanel(int x, int y)
-		{
-			// top-left
-			addPoint(x -55, y -15);
-			addPoint(x -50, y -25);
-			// top-right
-			addPoint(x + 50, y -25);
-			addPoint(x + 55, y -15);
-			// bottom
-			addPoint(x + 5, y + 80);
-			addPoint(x -5, y + 80);
-		}
-	}
-	
-	private class Square extends Polygon
-	{
-		public Square(int x, int y)
-		{
-			//top-left
-			addPoint(x, y);
-			//top-right
-			addPoint(x + 90, y);
-			//bottom-right
-			addPoint(x + 90, y + 90);
-			//bottom-left
-			addPoint(x, y + 90);
 		}
 	}
 }

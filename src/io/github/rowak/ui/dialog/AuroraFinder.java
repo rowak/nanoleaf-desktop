@@ -15,6 +15,7 @@ import io.github.rowak.Aurora;
 import io.github.rowak.Setup;
 import io.github.rowak.StatusCodeException;
 import io.github.rowak.ui.button.CloseButton;
+import io.github.rowak.ui.button.ModernButton;
 import io.github.rowak.ui.listener.WindowDragListener;
 
 import javax.swing.JScrollPane;
@@ -172,11 +173,8 @@ public class AuroraFinder extends JDialog
 		listAuroras.setForeground(Color.WHITE);
 		scrollPane.setViewportView(listAuroras);
 		
-		JButton btnConnect = new JButton("Connect");
-		btnConnect.setContentAreaFilled(false);
+		JButton btnConnect = new ModernButton("Connect");
 		btnConnect.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		btnConnect.setForeground(Color.WHITE);
-		btnConnect.setBackground(Color.DARK_GRAY);
 		btnConnect.addActionListener(new ActionListener()
 		{
 			@Override
@@ -190,11 +188,8 @@ public class AuroraFinder extends JDialog
 		});
 		contentPane.add(btnConnect, "cell 1 2,alignx right");
 		
-		JButton btnAddExternalDevice = new JButton("Add External Device");
-		btnAddExternalDevice.setContentAreaFilled(false);
+		JButton btnAddExternalDevice = new ModernButton("Add External Device");
 		btnAddExternalDevice.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		btnAddExternalDevice.setForeground(Color.WHITE);
-		btnAddExternalDevice.setBackground(Color.DARK_GRAY);
 		btnAddExternalDevice.addActionListener(new ActionListener()
 		{
 			@Override
