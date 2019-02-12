@@ -27,6 +27,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -70,19 +71,47 @@ public class AuroraFinder extends JDialog
 	
 	private void findAuroras()
 	{
+		if (!findAurorasMethod1() && !findAurorasMethod2())
+		{
+			// Only show this message if both connect methods fail
+			new TextDialog(this, "Couldn't locate any devices. " +
+					"Please try again or create an issue on GitHub.")
+					.setVisible(true);
+		}
+	}
+	
+	// The first device search method uses the nanoleaf backend
+	// api to find the devices on the local network
+	private boolean findAurorasMethod1()
+	{
 		List<InetSocketAddress> auroras = Setup.quickFindAuroras();
 		
 		for (InetSocketAddress address : auroras)
 		{
 			listModel.addElement(address.getHostName() + ":" + address.getPort());
 		}
-		
-		if (auroras.isEmpty())
+		return !auroras.isEmpty();
+	}
+	
+	// The second device search method uses ssdp to find
+	// devices on the local network
+	private boolean findAurorasMethod2()
+	{
+		List<InetSocketAddress> auroras = new ArrayList<InetSocketAddress>();
+		try
 		{
-			new TextDialog(this, "Couldn't locate any devices. " +
-					"Please try again or create an issue on GitHub.")
-					.setVisible(true);
+			auroras = Setup.findAuroras(5000);
 		}
+		catch (Exception e)
+		{
+			// do nothing
+		}
+		
+		for (InetSocketAddress address : auroras)
+		{
+			listModel.addElement(address.getHostName() + ":" + address.getPort());
+		}
+		return !auroras.isEmpty();
 	}
 	
 	private Aurora connectToAurora(String host)
@@ -153,7 +182,7 @@ public class AuroraFinder extends JDialog
 		addMouseListener(wdl);
 		addMouseMotionListener(wdl);
 		
-		JLabel lblTitle = new JLabel("Searching for Auroras...");
+		JLabel lblTitle = new JLabel("Searching for devices...");
 		lblTitle.setFont(new Font("Tahoma", Font.PLAIN, 22));
 		lblTitle.setForeground(Color.WHITE);
 		contentPane.add(lblTitle, "gapx 15 0, cell 0 0");

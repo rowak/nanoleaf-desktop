@@ -36,6 +36,7 @@ import io.github.rowak.ui.dialog.colorpicker.ColorPicker;
 import io.github.rowak.ui.dialog.colorpicker.ColorWheel;
 import io.github.rowak.ui.listener.*;
 import io.github.rowak.ui.panel.DiscoveryPanel;
+import io.github.rowak.ui.panel.Ambilight.AmbilightPanel;
 import io.github.rowak.ui.panel.panelcanvas.PanelCanvas;
 import io.github.rowak.ui.scrollbar.ModernScrollBarUI;
 import io.github.rowak.ui.slider.ModernSliderUI;
@@ -62,7 +63,7 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.3.2", true);
+	public static final Version VERSION = new Version("v0.4.0", true);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
@@ -140,7 +141,6 @@ public class Main extends JFrame
 	{
 		PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
 		String width = manager.getProperty("windowWidth");
-		String height = manager.getProperty("windowHeight");
 		if (width != null)
 		{
 			return Integer.parseInt(width);
@@ -332,7 +332,8 @@ public class Main extends JFrame
 	private void initUI()
 	{
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, getUserWindowWidth(), getUserWindowHeight());
+		setBounds(100, 100, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+		setSize(getUserWindowWidth(), getUserWindowHeight());
 		setUndecorated(true);
 		URL iconPath = getClass().getResource("resources/images/icon.png");
 		setIconImage(new ImageIcon(iconPath).getImage());
@@ -761,12 +762,11 @@ public class Main extends JFrame
 		discoveryPanel = new DiscoveryPanel(device);
 		editor.addTab("Discovery", null, discoveryPanel, null);
 		
-//		JPanel ambilightPanel = new JPanel();
-//		ambilightPanel.setBorder(new LineBorder(Color.GRAY, 1, true));
-//		ambilightPanel.setBackground(Color.DARK_GRAY);
-//		editor.addTab("Ambient Lighting", null, ambilightPanel, null);
+		AmbilightPanel ambilightPanel = new AmbilightPanel(canvas);
+		editor.addTab("Ambient Lighting", null, ambilightPanel, null);
 		
-		AuroraNullListener anl = new AuroraNullListener(20, null, canvas, discoveryPanel);
+		AuroraNullListener anl = new AuroraNullListener(20, null,
+				canvas, discoveryPanel, ambilightPanel);
 		anl.start();
 		
 		if (device != null)

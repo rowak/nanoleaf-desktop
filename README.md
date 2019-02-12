@@ -7,10 +7,15 @@ Simply download the latest release from the [releases page](https://github.com/r
 ## Features
 - Select regular and rhythm scenes, set solid colors, and modify the brightness and color temperature
 - Control both Aurora and Canvas devices
-- Live and responsive preview of the aurora panels to show what is currently displayed on the physical device
+- Live and responsive preview of the panels to show what is currently displayed on the physical device
 - Discover new scenes and plugins created by other Nanoleaf users
 - Control devices from a computer outside your local network
+- Ambient lighting with two modes, customizable capture zones, and multi-monitor support
 - Custom dark modern UI
+
+## Limitations
+- The live preview does not currently support "dynamic" effects
+- Ambient lighting may not support all secondary monitors (primary monitor support is guarenteed)
 
 ## Screenshots
 ![](images/app_main_aurora.png)
@@ -21,6 +26,6 @@ An example of a custom effect being displayed on the live preview (below).
 ![](https://media.giphy.com/media/1rL3wxupQ6YqNoqT4Q/giphy.gif)
 
 ## Planned Features
-- Support for controlling multiple auroras
+- Support for controlling multiple devices
 - Create static and custom effects and edit existing dynamic effects
-- Streaming audio from other applications to the aurora (maybe)
+- Streaming audio from other applications to the device (maybe)

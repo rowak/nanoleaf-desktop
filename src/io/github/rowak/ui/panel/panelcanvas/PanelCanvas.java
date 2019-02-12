@@ -107,7 +107,6 @@ public class PanelCanvas extends JPanel
 	{
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 		String defaultRotation = manager.getProperty("panelRotation");
-		System.out.println("panelRotation = " + defaultRotation);
 		if (defaultRotation != null)
 		{
 			rotatePanels(Integer.parseInt(defaultRotation));
@@ -287,6 +286,24 @@ public class PanelCanvas extends JPanel
 	{
 		Color c = new Color(Color.HSBtoRGB(h/360, s/100, b/100));
 		setColor(c);
+	}
+	
+	public void setPanelColor(Panel panel, Color color)
+	{
+		if (customEffectDisplay.isRunning())
+		{
+			customEffectDisplay.stop();
+		}
+		for (Panel p : panels)
+		{
+			if (p.getId() == panel.getId())
+			{
+				p.setRGBW(color.getRed(), color.getGreen(),
+						color.getBlue(), 0);
+				break;
+			}
+		}
+		repaint();
 	}
 	
 	public void setStaticEffect(Effect ef)
