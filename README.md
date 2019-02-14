@@ -2,7 +2,7 @@
 Looking for a desktop alternative to the Nanoleaf mobile app? Look no further. Now you can control your devices from your computer on Windows, Mac, and Linux.
 
 ## Installation
-Simply download the latest release from the [releases page](https://github.com/rowak/nanoleaf-desktop/releases) and run the .jar file. This application requires Java, so make sure that you have at least java 8 installed.
+No installation necessary! Simply download the latest release from the [releases page](https://github.com/rowak/nanoleaf-desktop/releases) and run the .jar file. If you are on Windows or Mac, you can also download their platform-specific executable files. **This application requires Java, so make sure that you have at least java 8 installed.**
 
 ## Features
 - Select regular and rhythm scenes, set solid colors, and modify the brightness and color temperature
@@ -24,6 +24,9 @@ Simply download the latest release from the [releases page](https://github.com/r
 
 An example of a custom effect being displayed on the live preview (below).
 ![](https://media.giphy.com/media/1rL3wxupQ6YqNoqT4Q/giphy.gif)
+
+## Support
+[Donate (Paypal)](https://paypal.me/rowak?locale.x=en_US)
 
 ## Planned Features
 - Support for controlling multiple devices
