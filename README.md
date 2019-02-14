@@ -26,7 +26,7 @@ An example of a custom effect being displayed on the live preview (below).
 ![](https://media.giphy.com/media/1rL3wxupQ6YqNoqT4Q/giphy.gif)
 
 ## Support
-[Donate (Paypal)](https://paypal.me/rowak?locale.x=en_US)
+[Donate (Paypal)](https://paypal.me/rowak)
 
 ## Planned Features
 - Support for controlling multiple devices
