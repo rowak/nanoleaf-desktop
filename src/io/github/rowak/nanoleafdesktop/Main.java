@@ -36,7 +36,6 @@ import io.github.rowak.nanoleafdesktop.ui.dialog.LoadingSpinner;
 import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.SingleEntryDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.TripleEntryDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.BrightnessSlider;
 import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.ColorPicker;
 import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.ColorWheel;
@@ -71,7 +70,7 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.4.2", false);
+	public static final Version VERSION = new Version("v0.4.3", true);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
@@ -347,7 +346,15 @@ public class Main extends JFrame
 									device.getPort() + " v1 " +
 									device.getAccessToken());
 							lblTitle.setText("Connected to " + device.getName());
-							setupDeviceName("Would you like to give this device a name?");
+							Map<String, Object> devices = getDevices();
+							if (devices.containsKey(device.getHostName()))
+							{
+								loadDeviceName();
+							}
+							else
+							{
+								setupDeviceName("Would you like to give this device a name?");
+							}
 							loadAuroraData();
 						}
 						catch (StatusCodeException | HttpRequestException schre)
@@ -463,34 +470,6 @@ public class Main extends JFrame
 		setContentPane(contentPane);
 		contentPane.setLayout(new MigLayout("", "[-27.00,grow][755.00,grow]",
 				"[][680.00,growprio 105,grow][grow]"));
-		
-		ComponentResizer cr = new ComponentResizer();
-		cr.registerComponent(this);
-		cr.setSnapSize(new Dimension(10, 10));
-		cr.setMinimumSize(new Dimension(200, 200));
-		
-		WindowDragListener wdl = new WindowDragListener(50);
-		addMouseListener(wdl);
-		addMouseMotionListener(wdl);
-		
-		WindowOpeningListener wol = new WindowOpeningListener(this);
-		addWindowListener(wol);
-		
-		addComponentListener(new ComponentAdapter()
-		{
-			@Override
-			public void componentResized(ComponentEvent e)
-			{
-				PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
-				manager.setProperty("windowWidth", getWidth());
-				manager.setProperty("windowHeight", getHeight());
-				
-				if (canvas != null)
-				{
-					canvas.initCanvas();
-				}
-			}
-		});
 		
 		JButton btnMenu = new MenuButton();
 		contentPane.add(btnMenu, "flowx,cell 0 0,gapx 0 10");
@@ -895,6 +874,38 @@ public class Main extends JFrame
 		AuroraNullListener anl = new AuroraNullListener(20, null,
 				canvas, discoveryPanel, ambilightPanel);
 		anl.start();
+		
+		ComponentResizer cr = new ComponentResizer();
+		cr.registerComponent(this);
+		cr.setSnapSize(new Dimension(10, 10));
+		cr.setMinimumSize(new Dimension(200, 200));
+		
+		WindowDragListener wdl = new MainWindowDragListener(50, canvas);
+		addMouseListener(wdl);
+		addMouseMotionListener(wdl);
+		
+		WindowOpeningListener wol = new WindowOpeningListener(this);
+		addWindowListener(wol);
+		
+		addComponentListener(new ComponentAdapter()
+		{
+			@Override
+			public void componentResized(ComponentEvent e)
+			{
+				PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
+				manager.setProperty("windowWidth", getWidth());
+				manager.setProperty("windowHeight", getHeight());
+				
+				if (canvas != null)
+				{
+					EventQueue.invokeLater(() ->
+					{
+						canvas.initCanvas();
+						canvas.repaint();
+					});
+				}
+			}
+		});
 		
 		if (device != null)
 		{

@@ -5,9 +5,10 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -22,12 +23,16 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.LineBorder;
 
+import org.json.JSONObject;
+
 import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
 import io.github.rowak.Aurora;
+import io.github.rowak.AuroraMetadata;
 import io.github.rowak.Setup;
 import io.github.rowak.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.Main;
+import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.listener.WindowDragListener;
@@ -36,6 +41,7 @@ import net.miginfocom.swing.MigLayout;
 public class DeviceChangerDialog extends JDialog
 {
 	private Aurora device;
+	private List<AuroraMetadata> devices;
 	private DefaultListModel<String> listModel;
 	private Main parent;
 	private JPanel contentPane;
@@ -53,57 +59,48 @@ public class DeviceChangerDialog extends JDialog
 		}).start();
 	}
 	
-	private void findAuroras()
+	private AuroraMetadata getMetadataFromListItem(String item)
 	{
-		if (!findAurorasMethod1() && !findAurorasMethod2())
+		AuroraMetadata data = null;
+		String name = item.substring(0, item.indexOf("(")-1);
+		for (AuroraMetadata metadata : devices)
 		{
-			// Only show this message if both connect methods fail
-			new TextDialog(this, "Couldn't locate any devices. " +
-					"Please try again or create an issue on GitHub.")
-					.setVisible(true);
-		}
-	}
-	
-	// The first device search method uses the nanoleaf backend
-	// api to find the devices on the local network
-	private boolean findAurorasMethod1()
-	{
-		List<InetSocketAddress> auroras = Setup.quickFindAuroras();
-		
-		for (InetSocketAddress address : auroras)
-		{
-			listModel.addElement(address.getHostName() + ":" + address.getPort());
-			
-			if (lblTitle.getText().equals("Searching for Devices..."))
+			if (metadata.getDeviceName().equals(name))
 			{
-				lblTitle.setText("Select a Device");
+				data = metadata;
+				break;
 			}
 		}
-		return !auroras.isEmpty();
+		return data;
 	}
 	
-	// The second device search method uses ssdp to find
-	// devices on the local network
-	private boolean findAurorasMethod2()
+	private void findAuroras()
 	{
-		List<InetSocketAddress> auroras = new ArrayList<InetSocketAddress>();
+		devices = new ArrayList<AuroraMetadata>();
 		try
 		{
-			auroras = Setup.findAuroras(5000);
+			devices = Setup.findAuroras(5000);
 		}
 		catch (Exception e)
 		{
 			// do nothing
 		}
 		
-		for (InetSocketAddress address : auroras)
+		for (AuroraMetadata metadata : devices)
 		{
-			listModel.addElement(address.getHostName() + ":" + address.getPort());
+			addDeviceToList(metadata);
 		}
-		return !auroras.isEmpty();
+		
+		if (devices.isEmpty())
+		{
+			new TextDialog(this, "Couldn't locate any devices. " +
+					"Please try again or create an issue on GitHub.")
+					.setVisible(true);
+		}
+		lblTitle.setText("Select a Device");
 	}
 	
-	private Aurora connectToAurora(String host)
+	private Aurora connectToAurora(String item)
 	{
 		String text = "Press the power button on your " +
 				  "Aurora for 5-7 seconds until the LED starts flashing.";
@@ -111,10 +108,10 @@ public class DeviceChangerDialog extends JDialog
 		info.setVisible(true);
 		
 		DeviceChangerDialog dialog = this;
-	
-		String[] hostArr = host.split(":");
-		String hostName = hostArr[0];
-		int port = Integer.parseInt(hostArr[1]);
+		
+		AuroraMetadata metadata = getMetadataFromListItem(item);
+		String hostName = metadata.getHostName();
+		int port = metadata.getPort();
 		
 		Timer timer = new Timer();
 		timer.scheduleAtFixedRate(new TimerTask()
@@ -156,10 +153,40 @@ public class DeviceChangerDialog extends JDialog
 		}
 	}
 	
+	private void addDeviceToList(AuroraMetadata metadata)
+	{
+		Map<String, Object> savedDevices = getDevices();
+		if (savedDevices.containsKey(metadata.getHostName()))
+		{
+			String ip = metadata.getHostName();
+			String name = String.format("%s (%s)",
+					savedDevices.get(ip), ip);
+			listModel.addElement(name);
+		}
+		else
+		{
+			String name = String.format("%s (%s)",
+					metadata.getDeviceName(), metadata.getHostName());
+			listModel.addElement(name);
+		}
+	}
+	
+	private Map<String, Object> getDevices()
+	{
+		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+		String devicesStr = manager.getProperty("devices");
+		if (devicesStr != null)
+		{
+			JSONObject json = new JSONObject(devicesStr);
+			return json.toMap();
+		}
+		return new HashMap<String, Object>();
+	}
+	
 	private void initUI(Component parent)
 	{
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setSize(400, 200);
+		setSize(474, 225);
 		setLocationRelativeTo(parent);
 		setUndecorated(true);
 		contentPane = new JPanel();

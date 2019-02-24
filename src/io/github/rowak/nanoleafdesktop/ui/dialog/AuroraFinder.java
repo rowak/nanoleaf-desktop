@@ -9,11 +9,16 @@ import java.awt.Component;
 
 import javax.swing.border.LineBorder;
 
+import org.json.JSONObject;
+
 import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
 import io.github.rowak.Aurora;
+import io.github.rowak.AuroraMetadata;
 import io.github.rowak.Setup;
 import io.github.rowak.StatusCodeException;
+import io.github.rowak.nanoleafdesktop.Main;
+import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.listener.WindowDragListener;
@@ -28,7 +33,9 @@ import java.awt.event.ActionListener;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -40,8 +47,10 @@ public class AuroraFinder extends JDialog
 	private String hostName, accessToken;
 	private int port;
 	private Aurora device;
+	private List<AuroraMetadata> devices;
 	private DefaultListModel<String> listModel;
 	private JPanel contentPane;
+	private JLabel lblTitle;
 
 	public AuroraFinder(Component parent)
 	{
@@ -71,50 +80,31 @@ public class AuroraFinder extends JDialog
 	
 	private void findAuroras()
 	{
-		if (!findAurorasMethod1() && !findAurorasMethod2())
-		{
-			// Only show this message if both connect methods fail
-			new TextDialog(this, "Couldn't locate any devices. " +
-					"Please try again or create an issue on GitHub.")
-					.setVisible(true);
-		}
-	}
-	
-	// The first device search method uses the nanoleaf backend
-	// api to find the devices on the local network
-	private boolean findAurorasMethod1()
-	{
-		List<InetSocketAddress> auroras = Setup.quickFindAuroras();
-		
-		for (InetSocketAddress address : auroras)
-		{
-			listModel.addElement(address.getHostName() + ":" + address.getPort());
-		}
-		return !auroras.isEmpty();
-	}
-	
-	// The second device search method uses ssdp to find
-	// devices on the local network
-	private boolean findAurorasMethod2()
-	{
-		List<InetSocketAddress> auroras = new ArrayList<InetSocketAddress>();
+		devices = new ArrayList<AuroraMetadata>();
 		try
 		{
-			auroras = Setup.findAuroras(5000);
+			devices = Setup.findAuroras(5000);
 		}
 		catch (Exception e)
 		{
 			// do nothing
 		}
 		
-		for (InetSocketAddress address : auroras)
+		for (AuroraMetadata metadata : devices)
 		{
-			listModel.addElement(address.getHostName() + ":" + address.getPort());
+			addDeviceToList(metadata);
 		}
-		return !auroras.isEmpty();
+		
+		if (devices.isEmpty())
+		{
+			new TextDialog(this, "Couldn't locate any devices. " +
+					"Please try again or create an issue on GitHub.")
+					.setVisible(true);
+		}
+		lblTitle.setText("Select a Device");
 	}
 	
-	private Aurora connectToAurora(String host)
+	private Aurora connectToAurora(String item)
 	{
 		String text = "Press the power button on your " +
 				  "Aurora for 5-7 seconds until the LED starts flashing.";
@@ -122,10 +112,10 @@ public class AuroraFinder extends JDialog
 		info.setVisible(true);
 		
 		AuroraFinder finder = this;
-	
-		String[] hostArr = host.split(":");
-		hostName = hostArr[0];
-		port = Integer.parseInt(hostArr[1]);
+		
+		AuroraMetadata metadata = getMetadataFromListItem(item);
+		hostName = metadata.getHostName();
+		port = metadata.getPort();
 		
 		Timer timer = new Timer();
 		timer.scheduleAtFixedRate(new TimerTask()
@@ -166,10 +156,55 @@ public class AuroraFinder extends JDialog
 		}
 	}
 	
+	private AuroraMetadata getMetadataFromListItem(String item)
+	{
+		AuroraMetadata data = null;
+		String ip = item.substring(item.indexOf("(")+1, item.indexOf(")"));
+		for (AuroraMetadata metadata : devices)
+		{
+			if (metadata.getHostName().equals(ip))
+			{
+				data = metadata;
+				break;
+			}
+		}
+		return data;
+	}
+	
+	private void addDeviceToList(AuroraMetadata metadata)
+	{
+		Map<String, Object> savedDevices = getDevices();
+		if (savedDevices.containsKey(metadata.getHostName()))
+		{
+			String ip = metadata.getHostName();
+			String name = String.format("%s (%s)",
+					savedDevices.get(ip), ip);
+			listModel.addElement(name);
+		}
+		else
+		{
+			String name = String.format("%s (%s)",
+					metadata.getDeviceName(), metadata.getHostName());
+			listModel.addElement(name);
+		}
+	}
+	
+	private Map<String, Object> getDevices()
+	{
+		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+		String devicesStr = manager.getProperty("devices");
+		if (devicesStr != null)
+		{
+			JSONObject json = new JSONObject(devicesStr);
+			return json.toMap();
+		}
+		return new HashMap<String, Object>();
+	}
+	
 	private void initUI(Component parent)
 	{
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setSize(400, 200);
+		setSize(474, 225);
 		setLocationRelativeTo(parent);
 		setUndecorated(true);
 		contentPane = new JPanel();
@@ -182,7 +217,7 @@ public class AuroraFinder extends JDialog
 		addMouseListener(wdl);
 		addMouseMotionListener(wdl);
 		
-		JLabel lblTitle = new JLabel("Searching for Devices...");
+		lblTitle = new JLabel("Searching for Devices...");
 		lblTitle.setFont(new Font("Tahoma", Font.PLAIN, 22));
 		lblTitle.setForeground(Color.WHITE);
 		contentPane.add(lblTitle, "gapx 15 0, cell 0 0");

@@ -2,11 +2,13 @@ package io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
+import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +32,7 @@ import io.github.rowak.Frame;
 public class PanelCanvas extends JPanel
 {
 	private int rotation;
+	private float scaleFactor = 1f;
 	private Aurora device;
 	private Panel[] panels;
 	private DeviceType deviceType;
@@ -89,9 +92,11 @@ public class PanelCanvas extends JPanel
 			
 			customEffectDisplay = new CustomEffectDisplay(this);
 			toggleOn();
-			PanelDragListener pdl = new PanelDragListener(this, panels, panelLocations);
+			
+			PanelActionListener pdl = new PanelActionListener(this, panels, panelLocations);
 			addMouseListener(pdl);
 			addMouseMotionListener(pdl);
+			addMouseWheelListener(pdl);
 		}
 	}
 	
@@ -144,17 +149,27 @@ public class PanelCanvas extends JPanel
 	
 	public Aurora getAurora()
 	{
-		return this.device;
+		return device;
 	}
 	
 	public Panel[] getPanels()
 	{
-		return this.panels;
+		return panels;
 	}
 	
 	public int getRotation()
 	{
-		return this.rotation;
+		return rotation;
+	}
+	
+	public float getScaleFactor()
+	{
+		return scaleFactor;
+	}
+	
+	public void setScaleFactor(float factor)
+	{
+		scaleFactor = factor;
 	}
 	
 	public void checkAuroraState() throws StatusCodeException
@@ -229,6 +244,7 @@ public class PanelCanvas extends JPanel
 				{
 					checkAuroraState();
 				}
+				stopLoadingSpinner();
 			}
 		}
 		catch (StatusCodeException sce)
@@ -419,6 +435,44 @@ public class PanelCanvas extends JPanel
 		return point.distance(panelx, panely);
 	}
 	
+	private void drawScaledPanel(Polygon panel, Graphics2D g2d)
+	{
+		AffineTransform original = g2d.getTransform();
+		try
+		{
+			AffineTransform scaled = new AffineTransform();
+			Point centroid = getCentroid();
+			scaled.translate(centroid.getX(), centroid.getY());
+			scaled.scale(scaleFactor, scaleFactor);
+			scaled.translate(-centroid.getX(), -centroid.getY());
+			g2d.setTransform(scaled);
+			g2d.drawPolygon(panel);
+		}
+		finally
+		{
+			g2d.setTransform(original);
+		}
+	}
+	
+	private void fillScaledPanel(Polygon panel, Graphics2D g2d)
+	{
+		AffineTransform original = g2d.getTransform();
+		try
+		{
+			AffineTransform scaled = new AffineTransform();
+			Point centroid = getCentroid();
+			scaled.translate(centroid.getX(), centroid.getY());
+			scaled.scale(scaleFactor, scaleFactor);
+			scaled.translate(-centroid.getX(), -centroid.getY());
+			g2d.setTransform(scaled);
+			g2d.fillPolygon(panel);
+		}
+		finally
+		{
+			g2d.setTransform(original);
+		}
+	}
+	
 	private Map<Panel, Point> getDefaultPanelPositions(Map<Panel, Point> locations)
 	{
 		Map<Panel, Point> newLocations = new HashMap<Panel, Point>(panelLocations);
@@ -456,10 +510,6 @@ public class PanelCanvas extends JPanel
 				int y = panelLocations.get(panel).y;
 				int o = panel.getOrientation();
 				
-				// Draw the "centroids" (these are invisible, since
-				// the panel colors are drawn after this line
-				g.drawRect(x, y, 2, 2);
-				
 				if (deviceType == DeviceType.AURORA)
 				{
 					// Create the AURORA panel outline shapes (regular and inverted)
@@ -474,10 +524,10 @@ public class PanelCanvas extends JPanel
 					}
 					g.setColor(new Color(panel.getRed(),
 							panel.getGreen(), panel.getBlue()));
-					g.fillPolygon(tri);
+					fillScaledPanel(tri, g2d);
 					g.setColor(Color.BLACK);
 					g2d.setStroke(new BasicStroke(4));
-					g.drawPolygon(tri);
+					drawScaledPanel(tri, g2d);
 					g2d.setStroke(new BasicStroke(1));
 				}
 				else if (deviceType == DeviceType.CANVAS)
@@ -486,10 +536,10 @@ public class PanelCanvas extends JPanel
 					SquarePanel sq = new SquarePanel(x, y, this);
 					g.setColor(new Color(panel.getRed(),
 							panel.getGreen(), panel.getBlue()));
-					g.fillPolygon(sq);
+					fillScaledPanel(sq, g2d);
 					g.setColor(Color.BLACK);
 					g2d.setStroke(new BasicStroke(4));
-					g.drawPolygon(sq);
+					drawScaledPanel(sq, g2d);
 					g2d.setStroke(new BasicStroke(1));
 				}
 			}

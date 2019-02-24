@@ -4,6 +4,7 @@ import java.awt.Cursor;
 import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +14,7 @@ import io.github.rowak.Panel;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 
-public class PanelDragListener extends MouseAdapter
+public class PanelActionListener extends MouseAdapter
 {
 	private int lastXDiff;
 	private Panel[] panels;
@@ -21,7 +22,7 @@ public class PanelDragListener extends MouseAdapter
 	private Point mouseLast;
 	private PanelCanvas canvas;
 	
-	public PanelDragListener(PanelCanvas canvas,
+	public PanelActionListener(PanelCanvas canvas,
 			Panel[] panels, Map<Panel, Point> panelLocations)
 	{
 		this.canvas = canvas;
@@ -50,11 +51,22 @@ public class PanelDragListener extends MouseAdapter
 	
 	private void rotatePanelsUsingMouse(Point mouse)
 	{
-		int xdiff = (mouse.x - mouseLast.x);
+		int xdiff = (mouse.x - mouseLast.x)/5;
 		int rotation = canvas.getRotation() + xdiff - lastXDiff;
 		canvas.rotatePanels(rotation);
 		lastXDiff = xdiff;
 		canvas.repaint();
+	}
+	
+	private void scalePanelsUsingMouse(int rotationdiff)
+	{
+		float scaleFactor = canvas.getScaleFactor();
+		scaleFactor += rotationdiff * 0.05f;
+		if (scaleFactor > 0)
+		{
+			canvas.setScaleFactor(scaleFactor);
+			canvas.repaint();
+		}
 	}
 	
 	@Override
@@ -93,5 +105,11 @@ public class PanelDragListener extends MouseAdapter
 				rotatePanelsUsingMouse(e.getPoint());
 			}
 		}
+	}
+	
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent e)
+	{
+		scalePanelsUsingMouse(e.getWheelRotation());
 	}
 }

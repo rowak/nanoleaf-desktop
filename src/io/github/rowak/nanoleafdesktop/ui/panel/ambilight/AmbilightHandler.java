@@ -2,6 +2,7 @@ package io.github.rowak.nanoleafdesktop.ui.panel.ambilight;
 
 import java.awt.AWTException;
 import java.awt.Color;
+import java.awt.DisplayMode;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -360,6 +361,27 @@ public class AmbilightHandler
 		GraphicsConfiguration config = gs[parent.getMonitor()].getConfigurations()[0];
 		return config.getBounds().getLocation();
 	}
+	
+//	private Point getMonitorLocation()
+//	{
+//		GraphicsEnvironment ge = GraphicsEnvironment
+//				.getLocalGraphicsEnvironment();
+//		GraphicsDevice[] gs = ge.getScreenDevices();
+//		GraphicsConfiguration config = gs[parent.getMonitor()].getConfigurations()[0];
+//		Point bounds = config.getBounds().getLocation();
+//		DisplayMode mode = gs[parent.getMonitor()].getDisplayMode();
+//		int x = 0, y = 0;
+//    	if (bounds.x != 0)
+//    	{
+//    		x = (bounds.x / Math.abs(bounds.x)) * mode.getWidth();
+//    	}
+//    	if (bounds.y != 0)
+//    	{
+//    		y = (bounds.y / Math.abs(bounds.y)) * mode.getHeight();
+//    	}
+//    	bounds.setLocation(x, y);
+//		return bounds;
+//	}
 	
 	private void showMessageBox(String message)
 	{
