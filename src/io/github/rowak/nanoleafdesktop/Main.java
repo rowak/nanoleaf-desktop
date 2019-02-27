@@ -596,14 +596,17 @@ public class Main extends JFrame
 				JTabbedPane editor = (JTabbedPane)e.getSource();
 				if (editor.getSelectedComponent().equals(discoveryPanel))
 				{
-					EventQueue.invokeLater(new Runnable()
+					EventQueue.invokeLater(() ->
 					{
-						public void run()
-						{
-							discoveryPanel.addTopEffects(1, Main.this);
-						}
+						discoveryPanel.addTopEffects(1, Main.this);
 					});
 				}
+				
+				// safety to prevent preview from glitching
+				EventQueue.invokeLater(() ->
+				{
+					canvas.repaint();
+				});
 			}
 		});
 		contentPane.add(editor, "cell 1 2,grow");

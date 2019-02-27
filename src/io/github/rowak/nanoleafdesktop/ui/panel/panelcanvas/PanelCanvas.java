@@ -3,6 +3,8 @@ package io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -542,6 +544,16 @@ public class PanelCanvas extends JPanel
 					drawScaledPanel(sq, g2d);
 					g2d.setStroke(new BasicStroke(1));
 				}
+			}
+			
+			if (deviceType != DeviceType.AURORA && deviceType != DeviceType.CANVAS)
+			{
+				g.setFont(new Font("Tahoma", Font.PLAIN, 20));
+				FontMetrics fm = g.getFontMetrics();
+				String message = "Error while loading preview. Your device may not be supported.";
+				g.setColor(Color.WHITE);
+				g.drawString(message, (getWidth() - fm.stringWidth(message))/2,
+						(getHeight() + fm.getHeight())/2);
 			}
 		}
 	}

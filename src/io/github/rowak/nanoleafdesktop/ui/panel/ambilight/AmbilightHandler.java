@@ -12,6 +12,7 @@ import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.awt.image.RasterFormatException;
 import java.io.IOException;
 
 import javax.swing.Timer;
@@ -158,43 +159,23 @@ public class AmbilightHandler
 				final int HORIZONTAL_SEPARATOR = captureArea.width/rows[i].length;
 				int captureX = HORIZONTAL_SEPARATOR*j + HORIZONTAL_SEPARATOR/2;
 				
-				if (img.getSubimage(captureX, captureY, 1, 1) != null)
+				try
 				{
-					Color color = new Color(img.getRGB(captureX, captureY));
-					ceb.addFrame(rows[i][j], new Frame(color.getRed(),
-							color.getGreen(), color.getBlue(), 0, 5));
+					if (img.getSubimage(captureX, captureY, 1, 1) != null)
+					{
+						Color color = new Color(img.getRGB(captureX, captureY));
+						ceb.addFrame(rows[i][j], new Frame(color.getRed(),
+								color.getGreen(), color.getBlue(), 0, 5));
+					}
+				}
+				catch (RasterFormatException rfe)
+				{
+					// catch, but ignore
 				}
 			}
 		}
 		aurora.externalStreaming().sendStaticEffect(ceb.build("", false));
 	}
-	
-//	private void applySelectionMode()
-//			throws StatusCodeException, IOException
-//	{
-//		BufferedImage img = getScreenImage();
-//		System.out.println(captureArea.x + " " + captureArea.y + "    " + img.getWidth() + " " + img.getHeight());
-//		final int VERTICAL_SEPARATOR = captureArea.height/rows.length;
-//		for (int i = 0; i < rows.length; i++)
-//		{
-//			for (int j = 0; j < rows[i].length; j++)
-//			{
-//				final int HORIZONTAL_SEPARATOR = captureArea.width/rows[i].length;
-//				int captureX = HORIZONTAL_SEPARATOR*j + HORIZONTAL_SEPARATOR/2;
-//				int captureY = VERTICAL_SEPARATOR*i + VERTICAL_SEPARATOR/2;
-//				
-//				if (img.getSubimage(captureX, captureY, 1, 1) != null)
-//				{
-//					Color color = new Color(img.getRGB(captureX, captureY));
-//					Effect ef = new CustomEffectBuilder(aurora)
-//							.addFrame(rows[i][j], new Frame(color.getRed(),
-//									color.getGreen(), color.getBlue(), 0, 5))
-//							.build("", false);
-//					aurora.externalStreaming().sendStaticEffect(ef);
-//				}
-//			}
-//		}
-//	}
 	
 	public boolean isRunning()
 	{
@@ -361,27 +342,6 @@ public class AmbilightHandler
 		GraphicsConfiguration config = gs[parent.getMonitor()].getConfigurations()[0];
 		return config.getBounds().getLocation();
 	}
-	
-//	private Point getMonitorLocation()
-//	{
-//		GraphicsEnvironment ge = GraphicsEnvironment
-//				.getLocalGraphicsEnvironment();
-//		GraphicsDevice[] gs = ge.getScreenDevices();
-//		GraphicsConfiguration config = gs[parent.getMonitor()].getConfigurations()[0];
-//		Point bounds = config.getBounds().getLocation();
-//		DisplayMode mode = gs[parent.getMonitor()].getDisplayMode();
-//		int x = 0, y = 0;
-//    	if (bounds.x != 0)
-//    	{
-//    		x = (bounds.x / Math.abs(bounds.x)) * mode.getWidth();
-//    	}
-//    	if (bounds.y != 0)
-//    	{
-//    		y = (bounds.y / Math.abs(bounds.y)) * mode.getHeight();
-//    	}
-//    	bounds.setLocation(x, y);
-//		return bounds;
-//	}
 	
 	private void showMessageBox(String message)
 	{
