@@ -43,6 +43,7 @@ import io.github.rowak.nanoleafdesktop.ui.listener.*;
 import io.github.rowak.nanoleafdesktop.ui.panel.DiscoveryPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.ambilight.AmbilightPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
+import io.github.rowak.nanoleafdesktop.ui.panel.spotify.SpotifyPanel;
 import io.github.rowak.nanoleafdesktop.ui.scrollbar.ModernScrollBarUI;
 import io.github.rowak.nanoleafdesktop.ui.slider.ModernSliderUI;
 
@@ -70,7 +71,7 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.4.3", true);
+	public static final Version VERSION = new Version("v0.5.0", true);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
@@ -602,7 +603,7 @@ public class Main extends JFrame
 					});
 				}
 				
-				// safety to prevent preview from glitching
+				// Safety to prevent preview from glitching
 				EventQueue.invokeLater(() ->
 				{
 					canvas.repaint();
@@ -874,8 +875,11 @@ public class Main extends JFrame
 		ambilightPanel = new AmbilightPanel(canvas);
 		editor.addTab("Ambient Lighting", null, ambilightPanel, null);
 		
+		SpotifyPanel spotifyPanel = new SpotifyPanel(device);
+		editor.addTab("Spotify Visualizer", null, spotifyPanel, null);
+		
 		AuroraNullListener anl = new AuroraNullListener(20, null,
-				canvas, discoveryPanel, ambilightPanel);
+				canvas, discoveryPanel, ambilightPanel, spotifyPanel);
 		anl.start();
 		
 		ComponentResizer cr = new ComponentResizer();

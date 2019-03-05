@@ -15,12 +15,12 @@ import javax.swing.border.LineBorder;
 
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 
-public class TripleEntryDialog extends BasicDialog
+public class DoubleEntryDialog extends BasicDialog
 {
-	private JTextField entry1, entry2, entry3;
+	private JTextField entry1, entry2;
 
-	public TripleEntryDialog(Component parent, String entry1Label, String entry2Label,
-			String entry3Label, String buttonLabel, ActionListener buttonListener)
+	public DoubleEntryDialog(Component parent, String entry1Label,
+			String entry2Label, String buttonLabel, ActionListener buttonListener)
 	{
 		super();
 		
@@ -41,15 +41,6 @@ public class TripleEntryDialog extends BasicDialog
 		entry2.setFont(new Font("Tahoma", Font.PLAIN, 22));
 		entry2.addFocusListener(new TextFieldFocusListener(entry2));
 		contentPanel.add(entry2, "cell 0 2, grow, gapx 2 2");
-		
-		entry3 = new JTextField(entry3Label);
-		entry3.setForeground(Color.WHITE);
-		entry3.setBackground(Color.DARK_GRAY);
-		entry3.setBorder(new LineBorder(Color.GRAY));
-		entry3.setCaretColor(Color.WHITE);
-		entry3.setFont(new Font("Tahoma", Font.PLAIN, 22));
-		entry3.addFocusListener(new TextFieldFocusListener(entry3));
-		contentPanel.add(entry3, "cell 0 3, grow, gapx 2 2");
 		
 		JButton btnConfirm = new ModernButton(buttonLabel);
 		btnConfirm.setFont(new Font("Tahoma", Font.PLAIN, 18));
@@ -72,11 +63,6 @@ public class TripleEntryDialog extends BasicDialog
 	public JTextField getEntry2()
 	{
 		return entry2;
-	}
-	
-	public JTextField getEntry3()
-	{
-		return entry3;
 	}
 	
 	private class TextFieldFocusListener extends FocusAdapter

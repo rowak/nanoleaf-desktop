@@ -11,12 +11,9 @@ import javax.swing.border.LineBorder;
 
 import org.json.JSONObject;
 
-import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
-
 import io.github.rowak.Aurora;
 import io.github.rowak.AuroraMetadata;
 import io.github.rowak.Setup;
-import io.github.rowak.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
@@ -31,7 +28,6 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.InetSocketAddress;
-import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -80,14 +76,9 @@ public class AuroraFinder extends JDialog
 	
 	private void findAuroras()
 	{
-		devices = new ArrayList<AuroraMetadata>();
-		try
+		if (!findMethod1())
 		{
-			devices = Setup.findAuroras(5000);
-		}
-		catch (Exception e)
-		{
-			// do nothing
+			findMethod2();
 		}
 		
 		for (AuroraMetadata metadata : devices)
@@ -102,6 +93,40 @@ public class AuroraFinder extends JDialog
 					.setVisible(true);
 		}
 		lblTitle.setText("Select a Device");
+	}
+	
+	private boolean findMethod1()
+	{
+		devices = new ArrayList<AuroraMetadata>();
+		try
+		{
+			List<InetSocketAddress> devicesOld = Setup.quickFindAuroras();
+			for (InetSocketAddress addr : devicesOld)
+			{
+				AuroraMetadata metadata = new AuroraMetadata(addr.getHostName(),
+						addr.getPort(), "", addr.getHostName());
+				devices.add(metadata);
+			}
+		}
+		catch (Exception e)
+		{
+			// do nothing
+		}
+		return !devices.isEmpty();
+	}
+	
+	private boolean findMethod2()
+	{
+		devices = new ArrayList<AuroraMetadata>();
+		try
+		{
+			devices = Setup.findAuroras(5000);
+		}
+		catch (Exception e)
+		{
+			// do nothing
+		}
+		return !devices.isEmpty();
 	}
 	
 	private Aurora connectToAurora(String item)
@@ -138,22 +163,6 @@ public class AuroraFinder extends JDialog
 			}
 		}, 1000, 1000);
 		return device;
-	}
-	
-	private Aurora connectToExternalAurora(String ip, int port, String accessToken)
-	{
-		try
-		{
-			Aurora aurora = new Aurora(ip, port, "v1", accessToken);
-			this.hostName = ip;
-			this.port = port;
-			this.accessToken = accessToken;
-			return aurora;
-		}
-		catch (StatusCodeException | HttpRequestException schre)
-		{
-			return null;
-		}
 	}
 	
 	private AuroraMetadata getMetadataFromListItem(String item)
@@ -259,39 +268,57 @@ public class AuroraFinder extends JDialog
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				TripleEntryDialog entryDialog = new TripleEntryDialog(AuroraFinder.this, "IP Address",
-						"Port (Default is 16021)", "Access Token", "Add Device", new ActionListener()
+				DoubleEntryDialog entryDialog = new DoubleEntryDialog(AuroraFinder.this, "IP Address",
+						"Port (Default is 16021)", "Add Device", new ActionListener()
 						{
 							@Override
 							public void actionPerformed(ActionEvent e)
 							{
 								JButton button = (JButton)e.getSource();
-								TripleEntryDialog thisDialog =
-										(TripleEntryDialog)button.getFocusCycleRootAncestor();
+								DoubleEntryDialog thisDialog =
+										(DoubleEntryDialog)button.getFocusCycleRootAncestor();
 								String entry1Text = thisDialog.getEntry1().getText();
 								String entry2Text = thisDialog.getEntry2().getText();
-								String entry3Text = thisDialog.getEntry3().getText();
 								if (!entry1Text.equals("IP Address") &&
 										!entry2Text.equals("Port (Default is 16021)"))
 								{
 									String ip = entry1Text;
 									int port = -1;
-									String accessToken = entry3Text;
 									try
 									{
+										// TODO: Clean up this code
 										port = Integer.parseInt(entry2Text);
-										Aurora aurora = connectToExternalAurora(ip, port, accessToken);
-										if (aurora != null)
+										AuroraFinder.this.hostName = ip;
+										AuroraFinder.this.port = port;
+										String text = "Press the power button on your " +
+												  "Aurora for 5-7 seconds until the LED starts flashing.";
+										TextDialog info = new TextDialog(AuroraFinder.this, text);
+										info.setVisible(true);
+										Timer timer = new Timer();
+										timer.scheduleAtFixedRate(new TimerTask()
 										{
-											thisDialog.dispose();
-											AuroraFinder.this.dispose();
-										}
-										else
-										{
-											new TextDialog(AuroraFinder.this,
-													"Couldn't connect to the external device.")
-													.setVisible(true);
-										}
+											public void run()
+											{
+												try
+												{
+													accessToken = Setup.createAccessToken(hostName, AuroraFinder.this.port, "v1");
+													System.out.println(accessToken);
+													this.cancel();
+													Aurora aurora = new Aurora(ip, AuroraFinder.this.port, "v1", accessToken);
+													if (aurora != null)
+													{
+														info.dispose();
+														thisDialog.dispose();
+														AuroraFinder.this.dispose();
+													}
+												}
+												catch (Exception e)
+												{
+													// This will be called every second until an api key
+													// can be generated (403 forbidden)
+												}
+											}
+										}, 1000, 1000);
 									}
 									catch (NumberFormatException nfe)
 									{

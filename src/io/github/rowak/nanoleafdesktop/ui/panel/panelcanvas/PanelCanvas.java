@@ -2,7 +2,6 @@ package io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -204,7 +203,10 @@ public class PanelCanvas extends JPanel
 					}
 					else if (currentEffect.getAnimType().equals(Effect.Type.CUSTOM))
 					{
-						customEffectDisplay.changeEffect(currentEffect);
+						// **
+						// DISABLED UNTIL CPU FIX
+						// **
+						//customEffectDisplay.changeEffect(currentEffect);
 					}
 					else if (!currentEffect.getAnimType().equals(Effect.Type.STATIC))
 					{
