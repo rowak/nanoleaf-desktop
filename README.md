@@ -11,6 +11,7 @@ No installation necessary! Simply download the latest release from the [releases
 - Discover new scenes and plugins created by other Nanoleaf users
 - Control devices from a computer outside your local network
 - Ambient lighting with two modes, customizable capture zones, and multi-monitor support
+- Spotify integration to sync your lights with your music (works *without* rhythm module)
 - Custom dark modern UI
 
 ## Ambient Lighting
@@ -19,6 +20,14 @@ The ambient lighting feature allows your panels to display what is currently on 
 Ambient lighting has two modes:
 - **Average**: Displays the average color of your screen/zone.
 - **Selection**: Maps the device's panels to the screen/zone and sets each panel color based on its mapped location (you have to try it to understand).
+
+## Spotify Integration
+This feature allows you to synchronize your Spotify music with your Nanoleaf lights in real time. This feature does *not* require the rhythm module to function, and it does *not* support rhythm effects downloaded from the Nanoleaf mobile app.
+
+The currently available effects include:
+- **Pulse Beats**: Changes the color of a single panel for each beat and creates a ripple around that panel that radiates outward to all other panels.
+
+More effects will be added soon.
 
 ## Panel Preview
 The panel preview displays a live* preview of your device's panels. The preview panels can be **moved around**, **rotated**, and **zoomed** on the screen. Move the panels by holding down left click and dragging the mouse anywhere in the preview window. Rotate the panels by holding down right click in the preview window and moving the mouse right or left. Zoom in or out using the mouse scroll wheel.
@@ -36,6 +45,13 @@ An example of a custom effect being displayed on the live preview (below).
 ## Support
 [Donate (Paypal)](https://paypal.me/rowak)
 
+## Used Libraries
+- [nanoleaf-aurora](https://github.com/rowak/nanoleaf-aurora)
+- [http-request](https://github.com/kevinsawicki/http-request)
+- [nanohttpd](https://github.com/NanoHttpd/nanohttpd)
+- [spotify-web-api-java](https://github.com/thelinmichael/spotify-web-api-java)
+- [JSON-java](https://github.com/stleary/JSON-java)
+
 ## Planned Features
+- More Spotify rhythmic effects
 - Create static and custom effects and edit existing dynamic effects
-- Streaming audio from other applications to the device using Spotify (maybe)
