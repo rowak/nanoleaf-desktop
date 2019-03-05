@@ -13,9 +13,17 @@ No installation necessary! Simply download the latest release from the [releases
 - Ambient lighting with two modes, customizable capture zones, and multi-monitor support
 - Custom dark modern UI
 
-## Limitations
-- The live preview does not currently support "dynamic" effects
-- Ambient lighting may not support all secondary monitors (primary monitor support is guarenteed)
+## Ambient Lighting
+The ambient lighting feature allows your panels to display what is currently on your computer in real time. This can be used to enhance your experience while watching movies, playing games, or listening to music (with an audio visualizer). This feature supports *some* multi-monitor setups, and allows you to set specific "zones" on your screen to be captured instead of the entire screen at once.
+
+Ambient lighting has two modes:
+- **Average**: Displays the average color of your screen/zone.
+- **Selection**: Maps the device's panels to the screen/zone and sets each panel color based on its mapped location (you have to try it to understand).
+
+## Panel Preview
+The panel preview displays a live* preview of your device's panels. The preview panels can be **moved around**, **rotated**, and **zoomed** on the screen. Move the panels by holding down left click and dragging the mouse anywhere in the preview window. Rotate the panels by holding down right click in the preview window and moving the mouse right or left. Zoom in or out using the mouse scroll wheel.
+
+_*This is a work in progress. The panel preview can currently only display "static" type and "custom" type effects. Dynamic and rhythm effects are not yet supported. The ambient lighting preview is also not currently supported._
 
 ## Screenshots
 ![](images/app_main_aurora.png)
@@ -29,6 +37,5 @@ An example of a custom effect being displayed on the live preview (below).
 [Donate (Paypal)](https://paypal.me/rowak)
 
 ## Planned Features
-- Support for controlling multiple devices
 - Create static and custom effects and edit existing dynamic effects
-- Streaming audio from other applications to the device (maybe)
+- Streaming audio from other applications to the device using Spotify (maybe)
