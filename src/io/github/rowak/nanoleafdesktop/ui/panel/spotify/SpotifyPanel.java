@@ -167,8 +167,11 @@ public class SpotifyPanel extends JPanel
 									OptionDialog dialog = (OptionDialog)((JButton)e.getSource())
 											.getTopLevelAncestor();
 									dialog.dispose();
-									trySetupPlayer();
-									btnEnableDisable.setText("Disable");
+									new Thread(() ->
+									{
+										trySetupPlayer();
+										btnEnableDisable.setText("Disable");
+									}).start();
 								}
 							}, new ActionListener()
 							{
