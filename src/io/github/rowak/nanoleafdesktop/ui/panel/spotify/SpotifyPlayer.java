@@ -1,6 +1,9 @@
 package io.github.rowak.nanoleafdesktop.ui.panel.spotify;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -12,6 +15,7 @@ import com.wrapper.spotify.model_objects.miscellaneous.AudioAnalysisMeasure;
 import com.wrapper.spotify.model_objects.miscellaneous.AudioAnalysisSection;
 import com.wrapper.spotify.model_objects.miscellaneous.AudioAnalysisSegment;
 import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
+import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
 import com.wrapper.spotify.model_objects.specification.Track;
 import com.wrapper.spotify.requests.data.player.GetUsersCurrentlyPlayingTrackRequest;
 import com.wrapper.spotify.requests.data.tracks.GetAudioAnalysisForTrackRequest;
@@ -32,14 +36,16 @@ public class SpotifyPlayer
 	private Aurora aurora;
 	private SpotifyEffect effect;
 	private Color[] palette;
+	private SpotifyPanel panel;
 	
 	public SpotifyPlayer(SpotifyApi spotifyApi, SpotifyEffect.Type defaultEffect,
-			Color[] defaultPalette, Aurora aurora) throws UnauthorizedException,
+			Color[] defaultPalette, Aurora aurora, SpotifyPanel panel) throws UnauthorizedException,
 			HttpRequestException, StatusCodeException
 	{
 		this.spotifyApi = spotifyApi;
 		palette = defaultPalette;
 		this.aurora = aurora;
+		this.panel = panel;
 		setEffect(defaultEffect);
 		if (aurora != null)
 		{
@@ -99,7 +105,7 @@ public class SpotifyPlayer
 						e.printStackTrace();
 					}
 				}
-			}, 0, 1000);
+			}, 0, 2000);
 		}
 	}
 	
@@ -110,6 +116,8 @@ public class SpotifyPlayer
 			running = false;
 			effectTimer.cancel();
 			effectTimer.purge();
+			spotifyActionTimer.cancel();
+			spotifyActionTimer.purge();
 		}
 	}
 	
@@ -161,6 +169,9 @@ public class SpotifyPlayer
 			currentTrack = current.getItem();
 			currentTrackAnalysis = getTrackAnalysis(currentTrack.getId());
 			progress = current.getProgress_ms();
+			playing = true;
+			updateTrackInfoText();
+			updateTrackProgressText();
 		}
 		catch (SpotifyWebApiException swe)
 		{
@@ -181,6 +192,7 @@ public class SpotifyPlayer
 	{
 		if (playing)
 		{
+			updateTrackProgressText();
 			AudioAnalysisMeasure beat = getBeatAtPos();
 			if (beat != null)
 			{
@@ -407,6 +419,43 @@ public class SpotifyPlayer
 		return (double)Math.round((double)num * 10d)/10d;
 	}
 	
+	private void updateTrackProgressText()
+	{
+		Date d = new Date((progress/1000) * 1000L);
+		SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
+		df.setTimeZone(TimeZone.getTimeZone("GMT"));
+		panel.setTrackProgressText(df.format(d));
+	}
+	
+	private void updateTrackInfoText()
+	{
+		if (playing)
+		{
+			String title = currentTrack.getName();
+			String artists = getArtists();
+			panel.setTrackInfoText(title + " | " + artists);
+		}
+		else
+		{
+			panel.setTrackInfoText("No song playing");
+		}
+	}
+	
+	private String getArtists()
+	{
+		ArtistSimplified[] artists = currentTrack.getArtists();
+		String str = "";
+		for (int i = 0; i < artists.length; i++)
+		{
+			str += artists[i].getName();
+			if (i < artists.length-1)
+			{
+				str += ", ";
+			}
+		}
+		return str;
+	}
+	
 	private void checkTrackStateChange()
 			throws SpotifyWebApiException, IOException
 	{
@@ -421,6 +470,8 @@ public class SpotifyPlayer
 			currentTrack = current.getItem();
 			currentTrackAnalysis = getTrackAnalysis(currentTrack.getId());
 			progress = current.getProgress_ms();
+			updateTrackInfoText();
+			updateTrackProgressText();
 		}
 		
 		float progressDiff = Math.abs(current.getProgress_ms() - progress);
@@ -434,12 +485,17 @@ public class SpotifyPlayer
 		{
 			playing = true;
 			progress = current.getProgress_ms()+500;
+			updateTrackInfoText();
+			updateTrackProgressText();
+			
 		}
 		// Detect if the user pauses a track
 		else if (!current.getIs_playing() && playing)
 		{
 			playing = false;
 			progress = current.getProgress_ms();
+			updateTrackInfoText();
+			updateTrackProgressText();
 		}
 		/*
 		 * Detect if the local progress is significantly
@@ -448,6 +504,8 @@ public class SpotifyPlayer
 		else if (current.getIs_playing() && progressDiff >= 10)
 		{
 			progress = current.getProgress_ms();
+			updateTrackInfoText();
+			updateTrackProgressText();
 		}
 	}
 	

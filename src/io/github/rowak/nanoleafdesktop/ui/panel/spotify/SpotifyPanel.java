@@ -53,6 +53,8 @@ public class SpotifyPanel extends JPanel
 	private JToggleButton btnEnableDisable;
 	private JComboBox<String> cmbxEffect;
 	private JSlider sensitivitySlider;
+	private JLabel lblTrackInfo;
+	private JLabel lblTrackProgress;
 	
 	public SpotifyPanel(Aurora aurora)
 	{
@@ -74,7 +76,7 @@ public class SpotifyPanel extends JPanel
 	{
 		setBorder(new LineBorder(Color.GRAY, 1, true));
 		setBackground(Color.DARK_GRAY);
-		setLayout(new MigLayout("", "[][grow][]", "[][][]"));
+		setLayout(new MigLayout("", "[][grow][]", "[][][][][]"));
 		
 		JLabel lblStatus = new JLabel("Status");
 		lblStatus.setFont(new Font("Tahoma", Font.PLAIN, 25));
@@ -141,6 +143,16 @@ public class SpotifyPanel extends JPanel
 			}
 		});
 		add(sensitivitySlider, "cell 1 2,growx");
+		
+		lblTrackInfo = new JLabel("No song playing");
+		lblTrackInfo.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		lblTrackInfo.setForeground(Color.WHITE);
+		add(lblTrackInfo, "cell 0 3 3 1,alignx center");
+		
+		lblTrackProgress = new JLabel("00:00:00");
+		lblTrackProgress.setForeground(Color.WHITE);
+		lblTrackProgress.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		add(lblTrackProgress, "cell 0 4 3 1,alignx center");
 	}
 	
 	private void toggleEnabled()
@@ -157,7 +169,8 @@ public class SpotifyPanel extends JPanel
 				else
 				{
 					String message = "You will now be prompted to login with your Spotify account through your web browser.";
-					new OptionDialog(SpotifyPanel.this.getFocusCycleRootAncestor(),
+					OptionDialog spotifyAuth = new OptionDialog(
+							SpotifyPanel.this.getFocusCycleRootAncestor(),
 							message, "Ok", "Cancel",
 							new ActionListener()
 							{
@@ -182,8 +195,19 @@ public class SpotifyPanel extends JPanel
 											.getTopLevelAncestor();
 									dialog.dispose();
 								}
-							})
-					.setVisible(true);
+							});
+					if (SpotifyAuthenticator.getSavedAccessToken() == null)
+					{
+						spotifyAuth.setVisible(true);
+					}
+					else
+					{
+						new Thread(() ->
+						{
+							trySetupPlayer();
+							btnEnableDisable.setText("Disable");
+						}).start();
+					}
 				}
 			}).start();
 		}
@@ -200,7 +224,7 @@ public class SpotifyPanel extends JPanel
 		{
 			authenticator = new SpotifyAuthenticator();
 			player = new SpotifyPlayer(authenticator.getSpotifyApi(),
-					getSelectedEffect(), convertPalette(palette), aurora);
+					getSelectedEffect(), convertPalette(palette), aurora, this);
 			player.setSensitivity(sensitivity);
 		}
 		catch (Exception e)
@@ -209,6 +233,16 @@ public class SpotifyPanel extends JPanel
 			return false;
 		}
 		return true;
+	}
+	
+	public void setTrackInfoText(String text)
+	{
+		lblTrackInfo.setText(text);
+	}
+	
+	public void setTrackProgressText(String text)
+	{
+		lblTrackProgress.setText(text);
 	}
 	
 	private SpotifyEffect.Type getSelectedEffect()

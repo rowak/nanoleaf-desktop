@@ -33,6 +33,7 @@ public class AuthCallbackServer extends NanoHTTPD
 			accessToken = parms.get("code");
 			msg = "<html><center><body bgcolor=\"#1DB954\" text=\"#FFFFFF\"><center>" +
 					"<font size=6 face=\"Arial Black\"><h1>Authentication complete.</h1>" +
+					"<h3></h3>Your panels will be synced in a moment. " +
 					"You can now close this window.</center>";
 		}
 		else if (accessToken == null)

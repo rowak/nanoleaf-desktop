@@ -100,13 +100,7 @@ public class AuroraFinder extends JDialog
 		devices = new ArrayList<AuroraMetadata>();
 		try
 		{
-			List<InetSocketAddress> devicesOld = Setup.quickFindAuroras();
-			for (InetSocketAddress addr : devicesOld)
-			{
-				AuroraMetadata metadata = new AuroraMetadata(addr.getHostName(),
-						addr.getPort(), "", addr.getHostName());
-				devices.add(metadata);
-			}
+			devices = Setup.findAuroras(5000);
 		}
 		catch (Exception e)
 		{
@@ -120,7 +114,13 @@ public class AuroraFinder extends JDialog
 		devices = new ArrayList<AuroraMetadata>();
 		try
 		{
-			devices = Setup.findAuroras(5000);
+			List<InetSocketAddress> devicesOld = Setup.quickFindAuroras();
+			for (InetSocketAddress addr : devicesOld)
+			{
+				AuroraMetadata metadata = new AuroraMetadata(addr.getHostName(),
+						addr.getPort(), "", "");
+				devices.add(metadata);
+			}
 		}
 		catch (Exception e)
 		{
@@ -192,8 +192,13 @@ public class AuroraFinder extends JDialog
 		}
 		else
 		{
+			String deviceName = metadata.getDeviceName();
+			if (deviceName.isEmpty())
+			{
+				deviceName = "Unknown device";
+			}
 			String name = String.format("%s (%s)",
-					metadata.getDeviceName(), metadata.getHostName());
+					deviceName, metadata.getHostName());
 			listModel.addElement(name);
 		}
 	}

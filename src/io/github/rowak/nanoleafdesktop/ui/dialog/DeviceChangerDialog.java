@@ -173,18 +173,6 @@ public class DeviceChangerDialog extends JDialog
 		return device;
 	}
 	
-	private Aurora connectToExternalAurora(String ip, int port, String accessToken)
-	{
-		try
-		{
-			return new Aurora(ip, port, "v1", accessToken);
-		}
-		catch (StatusCodeException | HttpRequestException schre)
-		{
-			return null;
-		}
-	}
-	
 	private void addDeviceToList(AuroraMetadata metadata)
 	{
 		Map<String, Object> savedDevices = getDevices();
@@ -197,8 +185,13 @@ public class DeviceChangerDialog extends JDialog
 		}
 		else
 		{
+			String deviceName = metadata.getDeviceName();
+			if (deviceName.isEmpty())
+			{
+				deviceName = "Unknown device";
+			}
 			String name = String.format("%s (%s)",
-					metadata.getDeviceName(), metadata.getHostName());
+					deviceName, metadata.getHostName());
 			listModel.addElement(name);
 		}
 	}

@@ -3,6 +3,8 @@ package io.github.rowak.nanoleafdesktop.ui.panel.spotify;
 import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -13,6 +15,9 @@ import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredential
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRefreshRequest;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRequest;
 import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeUriRequest;
+
+import io.github.rowak.nanoleafdesktop.Main;
+import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 
 public class SpotifyAuthenticator
 {
@@ -36,12 +41,24 @@ public class SpotifyAuthenticator
 	public SpotifyAuthenticator()
 			throws SpotifyWebApiException, IOException, InterruptedException
 	{
-		String accessToken = getAccessToken();
-		
-		AuthorizationCodeRequest authCodeRequest = spotifyApi.authorizationCode(accessToken).build();
-		AuthorizationCodeCredentials credentials = authCodeRequest.execute();
-		spotifyApi.setAccessToken(credentials.getAccessToken());
-		spotifyApi.setRefreshToken(credentials.getRefreshToken());
+		String savedToken = getSavedAccessToken();
+		if (savedToken != null)
+		{
+			AuthorizationCodeCredentials credentials =
+					new AuthorizationCodeCredentials.Builder()
+					.setAccessToken(savedToken).build();
+			spotifyApi.setAccessToken(credentials.getAccessToken());
+			spotifyApi.setRefreshToken(credentials.getRefreshToken());
+		}
+		else
+		{
+			String authCode = getAuthCode();
+			AuthorizationCodeRequest authCodeRequest = spotifyApi.authorizationCode(authCode).build();
+			AuthorizationCodeCredentials credentials = authCodeRequest.execute();
+			spotifyApi.setAccessToken(credentials.getAccessToken());
+			spotifyApi.setRefreshToken(credentials.getRefreshToken());
+			writeAccessToken(credentials.getAccessToken());
+		}
 	}
 	
 	public SpotifyApi getSpotifyApi()
@@ -49,7 +66,7 @@ public class SpotifyAuthenticator
 		return spotifyApi;
 	}
 	
-	private String getAccessToken()
+	private String getAuthCode()
 			throws IOException, InterruptedException
 	{
 		URI uri = authCodeUriRequest.execute();
@@ -121,5 +138,39 @@ public class SpotifyAuthenticator
 		spotifyApi.setAccessToken(credentials.getAccessToken());
 		spotifyApi.setRefreshToken(credentials.getRefreshToken());
 		System.out.println("Expires in: " + credentials.getExpiresIn());
+		writeAccessToken(credentials.getAccessToken());
+	}
+	
+	private void writeAccessToken(String token)
+	{
+		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+		manager.setProperty("spotifyToken", token);
+		
+		Date now = Calendar.getInstance().getTime();
+		manager.setProperty("spotifyTokenCreated", now.getTime());
+	}
+	
+	public static String getSavedAccessToken()
+	{
+		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+		String dateStr = manager.getProperty("spotifyTokenCreated");
+		if (dateStr != null)
+		{
+			try
+			{
+				Date time = new Date(Long.parseLong(dateStr));
+				Date now = Calendar.getInstance().getTime();
+				String token = manager.getProperty("spotifyToken");
+				if (now.getTime() - time.getTime() < 3550000 && token != null)
+				{
+					return token;
+				}
+			}
+			catch (NumberFormatException nfe)
+			{
+				nfe.printStackTrace();
+			}
+		}
+		return null;
 	}
 }
