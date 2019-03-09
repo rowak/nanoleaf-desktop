@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import fi.iki.elonen.NanoHTTPD;
-import fi.iki.elonen.NanoHTTPD.IHTTPSession;
-import fi.iki.elonen.NanoHTTPD.Response;
 
 public class AuthCallbackServer extends NanoHTTPD
 {

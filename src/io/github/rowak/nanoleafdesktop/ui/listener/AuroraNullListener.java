@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import javax.swing.Timer;
 
 import io.github.rowak.nanoleafdesktop.ui.panel.DiscoveryPanel;
+import io.github.rowak.nanoleafdesktop.ui.panel.KeyShortcutsPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.ambilight.AmbilightPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 import io.github.rowak.nanoleafdesktop.ui.panel.spotify.SpotifyPanel;
@@ -14,7 +15,8 @@ public class AuroraNullListener extends Timer
 {
 	public AuroraNullListener(int delay, ActionListener listener,
 			PanelCanvas canvas, DiscoveryPanel discoveryPanel,
-			AmbilightPanel ambilightPanel, SpotifyPanel spotifyPanel)
+			AmbilightPanel ambilightPanel, SpotifyPanel spotifyPanel,
+			KeyShortcutsPanel shortcutsPanel)
 	{
 		super(delay, listener);
 		
@@ -28,6 +30,7 @@ public class AuroraNullListener extends Timer
 					discoveryPanel.setAurora(canvas.getAurora());
 					ambilightPanel.setAurora(canvas.getAurora());
 					spotifyPanel.setAurora(canvas.getAurora());
+					shortcutsPanel.setAurora(canvas.getAurora());
 					canvas.initCanvas();
 					canvas.repaint();
 					

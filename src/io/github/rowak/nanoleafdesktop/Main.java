@@ -41,6 +41,7 @@ import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.ColorPicker;
 import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.ColorWheel;
 import io.github.rowak.nanoleafdesktop.ui.listener.*;
 import io.github.rowak.nanoleafdesktop.ui.panel.DiscoveryPanel;
+import io.github.rowak.nanoleafdesktop.ui.panel.KeyShortcutsPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.ambilight.AmbilightPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 import io.github.rowak.nanoleafdesktop.ui.panel.spotify.SpotifyPanel;
@@ -71,7 +72,7 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.5.1", true);
+	public static final Version VERSION = new Version("v0.6.0", false);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
@@ -460,7 +461,11 @@ public class Main extends JFrame
 	{
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
-		setSize(getUserWindowWidth(), getUserWindowHeight());
+		if (getUserWindowWidth() != DEFAULT_WINDOW_WIDTH ||
+				getUserWindowHeight() != DEFAULT_WINDOW_HEIGHT)
+		{
+			setSize(getUserWindowWidth(), getUserWindowHeight());
+		}
 		setUndecorated(true);
 		URL iconPath = getClass().getResource("resources/images/icon.png");
 		setIconImage(new ImageIcon(iconPath).getImage());
@@ -878,8 +883,13 @@ public class Main extends JFrame
 		SpotifyPanel spotifyPanel = new SpotifyPanel(device);
 		editor.addTab("Spotify Visualizer", null, spotifyPanel, null);
 		
+		KeyShortcutsPanel shortcutsPanel = new KeyShortcutsPanel(device);
+		shortcutsPanel.setBorder(new LineBorder(Color.GRAY, 1, true));
+		editor.addTab("Shortcuts", null, shortcutsPanel, null);
+		
 		AuroraNullListener anl = new AuroraNullListener(20, null,
-				canvas, discoveryPanel, ambilightPanel, spotifyPanel);
+				canvas, discoveryPanel, ambilightPanel,
+				spotifyPanel, shortcutsPanel);
 		anl.start();
 		
 		ComponentResizer cr = new ComponentResizer();
