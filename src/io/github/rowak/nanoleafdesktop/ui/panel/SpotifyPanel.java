@@ -1,9 +1,13 @@
-package io.github.rowak.nanoleafdesktop.ui.panel.spotify;
+package io.github.rowak.nanoleafdesktop.ui.panel;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
@@ -11,12 +15,22 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import io.github.rowak.Aurora;
+import io.github.rowak.StatusCodeException;
+import io.github.rowak.Effect.Direction;
 import io.github.rowak.nanoleafdesktop.Main;
+import io.github.rowak.nanoleafdesktop.spotify.SpotifyAuthenticator;
+import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
+import io.github.rowak.nanoleafdesktop.spotify.SpotifyPlayer;
+import io.github.rowak.nanoleafdesktop.spotify.UserOption;
+import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyEffect;
+import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
+import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernToggleButton;
 import io.github.rowak.nanoleafdesktop.ui.combobox.ModernComboBox;
 import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
+import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.PalettePicker;
 import io.github.rowak.nanoleafdesktop.ui.listener.ComponentChangeListener;
 import io.github.rowak.nanoleafdesktop.ui.slider.ModernSliderUI;
@@ -30,7 +44,6 @@ import javax.swing.JButton;
 
 public class SpotifyPanel extends JPanel
 {
-	private final String[] EFFECTS = {"Pulse Beats"};
 	private final int DEFAULT_SENSITIVITY = 9;
 	
 	private Color[] palette =
@@ -49,16 +62,20 @@ public class SpotifyPanel extends JPanel
 	private SpotifyAuthenticator authenticator;
 	private SpotifyPlayer player;
 	private Aurora aurora;
+	private Map<String, Object> userOptionArgs;
 	
 	private JToggleButton btnEnableDisable;
 	private JComboBox<String> cmbxEffect;
 	private JSlider sensitivitySlider;
 	private JLabel lblTrackInfo;
 	private JLabel lblTrackProgress;
+	private List<JLabel> lblOptions;
+	private List<JComboBox<String>> cmbxOptions;
 	
 	public SpotifyPanel(Aurora aurora)
 	{
 		this.aurora = aurora;
+		userOptionArgs = new HashMap<String, Object>();
 		initUI();
 		loadUserSettings();
 	}
@@ -72,11 +89,29 @@ public class SpotifyPanel extends JPanel
 		}
 	}
 	
+	public void setTrackInfoText(String text)
+	{
+		lblTrackInfo.setText(text);
+	}
+	
+	public void setTrackProgressText(String text)
+	{
+		lblTrackProgress.setText(text);
+	}
+	
+	public Map<String, Object> getUserOptionArgs()
+	{
+		return userOptionArgs;
+	}
+	
 	private void initUI()
 	{
 		setBorder(new LineBorder(Color.GRAY, 1, true));
 		setBackground(Color.DARK_GRAY);
 		setLayout(new MigLayout("", "[][grow][]", "[][][][][]"));
+		
+		lblOptions = new ArrayList<JLabel>();
+		cmbxOptions = new ArrayList<JComboBox<String>>();
 		
 		JLabel lblStatus = new JLabel("Status");
 		lblStatus.setFont(new Font("Tahoma", Font.PLAIN, 25));
@@ -89,7 +124,15 @@ public class SpotifyPanel extends JPanel
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				toggleEnabled();
+				if (getSelectedEffect() != null)
+				{
+					toggleEnabled();
+				}
+				else if (btnEnableDisable.getText().equals("Enable"))
+				{
+					new TextDialog(SpotifyPanel.this.getFocusCycleRootAncestor(),
+							"You must select an effect before enabling the visualizer.").setVisible(true);
+				}
 			}
 		});
 		add(btnEnableDisable, "cell 1 0");
@@ -100,7 +143,35 @@ public class SpotifyPanel extends JPanel
 		add(lblEffect, "cell 0 1");
 		
 		cmbxEffect = new ModernComboBox<String>(
-				new DefaultComboBoxModel<String>(EFFECTS));
+				new DefaultComboBoxModel<String>(getEffectTypes()));
+		cmbxEffect.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				new Thread(() ->
+				{
+					if (player != null)
+					{
+						try
+						{
+							showEffectOptions(false);
+							player.setEffect(getSelectedEffect());
+							showEffectOptions(true);
+						}
+						catch (StatusCodeException sce)
+						{
+							sce.printStackTrace();
+						}
+					}
+					else
+					{
+						showEffectOptions(false);
+						showEffectOptions(true);
+					}
+				}).start();
+			}
+		});
 		add(cmbxEffect, "cell 1 1,growx");
 		
 		JButton btnPalette = new ModernButton("Palette");
@@ -235,19 +306,129 @@ public class SpotifyPanel extends JPanel
 		return true;
 	}
 	
-	public void setTrackInfoText(String text)
+	private void showEffectOptions(boolean visible)
 	{
-		lblTrackInfo.setText(text);
+		SpotifyEffect effect = getEffectFromType(getSelectedEffect());
+		if (visible && effect != null)
+		{
+			remove(lblTrackInfo);
+			remove(lblTrackProgress);
+			
+			List<UserOption> options = effect.getUserOptions();
+			for (int i = 0; i < options.size(); i++)
+			{
+				UserOption option = options.get(i);
+				JLabel lblOption = new JLabel(option.getName());
+				lblOption.setForeground(Color.WHITE);
+				lblOption.setFont(new Font("Tahoma", Font.PLAIN, 25));
+				lblOptions.add(lblOption);
+				JComboBox<String> cmbxOption = new ModernComboBox<String>(
+						new DefaultComboBoxModel<String>(option.getOptions()));
+				cmbxOption.addActionListener(new ActionListener()
+				{
+					@Override
+					public void actionPerformed(ActionEvent e)
+					{
+						userOptionArgs.put(option.getName().toLowerCase(),
+								cmbxOption.getSelectedItem());
+						if (player != null)
+						{
+							try
+							{
+								player.setEffect(getSelectedEffect());
+							}
+							catch (StatusCodeException sce)
+							{
+								sce.printStackTrace();
+							}
+						}
+					}
+				});
+				cmbxOptions.add(cmbxOption);
+				
+				userOptionArgs.put(option.getName().toLowerCase(), option.getOptions()[0]);
+				
+				add(lblOptions.get(i), "cell 0 " + (i + 3) + ",gapx 0 15");
+				add(cmbxOptions.get(i), "cell 1 " + (i + 3) + ",growx");
+			}
+			add(lblTrackInfo, "cell 0 " + (options.size() + 3) + " 3 1,alignx center");
+			add(lblTrackProgress, "cell 0 " + (options.size() + 4) + " 3 1,alignx center");
+			
+			revalidate();
+		}
+		else if (!lblOptions.isEmpty() && !cmbxOptions.isEmpty())
+		{
+			remove(lblTrackInfo);
+			remove(lblTrackProgress);
+			
+			for (int i = 0; i < lblOptions.size(); i++)
+			{
+				remove(lblOptions.get(i));
+			}
+			for (int i = 0; i < cmbxOptions.size(); i++)
+			{
+				remove(cmbxOptions.get(i));
+			}
+			
+			add(lblTrackInfo, "cell 0 3 3 1,alignx center");
+			add(lblTrackProgress, "cell 0 4 3 1,alignx center");
+			
+			userOptionArgs.clear();
+			
+			revalidate();
+		}
 	}
 	
-	public void setTrackProgressText(String text)
+	private SpotifyEffect getEffectFromType(SpotifyEffectType type)
 	{
-		lblTrackProgress.setText(text);
+		if (type != null)
+		{
+			try
+			{
+				switch (type)
+				{
+					case PULSE_BEATS:
+						return new SpotifyPulseBeatsEffect(convertPalette(palette), aurora);
+					case SOUNDBAR:
+						return new SpotifySoundBarEffect(convertPalette(palette), Direction.RIGHT, aurora);
+				}
+			}
+			catch (StatusCodeException sce)
+			{
+				sce.printStackTrace();
+			}
+		}
+		return null;
 	}
 	
-	private SpotifyEffect.Type getSelectedEffect()
+	private SpotifyEffectType getSelectedEffect()
 	{
-		return SpotifyEffect.Type.values()[cmbxEffect.getSelectedIndex()];
+		int index = cmbxEffect.getSelectedIndex()-1;
+		if (index != -1)
+		{
+			return SpotifyEffectType.values()[index];
+		}
+		return null;
+	}
+	
+	private String[] getEffectTypes()
+	{
+		String[] types = new String[SpotifyEffectType.values().length+1];
+		types[0] = "Select an effect...";
+		for (int i = 0; i < SpotifyEffectType.values().length; i++)
+		{
+			char[] type = SpotifyEffectType.values()[i].toString().toLowerCase().toCharArray();
+			type[0] = (type[0] + "").toUpperCase().charAt(0);
+			for (int j = 0; j < type.length; j++)
+			{
+				if (type[j] == '_')
+				{
+					type[j+1] = (type[j+1] + "").toUpperCase().charAt(0);
+				}
+			}
+			types[i+1] = new String(type).replace("_", " ");
+		}
+		return types;
 	}
 	
 	private void setPalette()

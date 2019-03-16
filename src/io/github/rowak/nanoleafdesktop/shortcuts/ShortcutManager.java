@@ -1,6 +1,7 @@
 package io.github.rowak.nanoleafdesktop.shortcuts;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -30,6 +31,7 @@ public class ShortcutManager
 				{
 					keys.add((String)o);
 				}
+				String runTypeStr = json.getString("runType");
 				JSONObject actionjson = json.getJSONObject("action");
 				String actionTypeStr = actionjson.getString("type");
 				JSONArray argsjson = actionjson.getJSONArray("args");
@@ -44,9 +46,10 @@ public class ShortcutManager
 				}
 				if (name != null && keys != null && actionTypeStr != null)
 				{
-					ActionType actionType = nameToActionType(actionTypeStr);
+					ActionType actionType = nameToEnumType(ActionType.class, actionTypeStr);
+					RunType runType = nameToEnumType(RunType.class, runTypeStr);
 					Action action = new Action(actionType, args);
-					shortcuts[i] = new Shortcut(name, keys, action);
+					shortcuts[i] = new Shortcut(name, keys, runType, action);
 				}
 			}
 		}
@@ -89,6 +92,7 @@ public class ShortcutManager
 			JSONObject json = new JSONObject();
 			json.put("name", s.getName());
 			json.put("keys", s.getKeys());
+			json.put("runType", s.getRunType());
 			JSONObject actionjson = new JSONObject();
 			actionjson.put("type", s.getAction().getType());
 			JSONArray argsjson = new JSONArray();
@@ -107,10 +111,11 @@ public class ShortcutManager
 		manager.setProperty("shortcuts", jsonarr.toString());
 	}
 	
-	private static ActionType nameToActionType(String name)
+	private static <E extends Enum<E>> E
+		nameToEnumType(Class<E> enumType, String name)
 	{
 		name = name.toUpperCase().replace(' ', '_');
-		for (ActionType type : ActionType.values())
+		for (E type : EnumSet.allOf(enumType))
 		{
 			if (name.equals(type.toString()))
 			{

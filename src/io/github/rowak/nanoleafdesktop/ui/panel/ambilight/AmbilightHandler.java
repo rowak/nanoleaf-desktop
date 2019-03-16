@@ -197,7 +197,7 @@ public class AmbilightHandler
 		try
 		{
 			panels = aurora.panelLayout().getPanels();
-			PanelTableSort.sortPanelsAsTable(panels);
+			PanelTableSort.sortPanelsAsRows(panels);
 		}
 		catch (StatusCodeException sce)
 		{

@@ -7,6 +7,7 @@ import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
 import io.github.rowak.Aurora;
+import io.github.rowak.nanoleafdesktop.shortcuts.RunType;
 import io.github.rowak.nanoleafdesktop.shortcuts.Shortcut;
 
 public class GlobalShortcutListener implements NativeKeyListener
@@ -27,13 +28,26 @@ public class GlobalShortcutListener implements NativeKeyListener
 		this.device = device;
 	}
 	
-	private void checkShortcut()
+	private void checkShortcut(int trigger)
 	{
 		for (Shortcut s : shortcuts)
 		{
-			if (s.getKeys().equals(pressedKeys))
+			if (s.getKeys().equals(pressedKeys) &&
+					s.getRunType() != RunType.WHILE_HELD && trigger == 0)
 			{
 				s.execute(device);
+			}
+			else if (s.getKeys().equals(pressedKeys) &&
+					s.getRunType() == RunType.WHILE_HELD &&
+					s.getAction().getPreviousState() == null)
+			{
+				s.execute(device);
+			}
+			else if (!s.getKeys().equals(pressedKeys) &&
+					s.getRunType() == RunType.WHILE_HELD &&
+					s.getAction().getPreviousState() != null)
+			{
+				s.getAction().reset(device);
 			}
 		}
 	}
@@ -46,7 +60,7 @@ public class GlobalShortcutListener implements NativeKeyListener
 		{
 			pressedKeys.add(key);
 		}
-		checkShortcut();
+		checkShortcut(0);
 	}
 
 	@Override
@@ -57,6 +71,7 @@ public class GlobalShortcutListener implements NativeKeyListener
 		{
 			pressedKeys.remove(key);
 		}
+		checkShortcut(1);
 	}
 
 	@Override

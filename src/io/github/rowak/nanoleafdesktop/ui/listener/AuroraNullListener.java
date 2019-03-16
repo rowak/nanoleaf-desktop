@@ -7,9 +7,9 @@ import javax.swing.Timer;
 
 import io.github.rowak.nanoleafdesktop.ui.panel.DiscoveryPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.KeyShortcutsPanel;
+import io.github.rowak.nanoleafdesktop.ui.panel.SpotifyPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.ambilight.AmbilightPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
-import io.github.rowak.nanoleafdesktop.ui.panel.spotify.SpotifyPanel;
 
 public class AuroraNullListener extends Timer
 {

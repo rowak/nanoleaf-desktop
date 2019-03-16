@@ -25,6 +25,7 @@ import io.github.rowak.Aurora;
 import io.github.rowak.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.shortcuts.Action;
 import io.github.rowak.nanoleafdesktop.shortcuts.ActionType;
+import io.github.rowak.nanoleafdesktop.shortcuts.RunType;
 import io.github.rowak.nanoleafdesktop.shortcuts.Shortcut;
 import io.github.rowak.nanoleafdesktop.shortcuts.ShortcutManager;
 import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
@@ -39,16 +40,19 @@ public class ShortcutCreatorDialog extends JDialog
 {
 	private Aurora device;
 	private Component parent;
+	private Shortcut oldShortcut;
 	private JPanel contentPane;
 	private JLabel lblEffect;
 	private JLabel lblNumberField;
-	private JComboBox<String> cmbxType;
+	private JComboBox<String> cmbxActionType;
+	private JComboBox<String> cmbxRunType;
 	private JComboBox<String> cmbxEffect;
 	private JComboBox<String> cmbxKey1;
 	private JComboBox<String> cmbxKey2;
 	private JTextField txtName;
 	private JTextField txtNumberField;
 	private JButton btnCreate;
+	private JLabel lblRunType;
 	
 	/**
 	 * @wbp.parser.constructor
@@ -63,6 +67,7 @@ public class ShortcutCreatorDialog extends JDialog
 	public ShortcutCreatorDialog(Component parent, Shortcut shortcut, Aurora device)
 	{
 		this.parent = parent;
+		oldShortcut = shortcut;
 		this.device = device;
 		initUI(parent);
 		loadUIFromShortcut(shortcut);
@@ -73,10 +78,10 @@ public class ShortcutCreatorDialog extends JDialog
 		String name = shortcut.getName();
 		txtName.setText(name);
 		
-		String actionType = actionTypeToName(shortcut.getAction().getType());
+		String actionType = enumValueToName(shortcut.getAction().getType());
 		List<String> actionTypes = Arrays.asList(getActionTypes());
 		int actionIndex = actionTypes.indexOf(actionType);
-		cmbxType.setSelectedIndex(actionIndex);
+		cmbxActionType.setSelectedIndex(actionIndex);
 		
 		List<String> keys = Arrays.asList(getKeys());
 		String key1 = shortcut.getKeys().get(0);
@@ -87,6 +92,16 @@ public class ShortcutCreatorDialog extends JDialog
 			String key2 = shortcut.getKeys().get(1);
 			int key2Index = keys.indexOf(key2);
 			cmbxKey2.setSelectedIndex(key2Index);
+		}
+		
+		RunType runType = shortcut.getRunType();
+		if (runType == RunType.WHEN_PRESSED)
+		{
+			cmbxRunType.setSelectedIndex(0);
+		}
+		else if (runType == RunType.WHILE_HELD)
+		{
+			cmbxRunType.setSelectedIndex(1);
 		}
 		
 		if (cmbxEffect != null)
@@ -112,7 +127,7 @@ public class ShortcutCreatorDialog extends JDialog
 		contentPane.setBackground(Color.DARK_GRAY);
 		contentPane.setBorder(new LineBorder(new Color(128, 128, 128), 2));
 		setContentPane(contentPane);
-		contentPane.setLayout(new MigLayout("", "[grow][244.00,grow]", "[][][][][grow]"));
+		contentPane.setLayout(new MigLayout("", "[grow][244.00,grow]", "[][][][][][grow]"));
 		
 		WindowDragListener wdl = new WindowDragListener(50);
 		addMouseListener(wdl);
@@ -140,9 +155,9 @@ public class ShortcutCreatorDialog extends JDialog
 		lblType.setFont(new Font("Tahoma", Font.PLAIN, 22));
 		contentPane.add(lblType, "cell 0 2,gapx 0 15");
 		
-		cmbxType = new ModernComboBox<String>(
+		cmbxActionType = new ModernComboBox<String>(
 				new DefaultComboBoxModel<String>(getActionTypes()));
-		cmbxType.addActionListener(new ActionListener()
+		cmbxActionType.addActionListener(new ActionListener()
 		{
 			@Override
 			public void actionPerformed(ActionEvent e)
@@ -150,7 +165,36 @@ public class ShortcutCreatorDialog extends JDialog
 				updateHiddenUI();
 			}
 		});
-		contentPane.add(cmbxType, "cell 1 2,growx");
+		contentPane.add(cmbxActionType, "cell 1 2,growx");
+		
+		JLabel lblKeys = new JLabel("Trigger");
+		lblKeys.setFont(new Font("Tahoma", Font.PLAIN, 22));
+		lblKeys.setForeground(Color.WHITE);
+		contentPane.add(lblKeys, "cell 0 3,gapx 0 15");
+		
+		cmbxKey1 = new ModernComboBox<String>(
+				new DefaultComboBoxModel<String>(getKeys()));
+		contentPane.add(cmbxKey1, "flowx,cell 1 3,growx");
+		
+		lblRunType = new JLabel("Run");
+		lblRunType.setFont(new Font("Tahoma", Font.PLAIN, 22));
+		lblRunType.setForeground(Color.WHITE);
+		contentPane.add(lblRunType, "cell 0 4");
+		
+		String[] runTypes = new String[]{"When key(s) pressed",
+				"While key(s) pressed"};
+		cmbxRunType = new ModernComboBox<String>(
+				new DefaultComboBoxModel<String>(runTypes));
+		contentPane.add(cmbxRunType, "cell 1 4,growx");
+		
+		JLabel lblSeparator = new JLabel("+");
+		lblSeparator.setForeground(Color.WHITE);
+		lblSeparator.setFont(new Font("Tahoma", Font.PLAIN, 22));
+		contentPane.add(lblSeparator, "cell 1 3");
+		
+		cmbxKey2 = new ModernComboBox<String>(
+				new DefaultComboBoxModel<String>(getKeys()));
+		contentPane.add(cmbxKey2, "cell 1 3,growx");
 		
 		btnCreate = new ModernButton("Create");
 		btnCreate.setFont(new Font("Tahoma", Font.PLAIN, 18));
@@ -162,7 +206,7 @@ public class ShortcutCreatorDialog extends JDialog
 				Shortcut shortcut = createShortcut();
 				if (shortcut != null)
 				{
-					if (shortcut != null)
+					if (oldShortcut != null)
 					{
 						ShortcutManager.removeShortcut(shortcut.getName());
 					}
@@ -171,25 +215,7 @@ public class ShortcutCreatorDialog extends JDialog
 				}
 			}
 		});
-		
-		JLabel lblKeys = new JLabel("Trigger");
-		lblKeys.setFont(new Font("Tahoma", Font.PLAIN, 22));
-		lblKeys.setForeground(Color.WHITE);
-		contentPane.add(lblKeys, "cell 0 3,gapx 0 15");
-		
-		cmbxKey1 = new ModernComboBox<String>(
-				new DefaultComboBoxModel<String>(getKeys()));
-		contentPane.add(cmbxKey1, "flowx,cell 1 3,growx");
-		contentPane.add(btnCreate, "cell 0 4 2 1,alignx center");
-		
-		JLabel lblSeparator = new JLabel("+");
-		lblSeparator.setForeground(Color.WHITE);
-		lblSeparator.setFont(new Font("Tahoma", Font.PLAIN, 22));
-		contentPane.add(lblSeparator, "cell 1 3");
-		
-		cmbxKey2 = new ModernComboBox<String>(
-				new DefaultComboBoxModel<String>(getKeys()));
-		contentPane.add(cmbxKey2, "cell 1 3,growx");
+		contentPane.add(btnCreate, "cell 0 5 2 1,alignx center");
 		
 		resize();
 	}
@@ -199,6 +225,7 @@ public class ShortcutCreatorDialog extends JDialog
 		String name = txtName.getText();
 		ActionType actionType = getSelectedActionType();
 		List<String> keys = getSelectedKeys();
+		RunType runType = getSelectedRunType();
 		
 		if (userInputValid())
 		{
@@ -214,7 +241,7 @@ public class ShortcutCreatorDialog extends JDialog
 				args = new Object[]{value};
 			}
 			Action action = new Action(actionType, args);
-			return new Shortcut(name, keys, action);
+			return new Shortcut(name, keys, runType, action);
 		}
 		else
 		{
@@ -224,9 +251,9 @@ public class ShortcutCreatorDialog extends JDialog
 		}
 	}
 	
-	private String actionTypeToName(ActionType actionType)
+	private String enumValueToName(Enum enumValue)
 	{
-		char[] type = actionType.toString().toLowerCase().toCharArray();
+		char[] type = enumValue.toString().toLowerCase().toCharArray();
 		type[0] = (type[0] + "").toUpperCase().charAt(0);
 		for (int j = 0; j < type.length; j++)
 		{
@@ -289,8 +316,15 @@ public class ShortcutCreatorDialog extends JDialog
 	
 	private ActionType getSelectedActionType()
 	{
-		int index = cmbxType.getSelectedIndex()-1;
+		int index = cmbxActionType.getSelectedIndex()-1;
 		ActionType type = index >= 0 ? ActionType.values()[index] : null;
+		return type;
+	}
+	
+	private RunType getSelectedRunType()
+	{
+		int index = cmbxRunType.getSelectedIndex();
+		RunType type = index >= 0 ? RunType.values()[index] : null;
 		return type;
 	}
 	
@@ -339,7 +373,7 @@ public class ShortcutCreatorDialog extends JDialog
 	private boolean userInputValid()
 	{
 		if (!txtName.getText().isEmpty() && getSelectedActionType() != null &&
-				!getSelectedKeys().isEmpty())
+				!getSelectedKeys().isEmpty() && getSelectedRunType() != null)
 		{
 			if (txtNumberField != null)
 			{
@@ -368,7 +402,7 @@ public class ShortcutCreatorDialog extends JDialog
 	
 	private void updateHiddenUI()
 	{
-		String typeName = (String)cmbxType.getSelectedItem();
+		String typeName = (String)cmbxActionType.getSelectedItem();
 		ActionType type = nameToActionType(typeName);
 		if (type == ActionType.SET_EFFECT && cmbxEffect == null)
 		{
@@ -383,7 +417,12 @@ public class ShortcutCreatorDialog extends JDialog
 				type == ActionType.INCREASE_BRIGHTNESS ||
 				type == ActionType.INCREASE_COLOR_TEMP ||
 				type == ActionType.SET_BRIGHTNESS ||
-				type == ActionType.SET_COLOR_TEMP) &&
+				type == ActionType.SET_COLOR_TEMP ||
+				type == ActionType.SET_HUE ||
+				type == ActionType.SET_SATURATION ||
+				type == ActionType.SET_RED ||
+				type == ActionType.SET_GREEN ||
+				type == ActionType.SET_BLUE) &&
 				txtNumberField == null)
 		{
 			if (cmbxEffect != null)
@@ -412,21 +451,21 @@ public class ShortcutCreatorDialog extends JDialog
 			lblEffect = new JLabel("Effect");
 			lblEffect.setForeground(Color.WHITE);
 			lblEffect.setFont(new Font("Tahoma", Font.PLAIN, 22));
-			contentPane.add(lblEffect, "cell 0 4");
+			contentPane.add(lblEffect, "cell 0 5");
 			
 			cmbxEffect = new ModernComboBox<String>(
 					new DefaultComboBoxModel<String>(getEffects()));
-			contentPane.add(cmbxEffect, "cell 1 4,growx");
+			contentPane.add(cmbxEffect, "cell 1 5,growx");
 			
 			contentPane.remove(btnCreate);
-			contentPane.add(btnCreate, "cell 1 5,alignx right");
+			contentPane.add(btnCreate, "cell 1 6,alignx right");
 		}
 		else
 		{
 			contentPane.remove(lblEffect);
 			contentPane.remove(cmbxEffect);
 			contentPane.remove(btnCreate);
-			contentPane.add(btnCreate, "cell 1 4,alignx right");
+			contentPane.add(btnCreate, "cell 1 5,alignx right");
 			cmbxEffect = null;
 		}
 		resize();
@@ -439,7 +478,7 @@ public class ShortcutCreatorDialog extends JDialog
 			lblNumberField = new JLabel("Value");
 			lblNumberField.setForeground(Color.WHITE);
 			lblNumberField.setFont(new Font("Tahoma", Font.PLAIN, 22));
-			contentPane.add(lblNumberField, "cell 0 4");
+			contentPane.add(lblNumberField, "cell 0 5");
 			
 			txtNumberField = new JTextField();
 			txtNumberField.setForeground(Color.WHITE);
@@ -448,17 +487,17 @@ public class ShortcutCreatorDialog extends JDialog
 			txtNumberField.setCaretColor(Color.WHITE);
 			txtNumberField.setFont(new Font("Tahoma", Font.PLAIN, 22));
 			txtNumberField.setColumns(10);
-			contentPane.add(txtNumberField, "cell 1 4,growx");
+			contentPane.add(txtNumberField, "cell 1 5,growx");
 			
 			contentPane.remove(btnCreate);
-			contentPane.add(btnCreate, "cell 1 5,alignx right");
+			contentPane.add(btnCreate, "cell 1 6,alignx right");
 		}
 		else
 		{
 			contentPane.remove(lblNumberField);
 			contentPane.remove(txtNumberField);
 			contentPane.remove(btnCreate);
-			contentPane.add(btnCreate, "cell 1 4,alignx right");
+			contentPane.add(btnCreate, "cell 1 5,alignx right");
 			txtNumberField = null;
 		}
 		resize();

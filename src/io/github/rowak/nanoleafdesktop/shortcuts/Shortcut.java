@@ -9,12 +9,15 @@ public class Shortcut
 {
 	private String name;
 	private List<String> keys;
+	private RunType runType;
 	private Action action;
 	
-	public Shortcut(String name, List<String> keys, Action action)
+	public Shortcut(String name, List<String> keys,
+			RunType runType, Action action)
 	{
 		this.name = name;
 		this.keys = keys;
+		this.runType = runType;
 		this.action = action;
 	}
 	
@@ -43,6 +46,16 @@ public class Shortcut
 		this.keys = keys;
 	}
 	
+	public RunType getRunType()
+	{
+		return runType;
+	}
+	
+	public void setRunType(RunType type)
+	{
+		this.runType = type;
+	}
+	
 	public Action getAction()
 	{
 		return action;
@@ -61,8 +74,8 @@ public class Shortcut
 		{
 			keysStr += " + " + keys.get(1);
 		}
-		return String.format("Name: %s    Event: %s    Trigger: %s    Args: %s", name,
-				action.getType(), keysStr, Arrays.asList(action.getArgs()));
+		return String.format("Name: %s    Event: %s    Trigger: %s    Run: %s    Args: %s", name,
+				action.getType(), keysStr, runType, Arrays.asList(action.getArgs()));
 	}
 	
 	@Override
@@ -71,11 +84,12 @@ public class Shortcut
 		if (other instanceof Shortcut)
 		{
 			Shortcut o = (Shortcut)other;
-			return this.getName().equals(o.getName()) &&
-					this.getKeys().equals(o.getKeys()) &&
-					this.getAction().getType().equals(o.getAction().getType()) &&
-					Arrays.asList(this.getAction().getArgs()).equals(
-							Arrays.asList(o.getAction().getArgs()));
+			return this.name.equals(o.name) &&
+					this.keys.equals(o.keys) &&
+					this.action.getType().equals(o.action.getType()) &&
+					this.runType.equals(o.runType) &&
+					Arrays.asList(this.action.getArgs()).equals(
+							Arrays.asList(o.action.getArgs()));
 		}
 		return false;
 	}

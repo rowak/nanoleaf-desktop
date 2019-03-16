@@ -36,15 +36,13 @@ import io.github.rowak.nanoleafdesktop.ui.dialog.LoadingSpinner;
 import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.SingleEntryDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.BrightnessSlider;
-import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.ColorPicker;
-import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.ColorWheel;
+import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.*;
 import io.github.rowak.nanoleafdesktop.ui.listener.*;
 import io.github.rowak.nanoleafdesktop.ui.panel.DiscoveryPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.KeyShortcutsPanel;
+import io.github.rowak.nanoleafdesktop.ui.panel.SpotifyPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.ambilight.AmbilightPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
-import io.github.rowak.nanoleafdesktop.ui.panel.spotify.SpotifyPanel;
 import io.github.rowak.nanoleafdesktop.ui.scrollbar.ModernScrollBarUI;
 import io.github.rowak.nanoleafdesktop.ui.slider.ModernSliderUI;
 
@@ -587,6 +585,7 @@ public class Main extends JFrame
 		UIManager.put("TabbedPane.borderHightlightColor", Color.GRAY);
 		UIManager.put("TabbedPane.light", Color.LIGHT_GRAY);
 		UIManager.put("TabbedPane.selected", Color.DARK_GRAY);
+		
 		JTabbedPane editor = new JTabbedPane(JTabbedPane.TOP);
 		editor.setForeground(Color.WHITE);
 		editor.setBackground(Color.DARK_GRAY);

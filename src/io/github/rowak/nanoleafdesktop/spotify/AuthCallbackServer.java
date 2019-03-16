@@ -1,4 +1,4 @@
-package io.github.rowak.nanoleafdesktop.ui.panel.spotify;
+package io.github.rowak.nanoleafdesktop.spotify;
 
 import java.io.IOException;
 import java.util.Map;

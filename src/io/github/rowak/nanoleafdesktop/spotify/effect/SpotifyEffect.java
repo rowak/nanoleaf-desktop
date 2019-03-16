@@ -1,26 +1,27 @@
-package io.github.rowak.nanoleafdesktop.ui.panel.spotify;
+package io.github.rowak.nanoleafdesktop.spotify.effect;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import io.github.rowak.Aurora;
 import io.github.rowak.Color;
 import io.github.rowak.Panel;
 import io.github.rowak.StatusCodeException;
+import io.github.rowak.nanoleafdesktop.spotify.SpecificAudioAnalysis;
+import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
+import io.github.rowak.nanoleafdesktop.spotify.UserOption;
 
 public abstract class SpotifyEffect
 {
 	protected int paletteIndex;
-	protected Type type;
+	protected SpotifyEffectType type;
 	protected Aurora aurora;
 	protected Panel[] panels;
 	protected Color[] palette;
+	protected List<UserOption> userOptions;
 	
-	public static enum Type
-	{
-		PULSE_BEATS
-	}
-	
-	public SpotifyEffect(Type type,
+	public SpotifyEffect(SpotifyEffectType type,
 			Color[] palette, Aurora aurora)
 	{
 		this.type = type;
@@ -34,6 +35,23 @@ public abstract class SpotifyEffect
 		{
 			panels = new Panel[0];
 		}
+		userOptions = new ArrayList<UserOption>();
+	}
+	
+	public abstract void init()
+			throws StatusCodeException, IOException;
+	
+	public abstract void run(SpecificAudioAnalysis analysis)
+			throws StatusCodeException, IOException;
+	
+	public SpotifyEffectType getType()
+	{
+		return type;
+	}
+	
+	public List<UserOption> getUserOptions()
+	{
+		return userOptions;
 	}
 	
 	public void setPalette(Color[] palette)
@@ -41,9 +59,6 @@ public abstract class SpotifyEffect
 		this.palette = palette;
 		paletteIndex = 0;
 	}
-	
-	public abstract void runBeat()
-			throws StatusCodeException, IOException;
 	
 	protected void setNextPaletteColor()
 	{
