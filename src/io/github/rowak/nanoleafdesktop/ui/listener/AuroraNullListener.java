@@ -5,10 +5,10 @@ import java.awt.event.ActionListener;
 
 import javax.swing.Timer;
 
+import io.github.rowak.nanoleafdesktop.ui.panel.AmbilightPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.DiscoveryPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.KeyShortcutsPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.SpotifyPanel;
-import io.github.rowak.nanoleafdesktop.ui.panel.ambilight.AmbilightPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 
 public class AuroraNullListener extends Timer

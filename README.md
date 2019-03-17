@@ -51,6 +51,7 @@ An example of a custom effect being displayed on the live preview (below).
 - [nanohttpd](https://github.com/NanoHttpd/nanohttpd)
 - [spotify-web-api-java](https://github.com/thelinmichael/spotify-web-api-java)
 - [JSON-java](https://github.com/stleary/JSON-java)
+- [jnativehook](https://github.com/kwhat/jnativehook)
 
 ## Planned Features
 - More Spotify rhythmic effects

@@ -1,4 +1,4 @@
-package io.github.rowak.nanoleafdesktop.ui.panel.ambilight;
+package io.github.rowak.nanoleafdesktop.ambilight;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -23,6 +23,7 @@ import javax.swing.SwingUtilities;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
+import io.github.rowak.nanoleafdesktop.ui.panel.AmbilightPanel;
 
 public class CaptureAreaWindow extends JFrame
 {

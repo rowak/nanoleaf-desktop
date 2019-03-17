@@ -1,4 +1,4 @@
-package io.github.rowak.nanoleafdesktop.ui.panel.ambilight;
+package io.github.rowak.nanoleafdesktop.ambilight;
 
 import java.awt.AWTException;
 import java.awt.Color;
@@ -25,6 +25,7 @@ import io.github.rowak.StatusCodeException;
 import io.github.rowak.effectbuilder.CustomEffectBuilder;
 import io.github.rowak.nanoleafdesktop.tools.PanelTableSort;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
+import io.github.rowak.nanoleafdesktop.ui.panel.AmbilightPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 
 public class AmbilightHandler

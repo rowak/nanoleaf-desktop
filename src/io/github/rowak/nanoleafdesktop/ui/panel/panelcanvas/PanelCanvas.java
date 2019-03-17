@@ -10,6 +10,7 @@ import java.awt.Point;
 import java.awt.Polygon;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +42,8 @@ public class PanelCanvas extends JPanel
 	private Map<Panel, Point> panelLocations;
 	private CustomEffectDisplay customEffectDisplay;
 	private LoadingSpinner spinner;
+	private Graphics buffG;
+	private BufferedImage buff;
 	
 	public PanelCanvas(Aurora device)
 	{
@@ -495,15 +498,16 @@ public class PanelCanvas extends JPanel
 	@Override
 	public void paintComponent(Graphics g)
 	{
-		super.paintComponent(g);
+		initBuffer();
+		super.paintComponent(buffG);
 		
-		Graphics2D g2d = (Graphics2D)g;
+		Graphics2D g2d = (Graphics2D)buffG;
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
 		
 		// Draw the transparent background
-		g.setColor(new Color(0, 0, 0, 187));
-		g.fillRect(0, 0, getWidth(), getHeight());
+		buffG.setColor(new Color(0, 0, 0, 187));
+		buffG.fillRect(0, 0, getWidth(), getHeight());
 		
 		if (device != null)
 		{
@@ -526,10 +530,10 @@ public class PanelCanvas extends JPanel
 					{
 						tri = new InvertedPanel(x, y, this);
 					}
-					g.setColor(new Color(panel.getRed(),
+					buffG.setColor(new Color(panel.getRed(),
 							panel.getGreen(), panel.getBlue()));
 					fillScaledPanel(tri, g2d);
-					g.setColor(Color.BLACK);
+					buffG.setColor(Color.BLACK);
 					g2d.setStroke(new BasicStroke(4));
 					drawScaledPanel(tri, g2d);
 					g2d.setStroke(new BasicStroke(1));
@@ -538,10 +542,10 @@ public class PanelCanvas extends JPanel
 				{
 					// Create the CANVAS panel outline shape
 					SquarePanel sq = new SquarePanel(x, y, this);
-					g.setColor(new Color(panel.getRed(),
+					buffG.setColor(new Color(panel.getRed(),
 							panel.getGreen(), panel.getBlue()));
 					fillScaledPanel(sq, g2d);
-					g.setColor(Color.BLACK);
+					buffG.setColor(Color.BLACK);
 					g2d.setStroke(new BasicStroke(4));
 					drawScaledPanel(sq, g2d);
 					g2d.setStroke(new BasicStroke(1));
@@ -550,13 +554,20 @@ public class PanelCanvas extends JPanel
 			
 			if (deviceType != DeviceType.AURORA && deviceType != DeviceType.CANVAS)
 			{
-				g.setFont(new Font("Tahoma", Font.PLAIN, 20));
+				buffG.setFont(new Font("Tahoma", Font.PLAIN, 20));
 				FontMetrics fm = g.getFontMetrics();
 				String message = "Error while loading preview. Your device may not be supported.";
-				g.setColor(Color.WHITE);
-				g.drawString(message, (getWidth() - fm.stringWidth(message))/2,
+				buffG.setColor(Color.WHITE);
+				buffG.drawString(message, (getWidth() - fm.stringWidth(message))/2,
 						(getHeight() + fm.getHeight())/2);
 			}
 		}
+		g.drawImage(buff, 0, 0, this);
+	}
+	
+	private void initBuffer()
+	{
+		buff = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_RGB);
+		buffG = buff.getGraphics();
 	}
 }

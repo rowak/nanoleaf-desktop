@@ -1,4 +1,4 @@
-package io.github.rowak.nanoleafdesktop.ui.panel.ambilight;
+package io.github.rowak.nanoleafdesktop.ui.panel;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -19,6 +19,8 @@ import javax.swing.event.ChangeListener;
 
 import io.github.rowak.Aurora;
 import io.github.rowak.nanoleafdesktop.Main;
+import io.github.rowak.nanoleafdesktop.ambilight.AmbilightHandler;
+import io.github.rowak.nanoleafdesktop.ambilight.CaptureAreaWindow;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernToggleButton;

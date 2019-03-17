@@ -51,7 +51,7 @@ public class PanelActionListener extends MouseAdapter
 	
 	private void rotatePanelsUsingMouse(Point mouse)
 	{
-		int xdiff = (mouse.x - mouseLast.x)/5;
+		int xdiff = (mouse.x - mouseLast.x)/10;
 		int rotation = canvas.getRotation() + xdiff - lastXDiff;
 		canvas.rotatePanels(rotation);
 		lastXDiff = xdiff;
