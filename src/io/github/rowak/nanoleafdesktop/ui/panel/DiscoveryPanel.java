@@ -1,6 +1,5 @@
 package io.github.rowak.nanoleafdesktop.ui.panel;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.Font;
@@ -26,6 +25,7 @@ import io.github.rowak.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.discovery.Discovery;
 import io.github.rowak.nanoleafdesktop.discovery.EffectMetadata;
+import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 import io.github.rowak.nanoleafdesktop.ui.dialog.LoadingSpinner;
 import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
@@ -45,17 +45,17 @@ public class DiscoveryPanel extends JScrollPane
 		this.aurora = aurora;
 		getVerticalScrollBar().setUI(new ModernScrollBarUI());
 		setHorizontalScrollBar(null);
-		setBackground(Color.DARK_GRAY);
+		setBackground(UIConstants.darkBackground);
 		setBorder(null);
-		setViewportView(new LoadingSpinner(Color.DARK_GRAY));
+		setViewportView(new LoadingSpinner(UIConstants.darkBackground));
 		
 		discoveryEffects = new DefaultListModel<EffectMetadata>();
 		JList<EffectMetadata> list = new JList<EffectMetadata>(discoveryEffects);
 		list.setCellRenderer(new DiscoveryCellRenderer());
 		list.setFont(new Font("Tahoma", Font.PLAIN, 22));
-		list.setBackground(Color.DARK_GRAY);
-		list.setForeground(Color.WHITE);
-		setBorder(new LineBorder(Color.GRAY, 1, true));
+		list.setBackground(UIConstants.darkBackground);
+		list.setForeground(UIConstants.textPrimary);
+		setBorder(new LineBorder(UIConstants.darkForeground, 1, true));
 		
 		getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener()
 		{
@@ -221,6 +221,7 @@ public class DiscoveryPanel extends JScrollPane
 		}
 		catch (HttpRequestException hre)
 		{
+			hre.printStackTrace();
 			new TextDialog(component,
 					"Failed to get discovery data from the Nanoleaf server.")
 					.setVisible(true);

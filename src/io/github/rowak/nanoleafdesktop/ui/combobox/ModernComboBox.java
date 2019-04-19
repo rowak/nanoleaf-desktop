@@ -24,13 +24,6 @@ public class ModernComboBox<T> extends JComboBox<T>
 		setUI(new ModernComboBoxUI(this));
 		setFont(new Font("Tahoma", Font.PLAIN, 20));
 		setBackground(Color.DARK_GRAY);
-		if (System.getProperty("os.name").equals("Mac OS X"))
-		{
-			setForeground(Color.BLACK);
-		}
-		else
-		{
-			setForeground(Color.WHITE);
-		}
+		setForeground(Color.WHITE);
 	}
 }

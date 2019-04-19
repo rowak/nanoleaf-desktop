@@ -14,6 +14,7 @@ import javax.swing.border.TitledBorder;
 import io.github.rowak.Aurora;
 import io.github.rowak.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.Main;
+import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 import io.github.rowak.nanoleafdesktop.ui.dialog.LoadingSpinner;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
@@ -59,8 +60,8 @@ public class EffectsPanel extends JScrollPane
 	{
 		getVerticalScrollBar().setUI(new ModernScrollBarUI());
 		getHorizontalScrollBar().setUI(new ModernScrollBarUI());
-		setBackground(Color.DARK_GRAY);
-		setForeground(Color.WHITE);
+		setBackground(UIConstants.darkBackground);
+		setForeground(UIConstants.textPrimary);
 		setBorder(new TitledBorder(new LineBorder(Color.GRAY),
 				label, TitledBorder.LEFT, TitledBorder.TOP, null, Color.WHITE));
 		((TitledBorder)getBorder())
@@ -68,8 +69,8 @@ public class EffectsPanel extends JScrollPane
 		
 		model = new DefaultListModel<String>();
 		effects = new JList<String>(model);
-		effects.setBackground(Color.DARK_GRAY);
-		effects.setForeground(Color.WHITE);
+		effects.setBackground(UIConstants.darkBackground);
+		effects.setForeground(UIConstants.textPrimary);
 		effects.setFont(new Font("Tahoma", Font.PLAIN, 19));
 		effects.addMouseListener(new MouseAdapter()
 		{
@@ -92,7 +93,8 @@ public class EffectsPanel extends JScrollPane
 			}
 		});
 		
-		LoadingSpinner regEffectsSpinner = new LoadingSpinner(Color.DARK_GRAY);
+		LoadingSpinner regEffectsSpinner =
+				new LoadingSpinner(UIConstants.darkBackground);
 		setViewportView(regEffectsSpinner);
 	}
 }

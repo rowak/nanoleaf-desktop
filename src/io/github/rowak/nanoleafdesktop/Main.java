@@ -124,7 +124,7 @@ public class Main extends JFrame
 		else if (os.contains("mac"))
 		{
 			dir = System.getProperty("user.home") +
-					"/Library/ApplicationSupport/Nanoleaf for Desktop";
+					"/Library/Application Support/Nanoleaf for Desktop";
 		}
 		else if (os.contains("nux"))
 		{

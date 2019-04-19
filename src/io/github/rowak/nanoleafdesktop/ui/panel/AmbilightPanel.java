@@ -1,7 +1,6 @@
 package io.github.rowak.nanoleafdesktop.ui.panel;
 
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -22,10 +21,12 @@ import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.ambilight.AmbilightHandler;
 import io.github.rowak.nanoleafdesktop.ambilight.CaptureAreaWindow;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
+import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernToggleButton;
 import io.github.rowak.nanoleafdesktop.ui.combobox.ModernComboBox;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
+import io.github.rowak.nanoleafdesktop.ui.label.LargeModernLabel;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 import io.github.rowak.nanoleafdesktop.ui.slider.ModernSliderUI;
 import net.miginfocom.swing.MigLayout;
@@ -36,8 +37,12 @@ import javax.swing.JSlider;
 public class AmbilightPanel extends JPanel
 {
 	private final int DEFAULT_DELAY = 100; // default delay in milliseconds
+	private final int MAX_DELAY = 1000;
+	private final int MIN_DELAY = 5;
 	private final int DEFAULT_BRIGHTNESS = 2; // default brightness as an arbitrary coefficient
+	private final int MAX_BRIGHTNESS = 5;
 	private final String[] AMBILIGHT_MODES = {"Mode...", "Average", "Selection"};
+	
 	private int delay, brightness, monitor, mode;
 	private Rectangle captureArea;
 	private Aurora aurora;
@@ -62,9 +67,7 @@ public class AmbilightPanel extends JPanel
 		setBackground(Color.DARK_GRAY);
 		setLayout(new MigLayout("", "[][grow][][]", "[][][][][][]"));
 		
-		JLabel lblAmbilightStatus = new JLabel("Status");
-		lblAmbilightStatus.setFont(new Font("Tahoma", Font.PLAIN, 25));
-		lblAmbilightStatus.setForeground(Color.WHITE);
+		JLabel lblAmbilightStatus = new LargeModernLabel("Status");
 		add(lblAmbilightStatus, "cell 0 0,gapx 0 15");
 		
 		btnAmbilightOnOff = new ModernToggleButton("Enable");
@@ -78,18 +81,15 @@ public class AmbilightPanel extends JPanel
 		});
 		add(btnAmbilightOnOff, "cell 1 0");
 		
-		JLabel lblUpdateDelay = new JLabel("Update Delay");
-		lblUpdateDelay.setForeground(Color.WHITE);
-		lblUpdateDelay.setFont(new Font("Tahoma", Font.PLAIN, 25));
+		JLabel lblUpdateDelay = new LargeModernLabel("Update Delay");
 		add(lblUpdateDelay, "cell 0 1,gapx 0 15");
 		
 		updateDelaySlider = new JSlider();
-		updateDelaySlider.setValue(100);
-		updateDelaySlider.setMaximum(1000);
-		updateDelaySlider.setMinimum(5);
-		updateDelaySlider.setBackground(Color.DARK_GRAY);
-		updateDelaySlider.setUI(new ModernSliderUI(updateDelaySlider,
-				Color.GRAY, Color.DARK_GRAY, Color.DARK_GRAY));
+		updateDelaySlider.setValue(DEFAULT_DELAY);
+		updateDelaySlider.setMaximum(MAX_DELAY);
+		updateDelaySlider.setMinimum(MIN_DELAY);
+		updateDelaySlider.setBackground(UIConstants.darkBackground);
+		updateDelaySlider.setUI(new ModernSliderUI(updateDelaySlider));
 		updateDelaySlider.addChangeListener(new ChangeListener()
 		{
 			@Override
@@ -108,17 +108,14 @@ public class AmbilightPanel extends JPanel
 		});
 		add(updateDelaySlider, "cell 1 1 3 1,growx");
 		
-		JLabel lblBrightness = new JLabel("Brightness");
-		lblBrightness.setForeground(Color.WHITE);
-		lblBrightness.setFont(new Font("Tahoma", Font.PLAIN, 25));
+		JLabel lblBrightness = new LargeModernLabel("Brightness");
 		add(lblBrightness, "cell 0 2");
 		
 		brightnessSlider = new JSlider();
-		brightnessSlider.setValue(2);
-		brightnessSlider.setMaximum(5);
-		brightnessSlider.setBackground(Color.DARK_GRAY);
-		brightnessSlider.setUI(new ModernSliderUI(brightnessSlider,
-				Color.GRAY, Color.DARK_GRAY, Color.DARK_GRAY));
+		brightnessSlider.setValue(DEFAULT_BRIGHTNESS);
+		brightnessSlider.setMaximum(MAX_BRIGHTNESS);
+		brightnessSlider.setBackground(UIConstants.darkBackground);
+		brightnessSlider.setUI(new ModernSliderUI(brightnessSlider));
 		brightnessSlider.addChangeListener(new ChangeListener()
 		{
 			@Override
@@ -138,8 +135,8 @@ public class AmbilightPanel extends JPanel
 		add(brightnessSlider, "cell 1 2 3 1,growx");
 		
 		JLabel lblCaptureArea = new JLabel("Capture Area");
-		lblCaptureArea.setFont(new Font("Tahoma", Font.PLAIN, 25));
-		lblCaptureArea.setForeground(Color.WHITE);
+		lblCaptureArea.setFont(UIConstants.largeLabelFont);
+		lblCaptureArea.setForeground(UIConstants.textPrimary);
 		add(lblCaptureArea, "cell 0 3");
 		
 		String[] monitors = getMonitors();
@@ -177,9 +174,7 @@ public class AmbilightPanel extends JPanel
 		});
 		add(btnResetArea, "cell 3 3");
 		
-		JLabel lblMode = new JLabel("Mode");
-		lblMode.setFont(new Font("Tahoma", Font.PLAIN, 25));
-		lblMode.setForeground(Color.WHITE);
+		JLabel lblMode = new LargeModernLabel("Mode");
 		add(lblMode, "cell 0 4,gapx 0 15");
 		
 		cmbxMode = new ModernComboBox<String>(

@@ -1,7 +1,6 @@
 package io.github.rowak.nanoleafdesktop.ui.panel;
 
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -33,6 +32,8 @@ import io.github.rowak.nanoleafdesktop.ui.combobox.ModernComboBox;
 import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.PalettePicker;
+import io.github.rowak.nanoleafdesktop.ui.label.LargeModernLabel;
+import io.github.rowak.nanoleafdesktop.ui.label.SmallModernLabel;
 import io.github.rowak.nanoleafdesktop.ui.listener.ComponentChangeListener;
 import io.github.rowak.nanoleafdesktop.ui.slider.ModernSliderUI;
 import net.miginfocom.swing.MigLayout;
@@ -122,9 +123,7 @@ public class SpotifyPanel extends JPanel
 		lblOptions = new ArrayList<JLabel>();
 		cmbxOptions = new ArrayList<JComboBox<String>>();
 		
-		JLabel lblStatus = new JLabel("Status");
-		lblStatus.setFont(UIConstants.largeLabelFont);
-		lblStatus.setForeground(Color.WHITE);
+		JLabel lblStatus = new LargeModernLabel("Status");
 		add(lblStatus, "cell 0 0,gapx 0 15");
 		
 		btnEnableDisable = new ModernToggleButton("Enable");
@@ -147,9 +146,7 @@ public class SpotifyPanel extends JPanel
 		});
 		add(btnEnableDisable, "cell 1 0");
 		
-		JLabel lblEffect = new JLabel("Effect");
-		lblEffect.setFont(UIConstants.largeLabelFont);
-		lblEffect.setForeground(Color.WHITE);
+		JLabel lblEffect = new LargeModernLabel("Effect");
 		add(lblEffect, "cell 0 1");
 		
 		cmbxEffect = new ModernComboBox<String>(
@@ -195,18 +192,15 @@ public class SpotifyPanel extends JPanel
 		});
 		add(btnPalette, "cell 2 1");
 		
-		JLabel lblSensitivity = new JLabel("Sensitivity");
-		lblSensitivity.setFont(UIConstants.largeLabelFont);
-		lblSensitivity.setForeground(Color.WHITE);
+		JLabel lblSensitivity = new LargeModernLabel("Sensitivity");
 		add(lblSensitivity, "cell 0 2,gapx 0 15");
 		
 		sensitivitySlider = new JSlider();
 		sensitivitySlider.setValue(DEFAULT_SENSITIVITY);
 		sensitivitySlider.setMaximum(MAX_SENSITIVITY);
 		sensitivitySlider.setMinimum(MIN_SENSITIVITY);
-		sensitivitySlider.setBackground(Color.DARK_GRAY);
-		sensitivitySlider.setUI(new ModernSliderUI(sensitivitySlider,
-				Color.GRAY, Color.DARK_GRAY, Color.DARK_GRAY));
+		sensitivitySlider.setBackground(UIConstants.darkBackground);
+		sensitivitySlider.setUI(new ModernSliderUI(sensitivitySlider));
 		sensitivitySlider.addChangeListener(new ChangeListener()
 		{
 			@Override
@@ -225,24 +219,19 @@ public class SpotifyPanel extends JPanel
 		});
 		add(sensitivitySlider, "cell 1 2,growx");
 		
-		lblAudioOffset = new JLabel("Audio Offset (ms)");
-		lblAudioOffset.setForeground(Color.WHITE);
-		lblAudioOffset.setFont(UIConstants.largeLabelFont);
+		lblAudioOffset = new LargeModernLabel("Audio Offset (ms)");
 		add(lblAudioOffset, "cell 0 3,gapx 0 15");
 		
 		audioOffsetSlider = new JSlider();
 		audioOffsetSlider.setValue(DEFAULT_AUDIO_OFFSET);
 		audioOffsetSlider.setMaximum(MAX_AUDIO_OFFSET);
 		audioOffsetSlider.setMinimum(MIN_AUDIO_OFFSET);
-		audioOffsetSlider.setBackground(Color.DARK_GRAY);
-		
+		audioOffsetSlider.setBackground(UIConstants.darkBackground);
 		audioOffsetSlider.setPaintTicks(true);
 		audioOffsetSlider.setPaintLabels(true);
 		audioOffsetSlider.setFont(UIConstants.smallLabelFont);
 		audioOffsetSlider.setMajorTickSpacing(500);
-		
-		audioOffsetSlider.setUI(new ModernSliderUI(audioOffsetSlider,
-				Color.GRAY, Color.DARK_GRAY, Color.DARK_GRAY));
+		audioOffsetSlider.setUI(new ModernSliderUI(audioOffsetSlider));
 		audioOffsetSlider.addChangeListener(new ChangeListener()
 		{
 			@Override
@@ -261,14 +250,10 @@ public class SpotifyPanel extends JPanel
 		});
 		add(audioOffsetSlider, "cell 1 3,growx");
 		
-		lblTrackInfo = new JLabel("No song playing");
-		lblTrackInfo.setFont(UIConstants.smallLabelFont);
-		lblTrackInfo.setForeground(Color.WHITE);
+		lblTrackInfo = new SmallModernLabel("No song playing");
 		add(lblTrackInfo, "cell 0 4 3 1,alignx center");
 		
-		lblTrackProgress = new JLabel("00:00:00");
-		lblTrackProgress.setForeground(Color.WHITE);
-		lblTrackProgress.setFont(UIConstants.smallLabelFont);
+		lblTrackProgress = new SmallModernLabel("00:00:00");
 		add(lblTrackProgress, "cell 0 5 3 1,alignx center");
 	}
 	
@@ -365,9 +350,7 @@ public class SpotifyPanel extends JPanel
 			for (int i = 0; i < options.size(); i++)
 			{
 				UserOption option = options.get(i);
-				JLabel lblOption = new JLabel(option.getName());
-				lblOption.setForeground(Color.WHITE);
-				lblOption.setFont(new Font("Tahoma", Font.PLAIN, 25));
+				JLabel lblOption = new LargeModernLabel(option.getName());
 				lblOptions.add(lblOption);
 				JComboBox<String> cmbxOption = new ModernComboBox<String>(
 						new DefaultComboBoxModel<String>(option.getOptions()));

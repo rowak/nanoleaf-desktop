@@ -225,8 +225,14 @@ public class KeyShortcutsPanel extends JPanel
 		catch (NativeHookException nhe)
 		{
 			nhe.printStackTrace();
-			new TextDialog(this, "Failed to setup shortcuts.")
-				.setVisible(true);
+			
+			if (nhe.getMessage().equals("Failed to enable access for assistive devices.") &&
+					System.getProperty("os.name").toLowerCase().contains("mac"))
+			{
+				new TextDialog(KeyShortcutsPanel.this.getFocusCycleRootAncestor(),
+						"Please enable accessibility control to use the shortcuts feature.")
+						.setVisible(true);
+			}
 		}
 	}
 	

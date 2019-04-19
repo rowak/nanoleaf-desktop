@@ -1,7 +1,6 @@
 package io.github.rowak.nanoleafdesktop.ui.panel;
 
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -20,12 +19,14 @@ import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 import io.github.rowak.Aurora;
 import io.github.rowak.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.Main;
+import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernToggleButton;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.BrightnessSlider;
 import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.ColorPicker;
 import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.ColorWheel;
+import io.github.rowak.nanoleafdesktop.ui.label.LargeModernLabel;
 import io.github.rowak.nanoleafdesktop.ui.listener.ComponentChangeListener;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 import io.github.rowak.nanoleafdesktop.ui.slider.ModernSliderUI;
@@ -73,13 +74,11 @@ public class InformationPanel extends JPanel
 	
 	private void init()
 	{
-		setBorder(new LineBorder(Color.GRAY, 1, true));
-		setBackground(Color.DARK_GRAY);
+		setBorder(new LineBorder(UIConstants.darkForeground, 1, true));
+		setBackground(UIConstants.darkBackground);
 		setLayout(new MigLayout("", "[][428.00]", "[][][][][]"));
 		
-		JLabel lblOnOff = new JLabel("On/Off");
-		lblOnOff.setFont(new Font("Tahoma", Font.PLAIN, 25));
-		lblOnOff.setForeground(Color.WHITE);
+		JLabel lblOnOff = new LargeModernLabel("On/Off");
 		add(lblOnOff, "cell 0 0,aligny center");
 		
 		btnOnOff = new ModernToggleButton("Turn On");
@@ -115,25 +114,18 @@ public class InformationPanel extends JPanel
 		});
 		add(btnOnOff, "cell 1 0");
 		
-		JLabel lblCurrentScene = new JLabel("Active Scene:");
-		lblCurrentScene.setForeground(Color.WHITE);
-		lblCurrentScene.setFont(new Font("Tahoma", Font.PLAIN, 25));
+		JLabel lblCurrentScene = new LargeModernLabel("Active Scene:");
 		add(lblCurrentScene, "cell 0 1");
 		
-		lblActiveScene = new JLabel("*None*");
-		lblActiveScene.setForeground(Color.WHITE);
-		lblActiveScene.setFont(new Font("Tahoma", Font.PLAIN, 25));
+		lblActiveScene = new LargeModernLabel("*None*");
 		add(lblActiveScene, "cell 1 1");
 		
-		JLabel lblBrightness = new JLabel("Brightness");
-		lblBrightness.setForeground(Color.WHITE);
-		lblBrightness.setFont(new Font("Tahoma", Font.PLAIN, 25));
+		JLabel lblBrightness = new LargeModernLabel("Brightness");
 		add(lblBrightness, "cell 0 2");
 		
 		brightnessSlider = new JSlider();
 		brightnessSlider.setBackground(Color.DARK_GRAY);
-		brightnessSlider.setUI(new ModernSliderUI(brightnessSlider,
-				Color.GRAY, Color.DARK_GRAY, Color.DARK_GRAY));
+		brightnessSlider.setUI(new ModernSliderUI(brightnessSlider));
 		brightnessSlider.addChangeListener(new ChangeListener()
 		{
 			@Override
@@ -176,17 +168,14 @@ public class InformationPanel extends JPanel
 		});
 		add(brightnessSlider, "cell 1 2,growx");
 		
-		JLabel lblColorTemperature = new JLabel("Color Temperature");
-		lblColorTemperature.setForeground(Color.WHITE);
-		lblColorTemperature.setFont(new Font("Tahoma", Font.PLAIN, 25));
+		JLabel lblColorTemperature = new LargeModernLabel("Color Temperature");
 		add(lblColorTemperature, "cell 0 3,gapx 0 15");
 		
 		ctSlider = new JSlider();
 		ctSlider.setMaximum(6400);
 		ctSlider.setMinimum(1200);
-		ctSlider.setBackground(Color.DARK_GRAY);
-		ctSlider.setUI(new ModernSliderUI(ctSlider,
-				Color.GRAY, Color.DARK_GRAY, Color.DARK_GRAY));
+		ctSlider.setBackground(UIConstants.darkBackground);
+		ctSlider.setUI(new ModernSliderUI(ctSlider));
 		ctSlider.addChangeListener(new ChangeListener()
 		{
 			@Override
@@ -229,10 +218,7 @@ public class InformationPanel extends JPanel
 		});
 		add(ctSlider, "cell 1 3,growx");
 		
-		JLabel lblSolidColor = new JLabel("Solid Color");
-		lblSolidColor.setFont(new Font("Tahoma", Font.PLAIN, 25));
-		lblSolidColor.setBackground(Color.DARK_GRAY);
-		lblSolidColor.setForeground(Color.WHITE);
+		JLabel lblSolidColor = new LargeModernLabel("Solid Color");
 		add(lblSolidColor, "cell 0 4");
 		
 		JButton btnSetSolidColor = new ModernButton("Set Solid Color");

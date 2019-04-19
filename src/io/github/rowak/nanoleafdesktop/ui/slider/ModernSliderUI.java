@@ -15,13 +15,12 @@ public class ModernSliderUI extends BasicSliderUI
 {
 	private Color thumbColor;
 	
-	public ModernSliderUI(JSlider b, Color thumbColor,
-			Color trackShadow, Color trackHighlight)
+	public ModernSliderUI(JSlider b)
 	{
 		super(b);
-		this.thumbColor = thumbColor;
-		UIManager.put("Slider.shadow", trackShadow);
-		UIManager.put("Slider.highlight", trackHighlight);
+		thumbColor = Color.GRAY;
+		UIManager.put("Slider.shadow", Color.DARK_GRAY);
+		UIManager.put("Slider.highlight", Color.DARK_GRAY);
 	}
 	
 	@Override
@@ -31,7 +30,7 @@ public class ModernSliderUI extends BasicSliderUI
         int labelLeft = labelCenter - (label.getPreferredSize().width / 2);
         g.translate(labelLeft, 0);
         g.setColor(Color.GRAY);
-        g.drawString(((JLabel)label).getText(), 0, 0);
+        g.drawString(((JLabel)label).getText(), 0, 5);
         g.translate(-labelLeft, 0);
 	}
 	
