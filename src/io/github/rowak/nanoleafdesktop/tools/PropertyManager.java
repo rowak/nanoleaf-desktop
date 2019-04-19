@@ -7,8 +7,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import io.github.rowak.nanoleafdesktop.Main;
-
 public class PropertyManager
 {
 	private File file;
@@ -19,7 +17,9 @@ public class PropertyManager
 		try
 		{
 			if (!file.exists())
+			{
 				file.createNewFile();
+			}
 		}
 		catch (IOException ioe)
 		{

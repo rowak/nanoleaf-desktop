@@ -5,6 +5,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -61,12 +67,13 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.6.0", true);
+	public static final Version VERSION = new Version("v0.7.0", false);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
-	public static final String PROPERTIES_FILEPATH =
+	public static final String OLD_PROPERTIES_FILEPATH =
 			System.getProperty("user.home") + "/properties.txt";
+	public static final String PROPERTIES_FILEPATH = getPropertiesFilePath();
 	
 	private final int DEFAULT_WINDOW_WIDTH = 1050;
 	private final int DEFAULT_WINDOW_HEIGHT = 800;
@@ -84,6 +91,8 @@ public class Main extends JFrame
 	
 	public Main()
 	{
+		migrateOldProperties();
+		
 		PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
 		String lastSession = manager.getProperty("lastSession");
 		
@@ -102,6 +111,80 @@ public class Main extends JFrame
 		}
 		
 		checkForUpdate();
+	}
+	
+	public static String getPropertiesFilePath()
+	{
+		String dir = "";
+		final String os = System.getProperty("os.name").toLowerCase();
+		if (os.contains("win"))
+		{
+			dir = System.getenv("APPDATA") + "/Nanoleaf for Desktop";
+		}
+		else if (os.contains("mac"))
+		{
+			dir = System.getProperty("user.home") +
+					"/Library/ApplicationSupport/Nanoleaf for Desktop";
+		}
+		else if (os.contains("nux"))
+		{
+			dir = System.getProperty("user.home") + ".Nanoleaf for Desktop";
+		}
+		
+		File dirFile = new File(dir);
+		if (!dirFile.exists())
+		{
+			dirFile.mkdir();
+		}
+		
+		return dir + "/preferences.txt";
+	}
+	
+	private void migrateOldProperties()
+	{
+		File oldProperties = new File(OLD_PROPERTIES_FILEPATH);
+		if (oldProperties.exists())
+		{
+			BufferedReader reader = null;
+			BufferedWriter writer = null;
+			try
+			{
+				reader = new BufferedReader(new FileReader(OLD_PROPERTIES_FILEPATH));
+				writer = new BufferedWriter(new FileWriter(getPropertiesFilePath()));
+				String data = "";
+				String line = "";
+				while ((line = reader.readLine()) != null)
+				{
+					data += line + "\n";
+				}
+				writer.write(data);
+			}
+			catch (IOException ioe)
+			{
+				ioe.printStackTrace();
+			}
+			finally
+			{
+				try
+				{
+					if (reader != null)
+					{
+						reader.close();
+					}
+					if (writer != null)
+					{
+						writer.close();
+					}
+					oldProperties.renameTo(new File(
+							System.getProperty("user.home") +
+							"/propertiesOLD.txt"));
+				}
+				catch (IOException ioe)
+				{
+					ioe.printStackTrace();
+				}
+			}
+		}
 	}
 	
 	private void checkForUpdate()
@@ -510,10 +593,10 @@ public class Main extends JFrame
 	
 	private void initEffectsPanels()
 	{
-		regEffectsPanel = new EffectsPanel(this, device, canvas);
+		regEffectsPanel = new EffectsPanel("Regular Effects", this, device, canvas);
 		add(regEffectsPanel, "cell 0 1,grow");
-				
-		rhythEffectsPanel = new EffectsPanel(this, device, canvas);
+		
+		rhythEffectsPanel = new EffectsPanel("Rhythm Effects", this, device, canvas);
 		add(rhythEffectsPanel, "cell 0 2,grow");
 	}
 	

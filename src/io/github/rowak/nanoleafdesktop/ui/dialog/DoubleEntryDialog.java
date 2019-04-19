@@ -1,6 +1,5 @@
 package io.github.rowak.nanoleafdesktop.ui.dialog;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionListener;
@@ -8,12 +7,11 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
-import javax.swing.border.LineBorder;
 
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
+import io.github.rowak.nanoleafdesktop.ui.textfield.ModernTextField;
 
 public class DoubleEntryDialog extends BasicDialog
 {
@@ -24,21 +22,11 @@ public class DoubleEntryDialog extends BasicDialog
 	{
 		super();
 		
-		entry1 = new JTextField(entry1Label);
-		entry1.setForeground(Color.WHITE);
-		entry1.setBackground(Color.DARK_GRAY);
-		entry1.setBorder(new LineBorder(Color.GRAY));
-		entry1.setCaretColor(Color.WHITE);
-		entry1.setFont(new Font("Tahoma", Font.PLAIN, 22));
+		entry1 = new ModernTextField(entry1Label);
 		entry1.addFocusListener(new TextFieldFocusListener(entry1));
 		contentPanel.add(entry1, "cell 0 1, grow, gapx 2 2");
 		
-		entry2 = new JTextField(entry2Label);
-		entry2.setForeground(Color.WHITE);
-		entry2.setBackground(Color.DARK_GRAY);
-		entry2.setBorder(new LineBorder(Color.GRAY));
-		entry2.setCaretColor(Color.WHITE);
-		entry2.setFont(new Font("Tahoma", Font.PLAIN, 22));
+		entry2 = new ModernTextField(entry2Label);
 		entry2.addFocusListener(new TextFieldFocusListener(entry2));
 		contentPanel.add(entry2, "cell 0 2, grow, gapx 2 2");
 		

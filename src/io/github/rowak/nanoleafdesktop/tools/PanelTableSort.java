@@ -145,6 +145,16 @@ public class PanelTableSort
 						break;
 					}
 				}
+				
+				/*
+				 * Safety check to make sure last few panels
+				 * are added to the final column.
+				 */
+				if (max == 0)
+				{
+					max = sortedPanels.length;
+				}
+				
 				/*
 				 * Add the panels in this column to the columns
 				 * list as an array.

@@ -24,9 +24,9 @@ public class EffectsPanel extends JScrollPane
 	private JList<String> effects;
 	private DefaultListModel<String> model;
 	
-	public EffectsPanel(Main parent, Aurora device, PanelCanvas canvas)
+	public EffectsPanel(String label, Main parent, Aurora device, PanelCanvas canvas)
 	{
-		init(parent, device, canvas);
+		init(label, parent, device, canvas);
 	}
 	
 	public void addEffect(String effect)
@@ -55,14 +55,14 @@ public class EffectsPanel extends JScrollPane
 		return effects;
 	}
 	
-	private void init(Main parent, Aurora device, PanelCanvas canvas)
+	private void init(String label, Main parent, Aurora device, PanelCanvas canvas)
 	{
 		getVerticalScrollBar().setUI(new ModernScrollBarUI());
 		getHorizontalScrollBar().setUI(new ModernScrollBarUI());
 		setBackground(Color.DARK_GRAY);
 		setForeground(Color.WHITE);
 		setBorder(new TitledBorder(new LineBorder(Color.GRAY),
-				"Regular Effects", TitledBorder.LEFT, TitledBorder.TOP, null, Color.WHITE));
+				label, TitledBorder.LEFT, TitledBorder.TOP, null, Color.WHITE));
 		((TitledBorder)getBorder())
 			.setTitleFont(new Font("Tahoma", Font.BOLD, 22));
 		

@@ -2,7 +2,6 @@ package io.github.rowak.nanoleafdesktop.ambilight;
 
 import java.awt.AWTException;
 import java.awt.Color;
-import java.awt.DisplayMode;
 import java.awt.GraphicsConfiguration;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -197,7 +196,7 @@ public class AmbilightHandler
 		Panel[] panels = null;
 		try
 		{
-			panels = aurora.panelLayout().getPanels();
+			panels = aurora.panelLayout().getPanelsRotated();
 			PanelTableSort.sortPanelsAsRows(panels);
 		}
 		catch (StatusCodeException sce)

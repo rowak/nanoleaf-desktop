@@ -91,7 +91,9 @@ public class SpotifyPulseBeatsEffect extends SpotifyEffect
 	{
 		if (analysis.getSegment() != null)
 		{
-			loudness = loudnessToPercent(analysis.getSegment().getLoudnessStart());
+			float avg = (analysis.getSegment().getLoudnessMax() +
+					analysis.getSegment().getLoudnessStart()+0.1f)/2f;
+			loudness = loudnessToPercent(avg, analysis.getSegment().getLoudnessMax());
 		}
 	}
 	
@@ -105,18 +107,32 @@ public class SpotifyPulseBeatsEffect extends SpotifyEffect
 		return color;
 	}
 	
-	private float loudnessToPercent(float loudness)
+	private float loudnessToPercent(float loudness, float max)
 	{
-		final float MAX = 0f;
 		final float MIN = -40.0f;
 		if (loudness < MIN)
 		{
 			return 0f;
 		}
-		else if (loudness > MAX)
+		else if (loudness > max)
 		{
 			return 1f;
 		}
 		return (1 - loudness/MIN);
 	}
+	
+//	private float loudnessToPercent(float loudness)
+//	{
+//		final float MAX = 0f;
+//		final float MIN = -40.0f;
+//		if (loudness < MIN)
+//		{
+//			return 0f;
+//		}
+//		else if (loudness > MAX)
+//		{
+//			return 1f;
+//		}
+//		return (1 - loudness/MIN);
+//	}
 }

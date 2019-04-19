@@ -2,6 +2,7 @@ package io.github.rowak.nanoleafdesktop.shortcuts;
 
 import io.github.rowak.Aurora;
 import io.github.rowak.Color;
+import io.github.rowak.Effect;
 import io.github.rowak.StatusCodeException;
 
 public class Action
@@ -41,7 +42,7 @@ public class Action
 		return previousState;
 	}
 	
-	public void execute(Aurora device)
+	public void execute(Aurora device, Effect[] effects)
 	{
 		try
 		{
@@ -95,6 +96,82 @@ public class Action
 					previousState = device.effects().getCurrentEffectName();
 					device.effects().setEffect((String)args[0]);
 					break;
+				case NEXT_EFFECT:
+					String[] effectNames = device.effects().getEffectsList();
+					String currentEffect = device.effects().getCurrentEffectName();
+					previousState = currentEffect;
+					int nextEffect = -1;
+					for (int i = 0; i < effects.length; i++)
+					{
+						if (currentEffect.equals(effects[i].getName()) && i+1 < effects.length)
+						{
+							if (!isRhythmEffect(effects[i+1]))
+							{
+								nextEffect = i+1;
+							}
+							else
+							{
+								int j = i+1;
+								while (nextEffect == -1 && j < effects.length)
+								{
+									if (!isRhythmEffect(effects[j]))
+									{
+										nextEffect = j;
+										break;
+									}
+									j++;
+								}
+							}
+							break;
+						}
+					}
+					if (nextEffect == -1)
+					{
+						device.effects().setEffect(effectNames[0]);
+					}
+					else
+					{
+						device.effects().setEffect(effectNames[nextEffect]);
+					}
+					break;
+				case PREVIOUS_EFFECT:
+					effectNames = device.effects().getEffectsList();
+					currentEffect = device.effects().getCurrentEffectName();
+					previousState = currentEffect;
+					nextEffect = -1;
+					for (int i = 0; i < effects.length; i++)
+					{
+						if (currentEffect.equals(effects[i].getName()) && i-1 > -1)
+						{
+							if (!isRhythmEffect(effects[i-1]))
+							{
+								nextEffect = i-1;
+							}
+							else
+							{
+								int j = i-1;
+								while (nextEffect == -1 && j > -1)
+								{
+									if (!isRhythmEffect(effects[j]))
+									{
+										nextEffect = j;
+										break;
+									}
+									j--;
+								}
+							}
+							break;
+						}
+					}
+					if (nextEffect == -1)
+					{
+						device.effects().setEffect(effectNames[effectNames.length-1]);
+					}
+					else
+					{
+						device.effects().setEffect(effectNames[nextEffect]);
+					}
+					break;
 				case SET_RED:
 					Color c = device.state().getColor();
 					previousState = c;
@@ -118,7 +195,7 @@ public class Action
 		}
 	}
 	
-	public void reset(Aurora device)
+	public void reset(Aurora device, Effect[] effects)
 	{
 		try
 		{
@@ -160,6 +237,12 @@ public class Action
 				case SET_EFFECT:
 					device.effects().setEffect((String)previousState);
 					break;
+				case NEXT_EFFECT:
+					device.effects().setEffect((String)previousState);
+					break;
+				case PREVIOUS_EFFECT:
+					device.effects().setEffect((String)previousState);
+					break;
 				case SET_RED:
 					Color c = (Color)previousState;
 					device.state().setColor(Color.fromRGB(c.getRed(), c.getGreen(), c.getBlue()));
@@ -179,5 +262,10 @@ public class Action
 		{
 			sce.printStackTrace();
 		}
+	}
+	
+	private boolean isRhythmEffect(Effect ef)
+	{
+		return ef.getAnimType() == Effect.Type.PLUGIN && ef.getPluginType().equals("rhythm");
 	}
 }

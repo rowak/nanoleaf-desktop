@@ -27,12 +27,14 @@ import io.github.rowak.StatusCodeException.UnauthorizedException;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
+import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.panel.SpotifyPanel;
 
 public class SpotifyPlayer
 {
 	private boolean running, playing;
-	private int progress, sensitivity;
+	private int progress, sensitivity, audioOffset;
+	private String previousEffect;
 	private Timer effectTimer, spotifyActionTimer;
 	private SpotifyApi spotifyApi;
 	private Track currentTrack;
@@ -65,6 +67,7 @@ public class SpotifyPlayer
 		if (!running)
 		{
 			running = true;
+			saveCurrentEffect();
 			init();
 			effectTimer = new Timer();
 			effectTimer.scheduleAtFixedRate(new TimerTask()
@@ -124,6 +127,7 @@ public class SpotifyPlayer
 			effectTimer.purge();
 			spotifyActionTimer.cancel();
 			spotifyActionTimer.purge();
+			loadPreviousEffect();
 		}
 	}
 	
@@ -173,6 +177,7 @@ public class SpotifyPlayer
 	}
 	
 	public void setPalette(Color[] palette)
+			throws IOException, StatusCodeException
 	{
 		effect.setPalette(palette);
 	}
@@ -180,6 +185,37 @@ public class SpotifyPlayer
 	public void setSensitivity(int sensitivity)
 	{
 		this.sensitivity = sensitivity;
+	}
+	
+	public void setAudioOffset(int audioOffset)
+	{
+		this.audioOffset = audioOffset;
+	}
+	
+	private void saveCurrentEffect()
+	{
+		try
+		{
+			previousEffect = aurora.effects().getCurrentEffectName();
+		}
+		catch (StatusCodeException sce)
+		{
+			// ignore this exception for now, handle it
+			// later in the loadPreviousEffect() method
+		}
+	}
+	
+	private void loadPreviousEffect()
+	{
+		try
+		{
+			aurora.effects().setEffect(previousEffect);
+		}
+		catch (StatusCodeException | NullPointerException scenpe)
+		{
+			new TextDialog(panel.getFocusCycleRootAncestor(),
+					"The previous effect could not be loaded.").setVisible(true);
+		}
 	}
 	
 	private void init()
@@ -193,11 +229,6 @@ public class SpotifyPlayer
 			playing = true;
 			updateTrackInfoText();
 			updateTrackProgressText();
-			
-			if (effect != null)
-			{
-				effect.init();
-			}
 		}
 		catch (SpotifyWebApiException swe)
 		{
@@ -211,10 +242,6 @@ public class SpotifyPlayer
 		{
 			ioe.printStackTrace();
 		}
-		catch (StatusCodeException sce)
-		{
-			init();
-		}
 	}
 	
 	private void update() throws UnauthorizedException,
@@ -222,11 +249,18 @@ public class SpotifyPlayer
 	{
 		if (playing)
 		{
-			updateTrackProgressText();
-			SpecificAudioAnalysis analysis = SpecificAudioAnalysis
-					.getAnalysis(currentTrackAnalysis, progress, sensitivity);
-			effect.run(analysis);
-			progress += 100;
+			try
+			{
+				updateTrackProgressText();
+				SpecificAudioAnalysis analysis = SpecificAudioAnalysis
+						.getAnalysis(currentTrackAnalysis, progress+audioOffset, sensitivity);
+				effect.run(analysis);
+				progress += 100;
+			}
+			catch (NullPointerException npe)
+			{
+				npe.printStackTrace();
+			}
 		}
 	}
 	

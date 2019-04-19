@@ -1,14 +1,14 @@
 package io.github.rowak.nanoleafdesktop.ui.slider;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 
-import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JSlider;
 import javax.swing.UIManager;
-import javax.swing.plaf.basic.BasicGraphicsUtils;
 import javax.swing.plaf.basic.BasicSliderUI;
 
 public class ModernSliderUI extends BasicSliderUI
@@ -22,6 +22,17 @@ public class ModernSliderUI extends BasicSliderUI
 		this.thumbColor = thumbColor;
 		UIManager.put("Slider.shadow", trackShadow);
 		UIManager.put("Slider.highlight", trackHighlight);
+	}
+	
+	@Override
+	protected void paintHorizontalLabel(Graphics g, int value, Component label)
+	{
+		int labelCenter = xPositionForValue(value);
+        int labelLeft = labelCenter - (label.getPreferredSize().width / 2);
+        g.translate(labelLeft, 0);
+        g.setColor(Color.GRAY);
+        g.drawString(((JLabel)label).getText(), 0, 0);
+        g.translate(-labelLeft, 0);
 	}
 	
 	// Ripped from the paintThumb method in BasicSliderUI

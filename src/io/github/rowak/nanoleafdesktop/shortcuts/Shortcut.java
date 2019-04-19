@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import io.github.rowak.Aurora;
+import io.github.rowak.Effect;
 
 public class Shortcut
 {
@@ -21,9 +22,14 @@ public class Shortcut
 		this.action = action;
 	}
 	
-	public void execute(Aurora device)
+	public void execute(Aurora device, Effect[] effects)
 	{
-		action.execute(device);
+		action.execute(device, effects);
+	}
+	
+	public void reset(Aurora device, Effect[] effects)
+	{
+		action.reset(device, effects);
 	}
 	
 	public String getName()
@@ -69,13 +75,22 @@ public class Shortcut
 	@Override
 	public String toString()
 	{
-		String keysStr = keys.get(0);
-		if (keys.size() > 1)
+		if (runType == RunType.WHEN_PRESSED || runType == RunType.WHILE_HELD)
 		{
-			keysStr += " + " + keys.get(1);
+			String keysStr = keys.get(0);
+			for (int i = 1; i < keys.size(); i++)
+			{
+				keysStr += " + " + keys.get(i);
+			}
+			return String.format("Name: %s    Event: %s    Trigger: %s    Run: %s    Args: %s", name,
+					action.getType(), keysStr, runType, Arrays.asList(action.getArgs()));
 		}
-		return String.format("Name: %s    Event: %s    Trigger: %s    Run: %s    Args: %s", name,
-				action.getType(), keysStr, runType, Arrays.asList(action.getArgs()));
+		else
+		{
+			String appName = (String)action.getArgs()[1];
+			return String.format("Name: %s    Event: %s    Trigger: %s    Run: %s    Args: %s", name,
+					action.getType(), appName, runType, Arrays.asList(action.getArgs()));
+		}
 	}
 	
 	@Override

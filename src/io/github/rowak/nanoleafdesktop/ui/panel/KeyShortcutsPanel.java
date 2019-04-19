@@ -14,6 +14,7 @@ import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
 import io.github.rowak.Aurora;
+import io.github.rowak.nanoleafdesktop.shortcuts.RunType;
 import io.github.rowak.nanoleafdesktop.shortcuts.Shortcut;
 import io.github.rowak.nanoleafdesktop.shortcuts.ShortcutManager;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
@@ -40,6 +41,7 @@ public class KeyShortcutsPanel extends JPanel
 	private GlobalShortcutListener shortcutListener;
 	private Aurora device;
 	private Timer refreshTimer;
+	private Timer appRunningTimer;
 	
 	public KeyShortcutsPanel(Aurora device)
 	{
@@ -48,7 +50,7 @@ public class KeyShortcutsPanel extends JPanel
 		model = new DefaultListModel<Shortcut>();
 		refreshShortcuts();
 		initUI();
-		startListener();
+		startKeyListener();
 	}
 	
 	public void setAurora(Aurora device)
@@ -86,6 +88,22 @@ public class KeyShortcutsPanel extends JPanel
 		}
 	}
 	
+	private void startAppRunningTimer()
+	{
+		if (appRunningTimer == null)
+		{
+			appRunningTimer = new Timer();
+			appRunningTimer.scheduleAtFixedRate(new TimerTask()
+			{
+				@Override
+				public void run()
+				{
+					shortcutListener.checkAppShortcuts();
+				}
+			}, 1000, 1000);
+		}
+	}
+	
 	private void refreshShortcuts()
 	{
 		Shortcut[] arr = ShortcutManager.getSavedShortcuts();
@@ -97,6 +115,12 @@ public class KeyShortcutsPanel extends JPanel
 				{
 					shortcuts.add(s);
 					model.addElement(s);
+				}
+				
+				if (s.getRunType() == RunType.WHEN_APP_RUN ||
+						s.getRunType() == RunType.WHEN_APP_CLOSED)
+				{
+					startAppRunningTimer();
 				}
 			}
 			stopRefreshTimer();
@@ -188,7 +212,7 @@ public class KeyShortcutsPanel extends JPanel
 		add(btnEdit, "cell 0 1,growx");
 	}
 	
-	private void startListener()
+	private void startKeyListener()
 	{
 		try
 		{

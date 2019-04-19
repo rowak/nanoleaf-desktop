@@ -55,9 +55,11 @@ public abstract class SpotifyEffect
 	}
 	
 	public void setPalette(Color[] palette)
+			throws IOException, StatusCodeException
 	{
 		this.palette = palette;
-		paletteIndex = 0;
+		paletteIndex = palette.length > 1 ? 1 : 0;
+		init();
 	}
 	
 	protected void setNextPaletteColor()

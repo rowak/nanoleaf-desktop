@@ -26,6 +26,7 @@ import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
+import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernToggleButton;
 import io.github.rowak.nanoleafdesktop.ui.combobox.ModernComboBox;
@@ -45,6 +46,11 @@ import javax.swing.JButton;
 public class SpotifyPanel extends JPanel
 {
 	private final int DEFAULT_SENSITIVITY = 9;
+	private final int MAX_SENSITIVITY = 10;
+	private final int MIN_SENSITIVITY = 0;
+	private final int DEFAULT_AUDIO_OFFSET = 25;
+	private final int MAX_AUDIO_OFFSET = 1000;
+	private final int MIN_AUDIO_OFFSET = -1000;
 	
 	private Color[] palette =
 		{
@@ -58,6 +64,7 @@ public class SpotifyPanel extends JPanel
 		};
 	
 	private boolean adjustingPalette;
+	private int audioOffset;
 	private int sensitivity;
 	private SpotifyAuthenticator authenticator;
 	private SpotifyPlayer player;
@@ -71,6 +78,8 @@ public class SpotifyPanel extends JPanel
 	private JLabel lblTrackProgress;
 	private List<JLabel> lblOptions;
 	private List<JComboBox<String>> cmbxOptions;
+	private JLabel lblAudioOffset;
+	private JSlider audioOffsetSlider;
 	
 	public SpotifyPanel(Aurora aurora)
 	{
@@ -108,13 +117,13 @@ public class SpotifyPanel extends JPanel
 	{
 		setBorder(new LineBorder(Color.GRAY, 1, true));
 		setBackground(Color.DARK_GRAY);
-		setLayout(new MigLayout("", "[][grow][]", "[][][][][]"));
+		setLayout(new MigLayout("", "[][grow][]", "[][][][][][]"));
 		
 		lblOptions = new ArrayList<JLabel>();
 		cmbxOptions = new ArrayList<JComboBox<String>>();
 		
 		JLabel lblStatus = new JLabel("Status");
-		lblStatus.setFont(new Font("Tahoma", Font.PLAIN, 25));
+		lblStatus.setFont(UIConstants.largeLabelFont);
 		lblStatus.setForeground(Color.WHITE);
 		add(lblStatus, "cell 0 0,gapx 0 15");
 		
@@ -131,14 +140,15 @@ public class SpotifyPanel extends JPanel
 				else if (btnEnableDisable.getText().equals("Enable"))
 				{
 					new TextDialog(SpotifyPanel.this.getFocusCycleRootAncestor(),
-							"You must select an effect before enabling the visualizer.").setVisible(true);
+							"You must select an effect before enabling the visualizer.")
+							.setVisible(true);
 				}
 			}
 		});
 		add(btnEnableDisable, "cell 1 0");
 		
 		JLabel lblEffect = new JLabel("Effect");
-		lblEffect.setFont(new Font("Tahoma", Font.PLAIN, 25));
+		lblEffect.setFont(UIConstants.largeLabelFont);
 		lblEffect.setForeground(Color.WHITE);
 		add(lblEffect, "cell 0 1");
 		
@@ -186,14 +196,14 @@ public class SpotifyPanel extends JPanel
 		add(btnPalette, "cell 2 1");
 		
 		JLabel lblSensitivity = new JLabel("Sensitivity");
-		lblSensitivity.setFont(new Font("Tahoma", Font.PLAIN, 25));
+		lblSensitivity.setFont(UIConstants.largeLabelFont);
 		lblSensitivity.setForeground(Color.WHITE);
 		add(lblSensitivity, "cell 0 2,gapx 0 15");
 		
 		sensitivitySlider = new JSlider();
 		sensitivitySlider.setValue(DEFAULT_SENSITIVITY);
-		sensitivitySlider.setMaximum(10);
-		sensitivitySlider.setMinimum(0);
+		sensitivitySlider.setMaximum(MAX_SENSITIVITY);
+		sensitivitySlider.setMinimum(MIN_SENSITIVITY);
 		sensitivitySlider.setBackground(Color.DARK_GRAY);
 		sensitivitySlider.setUI(new ModernSliderUI(sensitivitySlider,
 				Color.GRAY, Color.DARK_GRAY, Color.DARK_GRAY));
@@ -215,15 +225,51 @@ public class SpotifyPanel extends JPanel
 		});
 		add(sensitivitySlider, "cell 1 2,growx");
 		
+		lblAudioOffset = new JLabel("Audio Offset (ms)");
+		lblAudioOffset.setForeground(Color.WHITE);
+		lblAudioOffset.setFont(UIConstants.largeLabelFont);
+		add(lblAudioOffset, "cell 0 3,gapx 0 15");
+		
+		audioOffsetSlider = new JSlider();
+		audioOffsetSlider.setValue(DEFAULT_AUDIO_OFFSET);
+		audioOffsetSlider.setMaximum(MAX_AUDIO_OFFSET);
+		audioOffsetSlider.setMinimum(MIN_AUDIO_OFFSET);
+		audioOffsetSlider.setBackground(Color.DARK_GRAY);
+		
+		audioOffsetSlider.setPaintTicks(true);
+		audioOffsetSlider.setPaintLabels(true);
+		audioOffsetSlider.setFont(UIConstants.smallLabelFont);
+		audioOffsetSlider.setMajorTickSpacing(500);
+		
+		audioOffsetSlider.setUI(new ModernSliderUI(audioOffsetSlider,
+				Color.GRAY, Color.DARK_GRAY, Color.DARK_GRAY));
+		audioOffsetSlider.addChangeListener(new ChangeListener()
+		{
+			@Override
+			public void stateChanged(ChangeEvent e)
+			{
+				if (!audioOffsetSlider.getValueIsAdjusting())
+				{
+					audioOffset = audioOffsetSlider.getValue();
+					setProperty("spotifyAudioOffset", audioOffset);
+					if (player != null)
+					{
+						player.setAudioOffset(audioOffset);
+					}
+				}
+			}
+		});
+		add(audioOffsetSlider, "cell 1 3,growx");
+		
 		lblTrackInfo = new JLabel("No song playing");
-		lblTrackInfo.setFont(new Font("Tahoma", Font.PLAIN, 18));
+		lblTrackInfo.setFont(UIConstants.smallLabelFont);
 		lblTrackInfo.setForeground(Color.WHITE);
-		add(lblTrackInfo, "cell 0 3 3 1,alignx center");
+		add(lblTrackInfo, "cell 0 4 3 1,alignx center");
 		
 		lblTrackProgress = new JLabel("00:00:00");
 		lblTrackProgress.setForeground(Color.WHITE);
-		lblTrackProgress.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		add(lblTrackProgress, "cell 0 4 3 1,alignx center");
+		lblTrackProgress.setFont(UIConstants.smallLabelFont);
+		add(lblTrackProgress, "cell 0 5 3 1,alignx center");
 	}
 	
 	private void toggleEnabled()
@@ -239,7 +285,8 @@ public class SpotifyPanel extends JPanel
 				}
 				else
 				{
-					String message = "You will now be prompted to login with your Spotify account through your web browser.";
+					String message = "You will now be prompted to login with your " +
+							"Spotify account through your web browser.";
 					OptionDialog spotifyAuth = new OptionDialog(
 							SpotifyPanel.this.getFocusCycleRootAncestor(),
 							message, "Ok", "Cancel",
@@ -348,11 +395,11 @@ public class SpotifyPanel extends JPanel
 				
 				userOptionArgs.put(option.getName().toLowerCase(), option.getOptions()[0]);
 				
-				add(lblOptions.get(i), "cell 0 " + (i + 3) + ",gapx 0 15");
-				add(cmbxOptions.get(i), "cell 1 " + (i + 3) + ",growx");
+				add(lblOptions.get(i), "cell 0 " + (i + 4) + ",gapx 0 15");
+				add(cmbxOptions.get(i), "cell 1 " + (i + 4) + ",growx");
 			}
-			add(lblTrackInfo, "cell 0 " + (options.size() + 3) + " 3 1,alignx center");
-			add(lblTrackProgress, "cell 0 " + (options.size() + 4) + " 3 1,alignx center");
+			add(lblTrackInfo, "cell 0 " + (options.size() + 4) + " 3 1,alignx center");
+			add(lblTrackProgress, "cell 0 " + (options.size() + 5) + " 3 1,alignx center");
 			
 			revalidate();
 		}
@@ -370,8 +417,8 @@ public class SpotifyPanel extends JPanel
 				remove(cmbxOptions.get(i));
 			}
 			
-			add(lblTrackInfo, "cell 0 3 3 1,alignx center");
-			add(lblTrackProgress, "cell 0 4 3 1,alignx center");
+			add(lblTrackInfo, "cell 0 4 3 1,alignx center");
+			add(lblTrackProgress, "cell 0 5 3 1,alignx center");
 			
 			userOptionArgs.clear();
 			
@@ -388,9 +435,11 @@ public class SpotifyPanel extends JPanel
 				switch (type)
 				{
 					case PULSE_BEATS:
-						return new SpotifyPulseBeatsEffect(convertPalette(palette), aurora);
+						return new SpotifyPulseBeatsEffect(
+								convertPalette(palette), aurora);
 					case SOUNDBAR:
-						return new SpotifySoundBarEffect(convertPalette(palette), Direction.RIGHT, aurora);
+						return new SpotifySoundBarEffect(
+								convertPalette(palette), Direction.RIGHT, aurora);
 				}
 			}
 			catch (StatusCodeException sce)
@@ -448,7 +497,15 @@ public class SpotifyPanel extends JPanel
 					{
 						if (player != null)
 						{
-							player.setPalette(convertPalette(palettePicker.getPalette()));
+							try
+							{
+								player.setPalette(convertPalette(
+										palettePicker.getPalette()));
+							}
+							catch (Exception e1)
+							{
+								e1.printStackTrace();
+							}
 						}
 						palette = palettePicker.getPalette();
 						adjustingPalette = false;
@@ -485,6 +542,19 @@ public class SpotifyPanel extends JPanel
 			catch (NumberFormatException nfe)
 			{
 				sensitivity = DEFAULT_SENSITIVITY;
+			}
+		}
+		String lastAudioOffset = manager.getProperty("spotifyAudioOffset");
+		if (lastAudioOffset != null)
+		{
+			try
+			{
+				audioOffset = Integer.parseInt(lastAudioOffset);
+				audioOffsetSlider.setValue(audioOffset);
+			}
+			catch (NumberFormatException nfe)
+			{
+				audioOffset = DEFAULT_AUDIO_OFFSET;
 			}
 		}
 	}

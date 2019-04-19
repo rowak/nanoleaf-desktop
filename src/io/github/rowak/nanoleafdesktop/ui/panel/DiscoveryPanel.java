@@ -235,6 +235,7 @@ public class DiscoveryPanel extends JScrollPane
 		}
 		catch (HttpRequestException hre)
 		{
+			hre.printStackTrace();
 			new TextDialog(component,
 					"Failed to get discovery data from the Nanoleaf server.")
 					.setVisible(true);

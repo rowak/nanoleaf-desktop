@@ -19,6 +19,7 @@ import io.github.rowak.nanoleafdesktop.tools.PanelTableSort;
 
 public class SpotifySoundBarEffect extends SpotifyEffect
 {
+	private boolean updating;
 	private int beatCounter;
 	private float loudness;
 	private Panel[][] panelTable;
@@ -29,18 +30,17 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 	{
 		super(SpotifyEffectType.SOUNDBAR, palette, aurora);
 		userOptions.add(new UserOption("Direction",
-				new String[]{"Up", "Down", "Left", "Right"}));
+				new String[]{"Right", "Up", "Down", "Left"}));
 		this.direction = direction;
-		initPanelTable();
-		initPalette();
-		clearDisplay();
-		
 		init();
 	}
 	
 	@Override
 	public void init() throws StatusCodeException
 	{
+		initPanelTable();
+		initPalette();
+		clearDisplay();
 		aurora.externalStreaming().enable();
 	}
 	
@@ -54,7 +54,11 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 		{
 			List<Panel> updated = new ArrayList<Panel>();
 			int max = (int)(panelTable.length * loudness);
-			float duration = analysis.getSegment().getMeasure().getDuration();
+			float duration = 0.5f;
+			if (analysis.getSegment() != null)
+			{
+				duration = analysis.getSegment().getMeasure().getDuration();
+			}
 			
 			for (int i = 0; i < panelTable.length; i++)
 			{
@@ -91,50 +95,64 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 		}
 		else if (max-i > 0)
 		{
-			for (Panel p : panelTable[max-i])
+			if (!updating)
 			{
-				Color c = getBackgroundColor();
-				try
+				updating = true;
+				new Thread(() ->
 				{
-					aurora.externalStreaming().setPanel(p,
-							c.getRed(), c.getGreen(), c.getBlue(), 1);
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace();
-				}
+					for (Panel p : panelTable[max-i])
+					{
+						Color c = getBackgroundColor();
+						try
+						{
+							aurora.externalStreaming().setPanel(p,
+									c.getRed(), c.getGreen(), c.getBlue(), 1);
+						}
+						catch (Exception e)
+						{
+							e.printStackTrace();
+						}
+					}
+					updating = false;
+				}).start();
 			}
 		}
 	}
 	
 	private void fadePanelsToBackground(int max, float duration)
 	{
-		new Thread(() ->
+		if (!updating)
 		{
-			try
+			updating = true;
+			new Thread(() ->
 			{
-				Thread.sleep(100);
-				for (int i = 0; i < panelTable.length; i++)
+				try
 				{
-					for (Panel p : panelTable[i])
+					//Thread.sleep(70);
+					Thread.sleep((int)(duration*1000));
+					for (int i = 0; i < panelTable.length; i++)
 					{
-						Color c = getBackgroundColor();
-						aurora.externalStreaming().setPanel(p, c.getRed(),
-								c.getGreen(), c.getBlue(), max-i + (int)(2*duration));
+						for (Panel p : panelTable[i])
+						{
+							Color c = getBackgroundColor();
+							aurora.externalStreaming().setPanel(p, c.getRed(),
+									c.getGreen(), c.getBlue(), max-i);
+						}
 					}
 				}
-			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
-			}
-		}).start();
+				catch (Exception e)
+				{
+					e.printStackTrace();
+				}
+				updating = false;
+			}).start();
+		}
 	}
 	
 	private void initPanelTable() throws StatusCodeException
 	{
-		Panel[] panels = aurora.panelLayout().getPanels();
-		if (direction == Direction.RIGHT || direction == Direction.LEFT)
+		Panel[] panels = aurora.panelLayout().getPanelsRotated();
+		if (direction == Direction.RIGHT || direction == Direction.LEFT || direction == null)
 		{
 			panelTable = PanelTableSort.getColumns(panels);
 		}
@@ -173,7 +191,9 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 	{
 		if (analysis.getSegment() != null)
 		{
-			loudness = loudnessToPercent(analysis.getSegment().getLoudnessStart());
+			float avg = (analysis.getSegment().getLoudnessMax() +
+					analysis.getSegment().getLoudnessStart()+0.1f)/2f;
+			loudness = loudnessToPercent(avg, analysis.getSegment().getLoudnessMax());
 		}
 	}
 	
@@ -197,23 +217,30 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 	
 	private java.awt.Color applyLoudnessToColor(java.awt.Color color, int i, int max)
 	{
-		float[] hsb = new float[3];
-		hsb = java.awt.Color.RGBtoHSB(color.getRed(),
-				color.getGreen(), color.getBlue(), hsb);
-		float loudnessFactor = (max-i)/(float)max;
-		hsb[2] = ((hsb[2]*100f)*loudnessFactor)/100f;
-		return java.awt.Color.getHSBColor(hsb[0], hsb[1], hsb[2]);
+		Color bg = getBackgroundColor();
+		float factor = (max-i)/(float)max;
+		if (factor+0.2f < 1.0f)
+		{
+			factor+=0.2f;
+		}
+		else
+		{
+			factor = 1.0f;
+		}
+		int r = (int)Math.abs((factor * color.getRed()) + ((1 - factor) * bg.getRed()));
+		int g = (int)Math.abs((factor * color.getGreen()) + ((1 - factor) * bg.getGreen()));
+		int b = (int)Math.abs((factor * color.getBlue()) + ((1 - factor) * bg.getBlue()));
+		return new java.awt.Color(r, g, b);
 	}
 	
-	private float loudnessToPercent(float loudness)
+	private float loudnessToPercent(float loudness, float max)
 	{
-		final float MAX = 0f;
 		final float MIN = -40.0f;
 		if (loudness < MIN)
 		{
 			return 0f;
 		}
-		else if (loudness > MAX)
+		else if (loudness > max)
 		{
 			return 1f;
 		}
