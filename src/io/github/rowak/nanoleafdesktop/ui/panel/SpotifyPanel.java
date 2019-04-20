@@ -164,6 +164,7 @@ public class SpotifyPanel extends JPanel
 						{
 							showEffectOptions(false);
 							player.setEffect(getSelectedEffect());
+							player.initEffect();
 							showEffectOptions(true);
 						}
 						catch (StatusCodeException sce)
@@ -366,6 +367,7 @@ public class SpotifyPanel extends JPanel
 							try
 							{
 								player.setEffect(getSelectedEffect());
+								player.initEffect();
 							}
 							catch (StatusCodeException sce)
 							{

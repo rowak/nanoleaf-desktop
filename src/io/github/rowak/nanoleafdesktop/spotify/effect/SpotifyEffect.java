@@ -14,6 +14,7 @@ import io.github.rowak.nanoleafdesktop.spotify.UserOption;
 
 public abstract class SpotifyEffect
 {
+	protected boolean requiresExtControl;
 	protected int paletteIndex;
 	protected SpotifyEffectType type;
 	protected Aurora aurora;
@@ -47,6 +48,11 @@ public abstract class SpotifyEffect
 	public SpotifyEffectType getType()
 	{
 		return type;
+	}
+	
+	public boolean requiresExtControl()
+	{
+		return requiresExtControl;
 	}
 	
 	public List<UserOption> getUserOptions()

@@ -225,7 +225,6 @@ public class KeyShortcutsPanel extends JPanel
 		catch (NativeHookException nhe)
 		{
 			nhe.printStackTrace();
-			
 			if (nhe.getMessage().equals("Failed to enable access for assistive devices.") &&
 					System.getProperty("os.name").toLowerCase().contains("mac"))
 			{
@@ -233,6 +232,13 @@ public class KeyShortcutsPanel extends JPanel
 						"Please enable accessibility control to use the shortcuts feature.")
 						.setVisible(true);
 			}
+		}
+		catch (UnsatisfiedLinkError ule)
+		{
+			ule.printStackTrace();
+			new TextDialog(KeyShortcutsPanel.this.getFocusCycleRootAncestor(),
+					"Failed to setup shortcuts. Your platform may not be supported.")
+					.setVisible(true);
 		}
 	}
 	

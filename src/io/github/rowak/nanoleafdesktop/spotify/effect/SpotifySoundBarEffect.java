@@ -6,12 +6,9 @@ import java.util.List;
 
 import io.github.rowak.Aurora;
 import io.github.rowak.Color;
-import io.github.rowak.Effect;
 import io.github.rowak.Effect.Direction;
-import io.github.rowak.Frame;
 import io.github.rowak.Panel;
 import io.github.rowak.StatusCodeException;
-import io.github.rowak.effectbuilder.CustomEffectBuilder;
 import io.github.rowak.nanoleafdesktop.spotify.SpecificAudioAnalysis;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
 import io.github.rowak.nanoleafdesktop.spotify.UserOption;
@@ -31,6 +28,7 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 		super(SpotifyEffectType.SOUNDBAR, palette, aurora);
 		userOptions.add(new UserOption("Direction",
 				new String[]{"Right", "Up", "Down", "Left"}));
+		requiresExtControl = true;
 		this.direction = direction;
 		init();
 	}
@@ -40,8 +38,6 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 	{
 		initPanelTable();
 		initPalette();
-		clearDisplay();
-		aurora.externalStreaming().enable();
 	}
 	
 	@Override
@@ -179,14 +175,6 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 		}
 	}
 	
-	private void clearDisplay() throws StatusCodeException
-	{
-		Effect clear = new CustomEffectBuilder(aurora)
-				.addFrameToAllPanels(getBackgroundFrame(1))
-				.build("", false);
-		aurora.effects().displayEffect(clear);
-	}
-	
 	private void updateLoudness(SpecificAudioAnalysis analysis)
 	{
 		if (analysis.getSegment() != null)
@@ -265,11 +253,5 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 			c = Color.fromRGB(0, 0, 0);
 		}
 		return c;
-	}
-	
-	private Frame getBackgroundFrame(int transTime)
-	{
-		Color c = getBackgroundColor();
-		return new Frame(c.getRed(), c.getGreen(), c.getBlue(), 0, transTime);
 	}
 }

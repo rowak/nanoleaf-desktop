@@ -57,6 +57,11 @@ public class InformationPanel extends JPanel
 		return btnOnOff;
 	}
 	
+	public void setAurora(Aurora device)
+	{
+		this.device = device;
+	}
+	
 	public void setScene(String scene)
 	{
 		lblActiveScene.setText(scene);

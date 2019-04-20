@@ -21,9 +21,12 @@ import com.wrapper.spotify.requests.data.tracks.GetAudioAnalysisForTrackRequest;
 
 import io.github.rowak.Aurora;
 import io.github.rowak.Color;
+import io.github.rowak.Effect;
 import io.github.rowak.Effect.Direction;
+import io.github.rowak.Frame;
 import io.github.rowak.StatusCodeException;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
+import io.github.rowak.effectbuilder.CustomEffectBuilder;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
@@ -93,7 +96,6 @@ public class SpotifyPlayer
 					}
 				}
 			}, 0, 100);
-			
 			
 			spotifyActionTimer = new Timer();
 			spotifyActionTimer.scheduleAtFixedRate(new TimerTask()
@@ -222,6 +224,7 @@ public class SpotifyPlayer
 	{
 		try
 		{
+			initEffect();
 			CurrentlyPlaying current = getCurrentlyPlaying();
 			currentTrack = current.getItem();
 			currentTrackAnalysis = getTrackAnalysis(currentTrack.getId());
@@ -242,6 +245,27 @@ public class SpotifyPlayer
 		{
 			ioe.printStackTrace();
 		}
+		catch (StatusCodeException sce)
+		{
+			sce.printStackTrace();
+		}
+	}
+	
+	public void initEffect() throws StatusCodeException
+	{
+		clearDisplay();
+		if (effect.requiresExtControl())
+		{
+			aurora.externalStreaming().enable();
+		}
+	}
+	
+	private void clearDisplay() throws StatusCodeException
+	{
+		Effect clear = new CustomEffectBuilder(aurora)
+				.addFrameToAllPanels(new Frame(0, 0, 0, 0, 1))
+				.build("", false);
+		aurora.effects().displayEffect(clear);
 	}
 	
 	private void update() throws UnauthorizedException,

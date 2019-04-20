@@ -128,7 +128,7 @@ public class Main extends JFrame
 		}
 		else if (os.contains("nux"))
 		{
-			dir = System.getProperty("user.home") + ".Nanoleaf for Desktop";
+			dir = System.getProperty("user.home") + "/.Nanoleaf for Desktop";
 		}
 		
 		File dirFile = new File(dir);
@@ -644,7 +644,7 @@ public class Main extends JFrame
 		editor.addTab("Shortcuts", null, shortcutsPanel, null);
 		
 		AuroraNullListener anl = new AuroraNullListener(20, null,
-				canvas, discoveryPanel, ambilightPanel,
+				infoPanel, canvas, discoveryPanel, ambilightPanel,
 				spotifyPanel, shortcutsPanel);
 		anl.start();
 	}
