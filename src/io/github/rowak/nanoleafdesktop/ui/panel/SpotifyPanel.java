@@ -330,6 +330,7 @@ public class SpotifyPanel extends JPanel
 			player = new SpotifyPlayer(authenticator.getSpotifyApi(),
 					getSelectedEffect(), convertPalette(palette), aurora, this);
 			player.setSensitivity(sensitivity);
+			player.setAudioOffset(audioOffset);
 		}
 		catch (Exception e)
 		{

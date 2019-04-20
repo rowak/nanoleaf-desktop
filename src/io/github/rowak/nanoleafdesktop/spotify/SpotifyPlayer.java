@@ -290,7 +290,7 @@ public class SpotifyPlayer
 	
 	private void updateTrackProgressText()
 	{
-		Date d = new Date((progress/1000) * 1000L);
+		Date d = new Date((int)((progress+audioOffset)/1000f) * 1000L);
 		SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
 		df.setTimeZone(TimeZone.getTimeZone("GMT"));
 		panel.setTrackProgressText(df.format(d));

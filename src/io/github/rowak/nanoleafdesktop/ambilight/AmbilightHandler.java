@@ -13,6 +13,8 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.Timer;
 
@@ -154,6 +156,7 @@ public class AmbilightHandler
 		{
 			int captureY = VERTICAL_SEPARATOR*i + VERTICAL_SEPARATOR/2;
 			
+			Map<Panel, Color> colors = new HashMap<Panel, Color>();
 			for (int j = 0; j < rows[i].length; j++)
 			{
 				final int HORIZONTAL_SEPARATOR = captureArea.width/rows[i].length;
@@ -166,6 +169,7 @@ public class AmbilightHandler
 						Color color = new Color(img.getRGB(captureX, captureY));
 						ceb.addFrame(rows[i][j], new Frame(color.getRed(),
 								color.getGreen(), color.getBlue(), 0, 5));
+						colors.put(rows[i][j], color);
 					}
 				}
 				catch (RasterFormatException rfe)
@@ -173,6 +177,21 @@ public class AmbilightHandler
 					// catch, but ignore
 				}
 			}
+			
+			// Updating the panel preview int real time is too intensive on the computer
+//			new Thread(() ->
+//			{
+//				for (Panel[] row : rows)
+//				{
+//					for (Panel p : row)
+//					{
+//						if (colors.get(p) != null)
+//						{
+//							canvas.setPanelColor(p, colors.get(p));
+//						}
+//					}
+//				}
+//			}).start();
 		}
 		aurora.externalStreaming().sendStaticEffect(ceb.build("", false));
 	}

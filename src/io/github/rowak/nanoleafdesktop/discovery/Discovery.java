@@ -31,8 +31,8 @@ public class Discovery
 			{
 				HttpRequest request = HttpRequest.get(String.format(
 						"%s/effects/%s?page=%d", BASE_ENDPOINT, type, page));
-				request.connectTimeout(5000);
-				request.readTimeout(5000);
+				request.connectTimeout(10000);
+				request.readTimeout(10000);
 				return new JSONObject(request.body());
 			}
 			catch (JSONException je)
@@ -59,8 +59,8 @@ public class Discovery
 	{
 		HttpRequest request = HttpRequest.get(String.format("%s/effects/download/%s",
 				BASE_ENDPOINT, key));
-		request.connectTimeout(5000);
-		request.readTimeout(5000);
+		request.connectTimeout(10000);
+		request.readTimeout(10000);
 		return Effect.fromJSON(request.body());
 	}
 }

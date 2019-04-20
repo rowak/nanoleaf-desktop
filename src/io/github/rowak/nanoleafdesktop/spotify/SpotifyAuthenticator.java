@@ -41,14 +41,17 @@ public class SpotifyAuthenticator
 	public SpotifyAuthenticator()
 			throws SpotifyWebApiException, IOException, InterruptedException
 	{
-		String savedToken = getSavedAccessToken();
-		if (savedToken != null)
+		String savedAccessToken = getSavedAccessToken();
+		String savedRefreshToken = getSavedRefreshToken();
+		if (savedAccessToken != null && savedRefreshToken != null)
 		{
 			AuthorizationCodeCredentials credentials =
 					new AuthorizationCodeCredentials.Builder()
-					.setAccessToken(savedToken).build();
+					.setAccessToken(savedAccessToken)
+					.setRefreshToken(savedRefreshToken).build();
 			spotifyApi.setAccessToken(credentials.getAccessToken());
 			spotifyApi.setRefreshToken(credentials.getRefreshToken());
+			startRefreshTokenTimer();
 		}
 		else
 		{
@@ -57,7 +60,7 @@ public class SpotifyAuthenticator
 			AuthorizationCodeCredentials credentials = authCodeRequest.execute();
 			spotifyApi.setAccessToken(credentials.getAccessToken());
 			spotifyApi.setRefreshToken(credentials.getRefreshToken());
-			writeAccessToken(credentials.getAccessToken());
+			writeAccessToken(credentials.getAccessToken(), credentials.getRefreshToken());
 		}
 	}
 	
@@ -95,7 +98,7 @@ public class SpotifyAuthenticator
 	
 	private void stopServer(AuthCallbackServer server)
 	{
-		// Wait for server to server client, then close the server
+		// Wait for server to serve client, then close the server
 		new Timer().schedule(new TimerTask()
 		{
 			@Override
@@ -109,7 +112,7 @@ public class SpotifyAuthenticator
 	private void startRefreshTokenTimer()
 	{
 		/*
-		 * Start the refresh token timer to request a new token when
+		 * Start the refresh token timer to request a new token before
 		 * the previous one expires (every 3500 seconds)
 		 */
 		new Timer().scheduleAtFixedRate(new TimerTask()
@@ -119,6 +122,7 @@ public class SpotifyAuthenticator
 			{
 				try
 				{
+					System.out.println("new token");
 					refreshToken();
 				}
 				catch (Exception e)
@@ -136,15 +140,14 @@ public class SpotifyAuthenticator
 				spotifyApi.authorizationCodeRefresh().build();
 		AuthorizationCodeCredentials credentials = authCodeRefreshRequest.execute();
 		spotifyApi.setAccessToken(credentials.getAccessToken());
-		spotifyApi.setRefreshToken(credentials.getRefreshToken());
-		System.out.println("Expires in: " + credentials.getExpiresIn());
-		writeAccessToken(credentials.getAccessToken());
+		writeAccessToken(credentials.getAccessToken(), spotifyApi.getRefreshToken());
 	}
 	
-	private void writeAccessToken(String token)
+	private void writeAccessToken(String accessToken, String refreshToken)
 	{
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
-		manager.setProperty("spotifyToken", token);
+		manager.setProperty("spotifyToken", accessToken);
+		manager.setProperty("spotifyRefreshToken", refreshToken);
 		
 		Date now = Calendar.getInstance().getTime();
 		manager.setProperty("spotifyTokenCreated", now.getTime());
@@ -161,7 +164,31 @@ public class SpotifyAuthenticator
 				Date time = new Date(Long.parseLong(dateStr));
 				Date now = Calendar.getInstance().getTime();
 				String token = manager.getProperty("spotifyToken");
-				if (now.getTime() - time.getTime() < 3550000 && token != null)
+				if (now.getTime() - time.getTime() < (3500*1000) && token != null)
+				{
+					return token;
+				}
+			}
+			catch (NumberFormatException nfe)
+			{
+				nfe.printStackTrace();
+			}
+		}
+		return null;
+	}
+	
+	public static String getSavedRefreshToken()
+	{
+		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+		String dateStr = manager.getProperty("spotifyTokenCreated");
+		if (dateStr != null)
+		{
+			try
+			{
+				Date time = new Date(Long.parseLong(dateStr));
+				Date now = Calendar.getInstance().getTime();
+				String token = manager.getProperty("spotifyRefreshToken");
+				if (now.getTime() - time.getTime() < (3500*1000) && token != null)
 				{
 					return token;
 				}
