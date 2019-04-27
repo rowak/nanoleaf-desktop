@@ -36,7 +36,7 @@ import javax.swing.JSlider;
 
 public class AmbilightPanel extends JPanel
 {
-	private final int DEFAULT_DELAY = 100; // default delay in milliseconds
+	private final int DEFAULT_DELAY = 500; // default delay in milliseconds
 	private final int MAX_DELAY = 1000;
 	private final int MIN_DELAY = 5;
 	private final int DEFAULT_BRIGHTNESS = 2; // default brightness as an arbitrary coefficient
@@ -85,9 +85,9 @@ public class AmbilightPanel extends JPanel
 		add(lblUpdateDelay, "cell 0 1,gapx 0 15");
 		
 		updateDelaySlider = new JSlider();
-		updateDelaySlider.setValue(DEFAULT_DELAY);
 		updateDelaySlider.setMaximum(MAX_DELAY);
 		updateDelaySlider.setMinimum(MIN_DELAY);
+		updateDelaySlider.setValue(DEFAULT_DELAY);
 		updateDelaySlider.setBackground(UIConstants.darkBackground);
 		updateDelaySlider.setUI(new ModernSliderUI(updateDelaySlider));
 		updateDelaySlider.addChangeListener(new ChangeListener()
@@ -112,8 +112,8 @@ public class AmbilightPanel extends JPanel
 		add(lblBrightness, "cell 0 2");
 		
 		brightnessSlider = new JSlider();
-		brightnessSlider.setValue(DEFAULT_BRIGHTNESS);
 		brightnessSlider.setMaximum(MAX_BRIGHTNESS);
+		brightnessSlider.setValue(DEFAULT_BRIGHTNESS);
 		brightnessSlider.setBackground(UIConstants.darkBackground);
 		brightnessSlider.setUI(new ModernSliderUI(brightnessSlider));
 		brightnessSlider.addChangeListener(new ChangeListener()
