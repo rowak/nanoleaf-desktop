@@ -22,6 +22,7 @@ import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyPlayer;
 import io.github.rowak.nanoleafdesktop.spotify.UserOption;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyEffect;
+import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyFireworksEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
@@ -426,6 +427,9 @@ public class SpotifyPanel extends JPanel
 					case SOUNDBAR:
 						return new SpotifySoundBarEffect(
 								convertPalette(palette), Direction.RIGHT, aurora);
+					case FIREWORKS:
+						return new SpotifyFireworksEffect(
+								convertPalette(palette), aurora);
 				}
 			}
 			catch (StatusCodeException sce)

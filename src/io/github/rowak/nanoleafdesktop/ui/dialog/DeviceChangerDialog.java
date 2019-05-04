@@ -26,12 +26,9 @@ import javax.swing.border.LineBorder;
 
 import org.json.JSONObject;
 
-import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
-
 import io.github.rowak.Aurora;
 import io.github.rowak.AuroraMetadata;
 import io.github.rowak.Setup;
-import io.github.rowak.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;

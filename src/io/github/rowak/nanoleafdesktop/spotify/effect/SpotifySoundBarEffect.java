@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.wrapper.spotify.model_objects.miscellaneous.AudioAnalysisSegment;
+
 import io.github.rowak.Aurora;
 import io.github.rowak.Color;
 import io.github.rowak.Effect.Direction;
@@ -13,6 +15,7 @@ import io.github.rowak.nanoleafdesktop.spotify.SpecificAudioAnalysis;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
 import io.github.rowak.nanoleafdesktop.spotify.UserOption;
 import io.github.rowak.nanoleafdesktop.tools.PanelTableSort;
+import io.github.rowak.nanoleafdesktop.tools.SpotifyEffectUtils;
 
 public class SpotifySoundBarEffect extends SpotifyEffect
 {
@@ -44,16 +47,17 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 	public void run(SpecificAudioAnalysis analysis)
 					throws StatusCodeException, IOException
 	{
-		updateLoudness(analysis);
+		AudioAnalysisSegment segment = analysis.getSegment();
+		updateLoudness(segment);
 		
-		if (analysis.getSegment() != null)
+		if (segment != null && palette.length > 0)
 		{
 			List<Panel> updated = new ArrayList<Panel>();
 			int max = (int)(panelTable.length * loudness);
 			float duration = 0.5f;
-			if (analysis.getSegment() != null)
+			if (segment != null)
 			{
-				duration = analysis.getSegment().getMeasure().getDuration();
+				duration = segment.getMeasure().getDuration();
 			}
 			
 			for (int i = 0; i < panelTable.length; i++)
@@ -124,7 +128,6 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 			{
 				try
 				{
-					//Thread.sleep(70);
 					Thread.sleep((int)(duration*1000));
 					for (int i = 0; i < panelTable.length; i++)
 					{
@@ -175,13 +178,14 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 		}
 	}
 	
-	private void updateLoudness(SpecificAudioAnalysis analysis)
+	private void updateLoudness(AudioAnalysisSegment segment)
 	{
-		if (analysis.getSegment() != null)
+		if (segment != null)
 		{
-			float avg = (analysis.getSegment().getLoudnessMax() +
-					analysis.getSegment().getLoudnessStart()+0.1f)/2f;
-			loudness = loudnessToPercent(avg, analysis.getSegment().getLoudnessMax());
+			float avg = (segment.getLoudnessMax() +
+					segment.getLoudnessStart()+0.1f)/2f;
+			loudness = SpotifyEffectUtils.loudnessToPercent(avg,
+					segment.getLoudnessMax());
 		}
 	}
 	
@@ -219,20 +223,6 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 		int g = (int)Math.abs((factor * color.getGreen()) + ((1 - factor) * bg.getGreen()));
 		int b = (int)Math.abs((factor * color.getBlue()) + ((1 - factor) * bg.getBlue()));
 		return new java.awt.Color(r, g, b);
-	}
-	
-	private float loudnessToPercent(float loudness, float max)
-	{
-		final float MIN = -40.0f;
-		if (loudness < MIN)
-		{
-			return 0f;
-		}
-		else if (loudness > max)
-		{
-			return 1f;
-		}
-		return (1 - loudness/MIN);
 	}
 	
 	private void reversePanelTable(Panel[][] table)

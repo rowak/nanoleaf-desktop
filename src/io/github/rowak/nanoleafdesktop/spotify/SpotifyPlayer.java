@@ -28,6 +28,7 @@ import io.github.rowak.StatusCodeException;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
 import io.github.rowak.effectbuilder.CustomEffectBuilder;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyEffect;
+import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyFireworksEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
@@ -175,6 +176,9 @@ public class SpotifyPlayer
 				Direction direction = getDirectionFromStr(directionStr);
 				effect = new SpotifySoundBarEffect(palette, direction, aurora);
 				break;
+			case FIREWORKS:
+				effect = new SpotifyFireworksEffect(palette, aurora);
+				break;
 		}
 	}
 	
@@ -239,6 +243,7 @@ public class SpotifyPlayer
 		}
 		catch (NullPointerException npe)
 		{
+			npe.printStackTrace();
 			init();
 		}
 		catch (IOException ioe)

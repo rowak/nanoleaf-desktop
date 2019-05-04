@@ -206,7 +206,8 @@ public class PanelCanvas extends JPanel
 					}
 					else if (currentEffect.getAnimType().equals(Effect.Type.CUSTOM))
 					{
-						customEffectDisplay.changeEffect(currentEffect);
+						// **************** Currently disabled ****************
+						//customEffectDisplay.changeEffect(currentEffect);
 					}
 					else if (!currentEffect.getAnimType().equals(Effect.Type.STATIC))
 					{

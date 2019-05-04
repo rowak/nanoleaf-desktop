@@ -282,28 +282,4 @@ public class CaptureAreaWindow extends JFrame
 			}
 		}
 	}
-	
-//	private Rectangle getMaxCaptureArea()
-//	{
-//		GraphicsEnvironment ge = GraphicsEnvironment
-//				.getLocalGraphicsEnvironment();
-//		GraphicsDevice[] gs = ge.getScreenDevices();
-//		int smallestX = gs[0].getConfigurations()[0].getBounds().x;
-//		int smallestY = gs[0].getConfigurations()[0].getBounds().y;
-//		int totalWidth = gs[0].getConfigurations()[0].getBounds().width;
-//		int totalHeight = gs[0].getConfigurations()[0].getBounds().height;
-//		for (int i = 0; i < gs.length; i++)
-//		{
-//			GraphicsConfiguration config = gs[i].getConfigurations()[0];
-//			Rectangle bounds = config.getBounds();
-//			if (bounds.x < smallestX)
-//				smallestX = bounds.x;
-//			if (bounds.y < smallestY)
-//				smallestY = bounds.y;
-//			totalWidth += bounds.width;
-//			totalHeight += bounds.height;
-//		}
-//		return new Rectangle(smallestX, smallestY,
-//				totalWidth, totalHeight);
-//	}
 }

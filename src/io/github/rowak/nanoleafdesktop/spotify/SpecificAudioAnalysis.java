@@ -7,9 +7,9 @@ import com.wrapper.spotify.model_objects.miscellaneous.AudioAnalysisSegment;
 
 public class SpecificAudioAnalysis
 {
-	private AudioAnalysisMeasure bar, beat, tatum;
-	private AudioAnalysisSection section;
-	private AudioAnalysisSegment segment;
+	private int time;
+	private float sensitivity;
+	private AudioAnalysis analysis;
 	
 	public static SpecificAudioAnalysis getAnalysis(
 			AudioAnalysis analysis, int time, float sensitivity)
@@ -17,132 +17,121 @@ public class SpecificAudioAnalysis
 		final SpecificAudioAnalysis specificAnalysis =
 				new SpecificAudioAnalysis();
 		
-		specificAnalysis.bar = getBarAtPos(analysis, time, sensitivity);
-		specificAnalysis.beat = getBeatAtPos(analysis, time, sensitivity);
-		specificAnalysis.tatum = getTatumAtPos(analysis, time, sensitivity);
-		specificAnalysis.section = getSectionAtPos(analysis, time, sensitivity);
-		specificAnalysis.segment = getSegmentAtPos(analysis, time, sensitivity);
+		specificAnalysis.analysis = analysis;
+		specificAnalysis.time = time;
+		specificAnalysis.sensitivity = sensitivity;
 		
 		return specificAnalysis;
 	}
 	
 	public AudioAnalysisMeasure getBar()
 	{
-		return bar;
+		return getMeasureAtTime(analysis, analysis.getBars(), time,
+				sensitivity, 0, analysis.getBars().length-1);
 	}
 	
 	public AudioAnalysisMeasure getBeat()
 	{
-		return beat;
+		return getMeasureAtTime(analysis, analysis.getBeats(), time,
+				sensitivity, 0, analysis.getBeats().length-1);
 	}
 	
 	public AudioAnalysisMeasure getTatum()
 	{
-		return tatum;
-	}
-	
-	public AudioAnalysisSection getSection()
-	{
-		return section;
+		return getMeasureAtTime(analysis, analysis.getTatums(), time,
+				sensitivity, 0, analysis.getTatums().length-1);
 	}
 	
 	public AudioAnalysisSegment getSegment()
 	{
-		return segment;
+		return getSegmentInTimeRange(analysis, analysis.getSegments(), time,
+				sensitivity, 0, analysis.getSegments().length-1);
 	}
 	
-	private static AudioAnalysisMeasure getBarAtPos(AudioAnalysis analysis,
-			int time, float sensitivity)
+	public AudioAnalysisSection getSection()
 	{
-		for (AudioAnalysisMeasure measure : analysis.getBars())
+		return getSectionInTimeRange(analysis, analysis.getSections(), time,
+				sensitivity, 0, analysis.getSections().length-1);
+	}
+	
+	private static AudioAnalysisMeasure getMeasureAtTime(AudioAnalysis analysis,
+			AudioAnalysisMeasure[] measures, int time, float sensitivity, int left, int right)
+	{
+		if (right >= left)
 		{
-			if (measureAtTime(measure, time, sensitivity))
+			int middle = left+(right-left)/2;
+			double start = round(measures[middle].getStart(), 1);
+			double pos = round((float)time/1000, 1);
+			if (start == pos && isInSensitivityRange(
+					measures[middle].getConfidence(), sensitivity))
 			{
-				return measure;
+				return measures[middle];
 			}
+			
+			if (start > pos)
+			{
+				return getMeasureAtTime(analysis, measures, time, sensitivity, left, middle-1);
+			}
+			
+			return getMeasureAtTime(analysis, measures, time, sensitivity, middle+1, right);
 		}
 		return null;
 	}
 	
-	private static AudioAnalysisMeasure getBeatAtPos(AudioAnalysis analysis,
-			int time, float sensitivity)
+	private static AudioAnalysisSection getSectionInTimeRange(AudioAnalysis analysis,
+			AudioAnalysisSection[] sections, int time, float sensitivity, int left, int right)
 	{
-		for (AudioAnalysisMeasure measure : analysis.getBeats())
+		if (right >= left)
 		{
-			if (measureAtTime(measure, time, sensitivity))
+			int middle = left+(right-left)/2;
+			AudioAnalysisMeasure measure = sections[middle].getMeasure();
+			double start = round(measure.getStart(), 1);
+			double end = start + round(measure.getDuration(), 1);
+			double pos = round((float)time/1000, 1);
+			if (start < pos && pos < end && isInSensitivityRange(
+					measure.getConfidence(), sensitivity))
 			{
-				return measure;
+				return sections[middle];
 			}
+			
+			if (end > pos)
+			{
+				return getSectionInTimeRange(analysis, sections, time,
+						sensitivity, left, middle-1);
+			}
+			
+			return getSectionInTimeRange(analysis, sections, time,
+					sensitivity, middle+1, right);
 		}
 		return null;
 	}
 	
-	private static AudioAnalysisMeasure getTatumAtPos(AudioAnalysis analysis,
-			int time, float sensitivity)
+	private static AudioAnalysisSegment getSegmentInTimeRange(AudioAnalysis analysis,
+			AudioAnalysisSegment[] sections, int time, float sensitivity, int left, int right)
 	{
-		for (AudioAnalysisMeasure measure : analysis.getTatums())
+		if (right >= left)
 		{
-			if (measureAtTime(measure, time, sensitivity))
+			int middle = left+(right-left)/2;
+			AudioAnalysisMeasure measure = sections[middle].getMeasure();
+			double start = round(measure.getStart(), 1);
+			double end = start + round(measure.getDuration(), 1);
+			double pos = round((float)time/1000, 1);
+			if (start < pos && pos < end && isInSensitivityRange(
+					measure.getConfidence(), sensitivity))
 			{
-				return measure;
+				return sections[middle];
 			}
+			
+			if (end > pos)
+			{
+				return getSegmentInTimeRange(analysis, sections, time,
+						sensitivity, left, middle-1);
+			}
+			
+			return getSegmentInTimeRange(analysis, sections, time,
+					sensitivity, middle+1, right);
 		}
 		return null;
-	}
-	
-	private static AudioAnalysisSegment getSegmentAtPos(AudioAnalysis analysis,
-			int time, float sensitivity)
-	{
-		for (AudioAnalysisSegment segment : analysis.getSegments())
-		{
-			AudioAnalysisMeasure measure = segment.getMeasure();
-			if (measureAtTime(measure, time, sensitivity))
-			{
-				return segment;
-			}
-		}
-		return null;
-	}
-	
-	private static AudioAnalysisSection getSectionAtPos(AudioAnalysis analysis,
-			int time, float sensitivity)
-	{
-		for (AudioAnalysisSection section : analysis.getSections())
-		{
-			AudioAnalysisMeasure measure = section.getMeasure();
-			if (measureInTimeRange(measure, time, sensitivity))
-			{
-				return section;
-			}
-		}
-		return null;
-	}
-	
-	private static boolean measureAtTime(AudioAnalysisMeasure measure,
-			int time, float sensitivity)
-	{
-		double start = round(measure.getStart(), 1);
-		double pos = round((float)time/1000, 1);
-		if (start == pos && isInSensitivityRange(
-				measure.getConfidence(), sensitivity))
-		{
-			return true;
-		}
-		return false;
-	}
-	
-	private static boolean measureInTimeRange(AudioAnalysisMeasure measure,
-			int time, float sensitivity)
-	{
-		double start = round(measure.getStart(), 1);
-		double pos = round((float)time/1000, 1);
-		double end = start + round(measure.getDuration(), 1);
-		if (start < pos && pos < end && isInSensitivityRange(
-				measure.getConfidence(), sensitivity))
-		{
-			return true;
-		}
-		return false;
 	}
 	
 	private static double round(float num, int decimals)

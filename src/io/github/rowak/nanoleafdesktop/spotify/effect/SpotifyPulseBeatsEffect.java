@@ -13,10 +13,11 @@ import io.github.rowak.StatusCodeException;
 import io.github.rowak.effectbuilder.CustomEffectBuilder;
 import io.github.rowak.nanoleafdesktop.spotify.SpecificAudioAnalysis;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
+import io.github.rowak.nanoleafdesktop.tools.SpotifyEffectUtils;
 
 public class SpotifyPulseBeatsEffect extends SpotifyEffect
 {
-	private float loudness;
+	private float loudness = 0.5f;
 	private Random random;
 	
 	public SpotifyPulseBeatsEffect(Color[] palette, Aurora aurora)
@@ -32,9 +33,9 @@ public class SpotifyPulseBeatsEffect extends SpotifyEffect
 	public void run(SpecificAudioAnalysis analysis)
 					throws StatusCodeException, IOException
 	{
-		updateLoudness(analysis);
+		loudness = SpotifyEffectUtils.getLoudness(loudness, analysis);
 		
-		if (analysis.getBeat() != null)
+		if (analysis.getBeat() != null && palette.length > 0)
 		{
 			int panelIndex = random.nextInt(panels.length);
 			int panelId = panels[panelIndex].getId();
@@ -87,15 +88,16 @@ public class SpotifyPulseBeatsEffect extends SpotifyEffect
 		}
 	}
 	
-	private void updateLoudness(SpecificAudioAnalysis analysis)
-	{
-		if (analysis.getSegment() != null)
-		{
-			float avg = (analysis.getSegment().getLoudnessMax() +
-					analysis.getSegment().getLoudnessStart()+0.1f)/2f;
-			loudness = loudnessToPercent(avg, analysis.getSegment().getLoudnessMax());
-		}
-	}
+//	private void updateLoudness(SpecificAudioAnalysis analysis)
+//	{
+//		AudioAnalysisSegment segment = analysis.getSegment();
+//		if (segment != null)
+//		{
+//			float avg = (segment.getLoudnessMax() +
+//					segment.getLoudnessStart()+0.1f)/2f;
+//			loudness = loudnessToPercent(avg, segment.getLoudnessMax());
+//		}
+//	}
 	
 	private java.awt.Color applyLoudnessToColor(java.awt.Color color)
 	{
@@ -107,29 +109,14 @@ public class SpotifyPulseBeatsEffect extends SpotifyEffect
 		return color;
 	}
 	
-	private float loudnessToPercent(float loudness, float max)
-	{
-		final float MIN = -40.0f;
-		if (loudness < MIN)
-		{
-			return 0f;
-		}
-		else if (loudness > max)
-		{
-			return 1f;
-		}
-		return (1 - loudness/MIN);
-	}
-	
-//	private float loudnessToPercent(float loudness)
+//	private float loudnessToPercent(float loudness, float max)
 //	{
-//		final float MAX = 0f;
 //		final float MIN = -40.0f;
 //		if (loudness < MIN)
 //		{
 //			return 0f;
 //		}
-//		else if (loudness > MAX)
+//		else if (loudness > max)
 //		{
 //			return 1f;
 //		}

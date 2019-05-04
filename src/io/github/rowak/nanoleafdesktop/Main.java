@@ -67,7 +67,7 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.7.0", true);
+	public static final Version VERSION = new Version("v0.7.1", false);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
@@ -85,6 +85,8 @@ public class Main extends JFrame
 	private InformationPanel infoPanel;
 	private DiscoveryPanel discoveryPanel;
 	private AmbilightPanel ambilightPanel;
+	private SpotifyPanel spotifyPanel;
+	private KeyShortcutsPanel shortcutsPanel;
 	private JLabel lblTitle;
 	private EffectsPanel regEffectsPanel;
 	private EffectsPanel rhythEffectsPanel;
@@ -249,8 +251,11 @@ public class Main extends JFrame
 		loadDeviceName();
 		canvas.setAurora(device);
 		canvas.initCanvas();
+		infoPanel.setAurora(device);
 		discoveryPanel.setAurora(device);
 		ambilightPanel.setAurora(device);
+		spotifyPanel.setAurora(device);
+		shortcutsPanel.setAurora(device);
 	}
 	
 	public void loadEffects() throws StatusCodeException
@@ -261,6 +266,8 @@ public class Main extends JFrame
 			{
 				new Thread(() ->
 				{
+					regEffectsPanel.clearEffects();
+					rhythEffectsPanel.clearEffects();
 					try
 					{
 						for (Effect effect : device.effects().getAllEffects())
@@ -636,10 +643,10 @@ public class Main extends JFrame
 		ambilightPanel = new AmbilightPanel(canvas);
 		editor.addTab("Ambient Lighting", null, ambilightPanel, null);
 		
-		SpotifyPanel spotifyPanel = new SpotifyPanel(device);
+		spotifyPanel = new SpotifyPanel(device);
 		editor.addTab("Spotify Visualizer", null, spotifyPanel, null);
 		
-		KeyShortcutsPanel shortcutsPanel = new KeyShortcutsPanel(device);
+		shortcutsPanel = new KeyShortcutsPanel(device);
 		shortcutsPanel.setBorder(new LineBorder(Color.GRAY, 1, true));
 		editor.addTab("Shortcuts", null, shortcutsPanel, null);
 		

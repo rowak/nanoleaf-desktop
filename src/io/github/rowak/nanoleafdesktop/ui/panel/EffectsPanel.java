@@ -25,7 +25,8 @@ public class EffectsPanel extends JScrollPane
 	private JList<String> effects;
 	private DefaultListModel<String> model;
 	
-	public EffectsPanel(String label, Main parent, Aurora device, PanelCanvas canvas)
+	public EffectsPanel(String label, Main parent,
+			Aurora device, PanelCanvas canvas)
 	{
 		init(label, parent, device, canvas);
 	}
@@ -44,6 +45,11 @@ public class EffectsPanel extends JScrollPane
 		{
 			model.removeElement(effect);
 		}
+	}
+	
+	public void clearEffects()
+	{
+		model.clear();
 	}
 	
 	public DefaultListModel<String> getModel()
