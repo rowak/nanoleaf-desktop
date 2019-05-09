@@ -13,10 +13,16 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.Timer;
+
+import org.json.JSONObject;
+
+import com.github.kevinsawicki.http.HttpRequest;
+import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
 import io.github.rowak.Aurora;
 import io.github.rowak.Effect;
@@ -291,15 +297,71 @@ public class AmbilightHandler
 	
 	private void startExternalStreaming()
 	{
+		String deviceType = getDeviceType();
+		if (deviceType.equals("aurora"))
+		{
+			try
+			{
+				aurora.externalStreaming().enable();
+			}
+			catch (StatusCodeException sce)
+			{
+				showMessageBox("Failed to start ambient lighting server. " +
+						"Please reload the application and try again.");
+			}
+		}
+		else if (deviceType.equals("canvas"))
+		{
+			enableExtStreamingCanvas();
+		}
+		else
+		{
+			showMessageBox("Your device is not supported by this feature " +
+					"or it has not been recognized correctly.");
+		}
+	}
+	
+	/*
+	 * The canvas requires the version number to be specified
+	 * in order to enable external streaming to be enabled. This
+	 * function is not supported by the nanoleaf-aurora api interface.
+	 */
+	private void enableExtStreamingCanvas()
+	{
 		try
 		{
-			aurora.externalStreaming().enable();
+			String body = "{\"write\": {\"command\": \"display\", \"animType\": " +
+					"\"extControl\", \"extControlVersion\": \"v2\"}}";
+			String url = String.format("http://%s:%d/api/%s/%s/%s",
+					aurora.getHostName(), aurora.getPort(),
+					aurora.getApiLevel(), aurora.getAccessToken(), "effects");
+			HttpRequest req = HttpRequest.put(url);
+			req.connectTimeout(2000);
+			if (body != null)
+				req.send(body);
+			JSONObject response = new JSONObject(req.body());
+			String host = response.getString("streamControlIpAddr");
+			int port = response.getInt("streamControlPort");
+			aurora.externalStreaming().setAddress(new InetSocketAddress(host, port));
 		}
-		catch (StatusCodeException sce)
+		catch (HttpRequestException hre)
 		{
-			showMessageBox("Failed to start ambient lighting server. " +
-					"Please reload the application and try again.");
+			hre.printStackTrace();
 		}
+	}
+	
+	private String getDeviceType()
+	{
+		if (aurora.getName().toLowerCase().contains("light panels") ||
+				aurora.getName().toLowerCase().contains("aurora"))
+		{
+			return "aurora";
+		}
+		else if (aurora.getName().toLowerCase().contains("canvas"))
+		{
+			return "canvas";
+		}
+		return null;
 	}
 	
 	private boolean sameColor(Color color1, Color color2)

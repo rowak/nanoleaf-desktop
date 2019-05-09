@@ -88,17 +88,6 @@ public class SpotifyPulseBeatsEffect extends SpotifyEffect
 		}
 	}
 	
-//	private void updateLoudness(SpecificAudioAnalysis analysis)
-//	{
-//		AudioAnalysisSegment segment = analysis.getSegment();
-//		if (segment != null)
-//		{
-//			float avg = (segment.getLoudnessMax() +
-//					segment.getLoudnessStart()+0.1f)/2f;
-//			loudness = loudnessToPercent(avg, segment.getLoudnessMax());
-//		}
-//	}
-	
 	private java.awt.Color applyLoudnessToColor(java.awt.Color color)
 	{
 		float[] hsb = new float[3];
@@ -108,18 +97,4 @@ public class SpotifyPulseBeatsEffect extends SpotifyEffect
 		color = java.awt.Color.getHSBColor(hsb[0], hsb[1], hsb[2]);
 		return color;
 	}
-	
-//	private float loudnessToPercent(float loudness, float max)
-//	{
-//		final float MIN = -40.0f;
-//		if (loudness < MIN)
-//		{
-//			return 0f;
-//		}
-//		else if (loudness > max)
-//		{
-//			return 1f;
-//		}
-//		return (1 - loudness/MIN);
-//	}
 }

@@ -44,12 +44,14 @@ public class SpotifyFireworksEffect extends SpotifyEffect
 			{				
 				try
 				{
-					int colorIndex = random.nextInt(palette.length-1);
+					int colorIndex = random.nextInt(palette.length);
 					List<Panel> updatedPanels = new ArrayList<Panel>();
+					int usedPanels = 0;
 					for (Panel p : panels)
 					{
 						if (random.nextBoolean())
 						{
+							usedPanels++;
 							updatedPanels.add(p);
 							int r = palette[colorIndex].getRed();
 							int g = palette[colorIndex].getGreen();
@@ -59,6 +61,7 @@ public class SpotifyFireworksEffect extends SpotifyEffect
 									color.getGreen(), color.getBlue(), 1);
 						}
 					}
+					System.out.println(usedPanels);
 					
 					Thread.sleep(50);
 					

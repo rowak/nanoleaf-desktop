@@ -7,7 +7,7 @@ import javax.swing.JLabel;
 
 public class TextDialog extends BasicDialog
 {
-	public TextDialog(Component parent,  String text)
+	public TextDialog(Component parent, String text)
 	{
 		super();
 		

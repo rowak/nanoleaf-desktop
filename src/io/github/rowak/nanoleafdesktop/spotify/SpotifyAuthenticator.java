@@ -122,7 +122,6 @@ public class SpotifyAuthenticator
 			{
 				try
 				{
-					System.out.println("new token");
 					refreshToken();
 				}
 				catch (Exception e)

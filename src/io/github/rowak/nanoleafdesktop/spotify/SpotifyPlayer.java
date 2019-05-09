@@ -185,6 +185,7 @@ public class SpotifyPlayer
 	public void setPalette(Color[] palette)
 			throws IOException, StatusCodeException
 	{
+		this.palette = palette;
 		effect.setPalette(palette);
 	}
 	
