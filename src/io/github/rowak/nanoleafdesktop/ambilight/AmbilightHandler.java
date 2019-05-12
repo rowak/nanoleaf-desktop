@@ -19,8 +19,6 @@ import java.util.Map;
 
 import javax.swing.Timer;
 
-import org.json.JSONObject;
-
 import com.github.kevinsawicki.http.HttpRequest;
 import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
@@ -30,6 +28,8 @@ import io.github.rowak.Frame;
 import io.github.rowak.Panel;
 import io.github.rowak.StatusCodeException;
 import io.github.rowak.effectbuilder.CustomEffectBuilder;
+import io.github.rowak.nanoleafdesktop.tools.CanvasTempAnimDataBuilder;
+import io.github.rowak.nanoleafdesktop.tools.CanvasTempExtStreaming;
 import io.github.rowak.nanoleafdesktop.tools.PanelTableSort;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.panel.AmbilightPanel;
@@ -137,13 +137,26 @@ public class AmbilightHandler
 		originalColor = addAdditionalBrightness(originalColor, brightness);
 		if (!sameColor(originalColor, currentColor))
 		{
-			Effect ef = new CustomEffectBuilder(aurora)
-					.addFrameToAllPanels(new Frame(originalColor.getRed(),
-							originalColor.getGreen(), originalColor.getBlue(), 0, 5))
-					.build("", false);
-			aurora.externalStreaming().sendStaticEffect(ef);
-			currentColor = originalColor;
-			ef = null;
+			String deviceType = getDeviceType();
+			if (deviceType.equals("aurora"))
+			{
+				Effect ef = new CustomEffectBuilder(aurora)
+						.addFrameToAllPanels(new Frame(originalColor.getRed(),
+								originalColor.getGreen(), originalColor.getBlue(), 0, 5))
+						.build("", false);
+				aurora.externalStreaming().sendStaticEffect(ef);
+				currentColor = originalColor;
+				ef = null;
+			}
+			else if (deviceType.equals("canvas"))
+			{
+				String animData = new CanvasTempAnimDataBuilder(aurora)
+						.addFrameToAllPanels(new Frame(originalColor.getRed(),
+								originalColor.getGreen(), originalColor.getBlue(), 0, 5))
+						.build();
+				CanvasTempExtStreaming.sendAnimData(animData, aurora);
+				currentColor = originalColor;
+			}
 			
 			new Thread(() ->
 			{
@@ -155,51 +168,73 @@ public class AmbilightHandler
 	private void applySelectionMode()
 			throws StatusCodeException, IOException
 	{
-		CustomEffectBuilder ceb = new CustomEffectBuilder(aurora);
-		BufferedImage img = getScreenImage();
-		final int VERTICAL_SEPARATOR = captureArea.height/rows.length;
-		for (int i = 0; i < rows.length; i++)
+		String deviceType = getDeviceType();
+		if (deviceType.equals("aurora"))
 		{
-			int captureY = VERTICAL_SEPARATOR*i + VERTICAL_SEPARATOR/2;
-			
-			Map<Panel, Color> colors = new HashMap<Panel, Color>();
-			for (int j = 0; j < rows[i].length; j++)
+			CustomEffectBuilder ceb = new CustomEffectBuilder(aurora);
+			BufferedImage img = getScreenImage();
+			final int VERTICAL_SEPARATOR = captureArea.height/rows.length;
+			for (int i = 0; i < rows.length; i++)
 			{
-				final int HORIZONTAL_SEPARATOR = captureArea.width/rows[i].length;
-				int captureX = HORIZONTAL_SEPARATOR*j + HORIZONTAL_SEPARATOR/2;
+				int captureY = VERTICAL_SEPARATOR*i + VERTICAL_SEPARATOR/2;
 				
-				try
+				Map<Panel, Color> colors = new HashMap<Panel, Color>();
+				for (int j = 0; j < rows[i].length; j++)
 				{
-					if (img.getSubimage(captureX, captureY, 1, 1) != null)
+					final int HORIZONTAL_SEPARATOR = captureArea.width/rows[i].length;
+					int captureX = HORIZONTAL_SEPARATOR*j + HORIZONTAL_SEPARATOR/2;
+					
+					try
 					{
-						Color color = new Color(img.getRGB(captureX, captureY));
-						ceb.addFrame(rows[i][j], new Frame(color.getRed(),
-								color.getGreen(), color.getBlue(), 0, 5));
-						colors.put(rows[i][j], color);
+						if (img.getSubimage(captureX, captureY, 1, 1) != null)
+						{
+							Color color = new Color(img.getRGB(captureX, captureY));
+							ceb.addFrame(rows[i][j], new Frame(color.getRed(),
+									color.getGreen(), color.getBlue(), 0, 5));
+							colors.put(rows[i][j], color);
+						}
+					}
+					catch (RasterFormatException rfe)
+					{
+						// catch, but ignore
 					}
 				}
-				catch (RasterFormatException rfe)
+			}
+			aurora.externalStreaming().sendStaticEffect(ceb.build("", false));
+		}
+		else if (deviceType.equals("canvas"))
+		{
+			CanvasTempAnimDataBuilder builder = new CanvasTempAnimDataBuilder(aurora);
+			BufferedImage img = getScreenImage();
+			final int VERTICAL_SEPARATOR = captureArea.height/rows.length;
+			for (int i = 0; i < rows.length; i++)
+			{
+				int captureY = VERTICAL_SEPARATOR*i + VERTICAL_SEPARATOR/2;
+				
+				Map<Panel, Color> colors = new HashMap<Panel, Color>();
+				for (int j = 0; j < rows[i].length; j++)
 				{
-					// catch, but ignore
+					final int HORIZONTAL_SEPARATOR = captureArea.width/rows[i].length;
+					int captureX = HORIZONTAL_SEPARATOR*j + HORIZONTAL_SEPARATOR/2;
+					
+					try
+					{
+						if (img.getSubimage(captureX, captureY, 1, 1) != null)
+						{
+							Color color = new Color(img.getRGB(captureX, captureY));
+							builder.addFrame(rows[i][j], new Frame(color.getRed(),
+									color.getGreen(), color.getBlue(), 0, 5));
+							colors.put(rows[i][j], color);
+						}
+					}
+					catch (RasterFormatException rfe)
+					{
+						// catch, but ignore
+					}
 				}
 			}
-			
-			// Updating the panel preview int real time is too intensive on the computer
-//			new Thread(() ->
-//			{
-//				for (Panel[] row : rows)
-//				{
-//					for (Panel p : row)
-//					{
-//						if (colors.get(p) != null)
-//						{
-//							canvas.setPanelColor(p, colors.get(p));
-//						}
-//					}
-//				}
-//			}).start();
+			CanvasTempExtStreaming.sendAnimData(builder.build(), aurora);
 		}
-		aurora.externalStreaming().sendStaticEffect(ceb.build("", false));
 	}
 	
 	public boolean isRunning()
@@ -312,41 +347,20 @@ public class AmbilightHandler
 		}
 		else if (deviceType.equals("canvas"))
 		{
-			enableExtStreamingCanvas();
+			try
+			{
+				CanvasTempExtStreaming.enable(aurora);
+			}
+			catch (StatusCodeException sce)
+			{
+				showMessageBox("Failed to start ambient lighting server. " +
+						"Please reload the application and try again.");
+			}
 		}
 		else
 		{
 			showMessageBox("Your device is not supported by this feature " +
 					"or it has not been recognized correctly.");
-		}
-	}
-	
-	/*
-	 * The canvas requires the version number to be specified
-	 * in order to enable external streaming to be enabled. This
-	 * function is not supported by the nanoleaf-aurora api interface.
-	 */
-	private void enableExtStreamingCanvas()
-	{
-		try
-		{
-			String body = "{\"write\": {\"command\": \"display\", \"animType\": " +
-					"\"extControl\", \"extControlVersion\": \"v2\"}}";
-			String url = String.format("http://%s:%d/api/%s/%s/%s",
-					aurora.getHostName(), aurora.getPort(),
-					aurora.getApiLevel(), aurora.getAccessToken(), "effects");
-			HttpRequest req = HttpRequest.put(url);
-			req.connectTimeout(2000);
-			if (body != null)
-				req.send(body);
-			JSONObject response = new JSONObject(req.body());
-			String host = response.getString("streamControlIpAddr");
-			int port = response.getInt("streamControlPort");
-			aurora.externalStreaming().setAddress(new InetSocketAddress(host, port));
-		}
-		catch (HttpRequestException hre)
-		{
-			hre.printStackTrace();
 		}
 	}
 	

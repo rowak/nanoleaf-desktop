@@ -31,6 +31,7 @@ import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyFireworksEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
+import io.github.rowak.nanoleafdesktop.tools.CanvasTempExtStreaming;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.panel.SpotifyPanel;
 
@@ -61,7 +62,7 @@ public class SpotifyPlayer
 		setEffect(defaultEffect);
 		if (aurora != null)
 		{
-			aurora.externalStreaming().enable();
+			enableExternalStreaming();
 			start();
 		}
 	}
@@ -141,7 +142,7 @@ public class SpotifyPlayer
 		{
 			try
 			{
-				aurora.externalStreaming().enable();
+				enableExternalStreaming();
 			}
 			catch (StatusCodeException sce)
 			{
@@ -262,7 +263,7 @@ public class SpotifyPlayer
 		clearDisplay();
 		if (effect.requiresExtControl())
 		{
-			aurora.externalStreaming().enable();
+			enableExternalStreaming();
 		}
 	}
 	
@@ -283,7 +284,8 @@ public class SpotifyPlayer
 			{
 				updateTrackProgressText();
 				SpecificAudioAnalysis analysis = SpecificAudioAnalysis
-						.getAnalysis(currentTrackAnalysis, progress+audioOffset, sensitivity);
+						.getAnalysis(currentTrackAnalysis,
+								progress+audioOffset, sensitivity);
 				effect.run(analysis);
 				progress += 100;
 			}
@@ -292,6 +294,33 @@ public class SpotifyPlayer
 				npe.printStackTrace();
 			}
 		}
+	}
+	
+	private void enableExternalStreaming() throws StatusCodeException
+	{
+		String deviceType = getDeviceType();
+		if (deviceType.equals("aurora"))
+		{
+			aurora.externalStreaming().enable();
+		}
+		else if (deviceType.equals("canvas"))
+		{
+			CanvasTempExtStreaming.enable(aurora);
+		}
+	}
+	
+	private String getDeviceType()
+	{
+		if (aurora.getName().toLowerCase().contains("light panels") ||
+				aurora.getName().toLowerCase().contains("aurora"))
+		{
+			return "aurora";
+		}
+		else if (aurora.getName().toLowerCase().contains("canvas"))
+		{
+			return "canvas";
+		}
+		return null;
 	}
 	
 	private void updateTrackProgressText()

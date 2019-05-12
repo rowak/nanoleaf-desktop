@@ -14,6 +14,7 @@ import io.github.rowak.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.spotify.SpecificAudioAnalysis;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
 import io.github.rowak.nanoleafdesktop.spotify.UserOption;
+import io.github.rowak.nanoleafdesktop.tools.CanvasTempExtStreaming;
 import io.github.rowak.nanoleafdesktop.tools.PanelTableSort;
 import io.github.rowak.nanoleafdesktop.tools.SpotifyEffectUtils;
 
@@ -84,38 +85,15 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 				updated.add(p);
 				try
 				{
-					aurora.externalStreaming().setPanel(p,
-							c.getRed(), c.getGreen(), c.getBlue(), 1);
+					setPanel(p, c.getRed(), c.getGreen(),
+							c.getBlue(), 1);
 				}
 				catch (Exception e)
 				{
 					e.printStackTrace();
 				}
 			}
-		}
-		else if (max-i > 0)
-		{
-			if (!updating)
-			{
-				updating = true;
-				new Thread(() ->
-				{
-					for (Panel p : panelTable[max-i])
-					{
-						Color c = getBackgroundColor();
-						try
-						{
-							aurora.externalStreaming().setPanel(p,
-									c.getRed(), c.getGreen(), c.getBlue(), 1);
-						}
-						catch (Exception e)
-						{
-							e.printStackTrace();
-						}
-					}
-					updating = false;
-				}).start();
-			}
+			
 		}
 	}
 	
@@ -134,8 +112,8 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 						for (Panel p : panelTable[i])
 						{
 							Color c = getBackgroundColor();
-							aurora.externalStreaming().setPanel(p, c.getRed(),
-									c.getGreen(), c.getBlue(), max-i);
+							setPanel(p, c.getRed(), c.getGreen(),
+									c.getBlue(), (max-i)-1);
 						}
 					}
 				}
@@ -211,9 +189,9 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 	{
 		Color bg = getBackgroundColor();
 		float factor = (max-i)/(float)max;
-		if (factor+0.2f < 1.0f)
+		if (factor+0.25f < 1.0f)
 		{
-			factor+=0.2f;
+			factor+=0.25f;
 		}
 		else
 		{
@@ -243,5 +221,36 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 			c = Color.fromRGB(0, 0, 0);
 		}
 		return c;
+	}
+	
+	private void setPanel(Panel panel, int red,
+			int green, int blue, int transitionTime)
+					throws StatusCodeException, IOException
+	{
+		String deviceType = getDeviceType();
+		if (deviceType.equals("aurora"))
+		{
+			aurora.externalStreaming().setPanel(panel, red,
+					green, blue, transitionTime);
+		}
+		else if (deviceType.equals("canvas"))
+		{
+			CanvasTempExtStreaming.setPanel(panel, red, green,
+					blue, transitionTime, aurora);
+		}
+	}
+	
+	private String getDeviceType()
+	{
+		if (aurora.getName().toLowerCase().contains("light panels") ||
+				aurora.getName().toLowerCase().contains("aurora"))
+		{
+			return "aurora";
+		}
+		else if (aurora.getName().toLowerCase().contains("canvas"))
+		{
+			return "canvas";
+		}
+		return null;
 	}
 }
