@@ -31,7 +31,7 @@ import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyFireworksEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
-import io.github.rowak.nanoleafdesktop.tools.CanvasTempExtStreaming;
+import io.github.rowak.nanoleafdesktop.tools.CanvasExtStreaming;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.panel.SpotifyPanel;
 
@@ -305,7 +305,7 @@ public class SpotifyPlayer
 		}
 		else if (deviceType.equals("canvas"))
 		{
-			CanvasTempExtStreaming.enable(aurora);
+			CanvasExtStreaming.enable(aurora);
 		}
 	}
 	

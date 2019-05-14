@@ -14,7 +14,7 @@ import io.github.rowak.Panel;
 import io.github.rowak.StatusCodeException;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
 
-public class CanvasTempExtStreaming
+public class CanvasExtStreaming
 {
 	private static InetSocketAddress getAddress(Aurora aurora)
 	{
@@ -36,6 +36,7 @@ public class CanvasTempExtStreaming
 			req.connectTimeout(2000);
 			if (body != null)
 				req.send(body);
+			req.ok();
 		}
 		catch (HttpRequestException hre)
 		{

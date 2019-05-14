@@ -14,7 +14,7 @@ import io.github.rowak.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.spotify.SpecificAudioAnalysis;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
 import io.github.rowak.nanoleafdesktop.spotify.UserOption;
-import io.github.rowak.nanoleafdesktop.tools.CanvasTempExtStreaming;
+import io.github.rowak.nanoleafdesktop.tools.CanvasExtStreaming;
 import io.github.rowak.nanoleafdesktop.tools.PanelTableSort;
 import io.github.rowak.nanoleafdesktop.tools.SpotifyEffectUtils;
 
@@ -93,7 +93,6 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 					e.printStackTrace();
 				}
 			}
-			
 		}
 	}
 	
@@ -235,7 +234,7 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 		}
 		else if (deviceType.equals("canvas"))
 		{
-			CanvasTempExtStreaming.setPanel(panel, red, green,
+			CanvasExtStreaming.setPanel(panel, red, green,
 					blue, transitionTime, aurora);
 		}
 	}

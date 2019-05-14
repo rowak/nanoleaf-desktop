@@ -11,12 +11,12 @@ import io.github.rowak.Panel;
 import io.github.rowak.StatusCodeException;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
 
-public class CanvasTempAnimDataBuilder
+public class CanvasAnimDataBuilder
 {
 	private Panel[] panels;
 	private Map<Integer, List<Frame>> frames;
 	
-	public CanvasTempAnimDataBuilder(Aurora controller)
+	public CanvasAnimDataBuilder(Aurora controller)
 			throws StatusCodeException, UnauthorizedException
 	{
 		panels = controller.panelLayout().getPanels();
@@ -66,7 +66,7 @@ public class CanvasTempAnimDataBuilder
 		return data.toString();
 	}
 	
-	public CanvasTempAnimDataBuilder addFrameToAllPanels(Frame frame)
+	public CanvasAnimDataBuilder addFrameToAllPanels(Frame frame)
 	{
 		for (Panel p : panels)
 		{
@@ -75,12 +75,12 @@ public class CanvasTempAnimDataBuilder
 		return this;
 	}
 	
-	public CanvasTempAnimDataBuilder addFrame(Panel panel, Frame frame)
+	public CanvasAnimDataBuilder addFrame(Panel panel, Frame frame)
 	{
 		return addFrame(panel.getId(), frame);
 	}
 	
-	public CanvasTempAnimDataBuilder addFrame(int panelId, Frame frame)
+	public CanvasAnimDataBuilder addFrame(int panelId, Frame frame)
 	{
 		if (panelIdIsValid(panelId))
 		{
@@ -94,12 +94,12 @@ public class CanvasTempAnimDataBuilder
 		return this;
 	}
 	
-	public CanvasTempAnimDataBuilder removeFrame(Panel panel, Frame frame)
+	public CanvasAnimDataBuilder removeFrame(Panel panel, Frame frame)
 	{
 		return removeFrame(panel.getId(), frame);
 	}
 	
-	public CanvasTempAnimDataBuilder removeFrame(int panelId, Frame frame)
+	public CanvasAnimDataBuilder removeFrame(int panelId, Frame frame)
 	{
 		if (panelIdIsValid(panelId))
 		{

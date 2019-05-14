@@ -13,14 +13,10 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.RasterFormatException;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.Timer;
-
-import com.github.kevinsawicki.http.HttpRequest;
-import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
 import io.github.rowak.Aurora;
 import io.github.rowak.Effect;
@@ -28,8 +24,8 @@ import io.github.rowak.Frame;
 import io.github.rowak.Panel;
 import io.github.rowak.StatusCodeException;
 import io.github.rowak.effectbuilder.CustomEffectBuilder;
-import io.github.rowak.nanoleafdesktop.tools.CanvasTempAnimDataBuilder;
-import io.github.rowak.nanoleafdesktop.tools.CanvasTempExtStreaming;
+import io.github.rowak.nanoleafdesktop.tools.CanvasAnimDataBuilder;
+import io.github.rowak.nanoleafdesktop.tools.CanvasExtStreaming;
 import io.github.rowak.nanoleafdesktop.tools.PanelTableSort;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.panel.AmbilightPanel;
@@ -150,11 +146,11 @@ public class AmbilightHandler
 			}
 			else if (deviceType.equals("canvas"))
 			{
-				String animData = new CanvasTempAnimDataBuilder(aurora)
+				String animData = new CanvasAnimDataBuilder(aurora)
 						.addFrameToAllPanels(new Frame(originalColor.getRed(),
 								originalColor.getGreen(), originalColor.getBlue(), 0, 5))
 						.build();
-				CanvasTempExtStreaming.sendAnimData(animData, aurora);
+				CanvasExtStreaming.sendAnimData(animData, aurora);
 				currentColor = originalColor;
 			}
 			
@@ -169,71 +165,51 @@ public class AmbilightHandler
 			throws StatusCodeException, IOException
 	{
 		String deviceType = getDeviceType();
-		if (deviceType.equals("aurora"))
+		CustomEffectBuilder ceb = new CustomEffectBuilder(aurora);
+		CanvasAnimDataBuilder cadb = new CanvasAnimDataBuilder(aurora);
+		BufferedImage img = getScreenImage();
+		final int VERTICAL_SEPARATOR = captureArea.height/rows.length;
+		for (int i = 0; i < rows.length; i++)
 		{
-			CustomEffectBuilder ceb = new CustomEffectBuilder(aurora);
-			BufferedImage img = getScreenImage();
-			final int VERTICAL_SEPARATOR = captureArea.height/rows.length;
-			for (int i = 0; i < rows.length; i++)
+			int captureY = VERTICAL_SEPARATOR*i + VERTICAL_SEPARATOR/2;
+			
+			Map<Panel, Color> colors = new HashMap<Panel, Color>();
+			for (int j = 0; j < rows[i].length; j++)
 			{
-				int captureY = VERTICAL_SEPARATOR*i + VERTICAL_SEPARATOR/2;
+				final int HORIZONTAL_SEPARATOR = captureArea.width/rows[i].length;
+				int captureX = HORIZONTAL_SEPARATOR*j + HORIZONTAL_SEPARATOR/2;
 				
-				Map<Panel, Color> colors = new HashMap<Panel, Color>();
-				for (int j = 0; j < rows[i].length; j++)
+				try
 				{
-					final int HORIZONTAL_SEPARATOR = captureArea.width/rows[i].length;
-					int captureX = HORIZONTAL_SEPARATOR*j + HORIZONTAL_SEPARATOR/2;
-					
-					try
+					if (img.getSubimage(captureX, captureY, 1, 1) != null)
 					{
-						if (img.getSubimage(captureX, captureY, 1, 1) != null)
+						Color color = new Color(img.getRGB(captureX, captureY));
+						if (deviceType.equals("aurora"))
 						{
-							Color color = new Color(img.getRGB(captureX, captureY));
 							ceb.addFrame(rows[i][j], new Frame(color.getRed(),
 									color.getGreen(), color.getBlue(), 0, 5));
-							colors.put(rows[i][j], color);
 						}
-					}
-					catch (RasterFormatException rfe)
-					{
-						// catch, but ignore
+						else if (deviceType.equals("canvas"))
+						{
+							cadb.addFrame(rows[i][j], new Frame(color.getRed(),
+									color.getGreen(), color.getBlue(), 0, 5));
+						}
+						colors.put(rows[i][j], color);
 					}
 				}
+				catch (RasterFormatException rfe)
+				{
+					// catch, but ignore
+				}
 			}
+		}
+		if (deviceType.equals("aurora"))
+		{
 			aurora.externalStreaming().sendStaticEffect(ceb.build("", false));
 		}
 		else if (deviceType.equals("canvas"))
 		{
-			CanvasTempAnimDataBuilder builder = new CanvasTempAnimDataBuilder(aurora);
-			BufferedImage img = getScreenImage();
-			final int VERTICAL_SEPARATOR = captureArea.height/rows.length;
-			for (int i = 0; i < rows.length; i++)
-			{
-				int captureY = VERTICAL_SEPARATOR*i + VERTICAL_SEPARATOR/2;
-				
-				Map<Panel, Color> colors = new HashMap<Panel, Color>();
-				for (int j = 0; j < rows[i].length; j++)
-				{
-					final int HORIZONTAL_SEPARATOR = captureArea.width/rows[i].length;
-					int captureX = HORIZONTAL_SEPARATOR*j + HORIZONTAL_SEPARATOR/2;
-					
-					try
-					{
-						if (img.getSubimage(captureX, captureY, 1, 1) != null)
-						{
-							Color color = new Color(img.getRGB(captureX, captureY));
-							builder.addFrame(rows[i][j], new Frame(color.getRed(),
-									color.getGreen(), color.getBlue(), 0, 5));
-							colors.put(rows[i][j], color);
-						}
-					}
-					catch (RasterFormatException rfe)
-					{
-						// catch, but ignore
-					}
-				}
-			}
-			CanvasTempExtStreaming.sendAnimData(builder.build(), aurora);
+			CanvasExtStreaming.sendAnimData(cadb.build(), aurora);
 		}
 	}
 	
@@ -349,7 +325,7 @@ public class AmbilightHandler
 		{
 			try
 			{
-				CanvasTempExtStreaming.enable(aurora);
+				CanvasExtStreaming.enable(aurora);
 			}
 			catch (StatusCodeException sce)
 			{
