@@ -27,6 +27,7 @@ This feature allows you to synchronize your Spotify music with your Nanoleaf lig
 The currently available effects include:
 - **Pulse Beats**: Changes the color of a single panel for each beat and creates a ripple around that panel that radiates outward to all other panels.
 - **Soundbar**: Creates a pulsating bar emanating from the top, bottom, left, or right. Reacts to changes in rhythm.
+- **Fireworks**: Creates multiple randomly colored pulses for each beat that quickly flash in then fade out.
 
 More effects will be added soon.
 
