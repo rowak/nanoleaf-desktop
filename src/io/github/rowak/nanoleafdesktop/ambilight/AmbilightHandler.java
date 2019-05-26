@@ -379,8 +379,10 @@ public class AmbilightHandler
 	    int x1 = x0 + w;
 	    int y1 = y0 + h;
 	    long sumr = 0, sumg = 0, sumb = 0;
-	    for (int x = x0; x < x1; x++) {
-	        for (int y = y0; y < y1; y++) {
+	    for (int x = x0; x < x1; x++)
+	    {
+	        for (int y = y0; y < y1; y++)
+	        {
 	            Color pixel = new Color(bi.getRGB(x, y));
 	            sumr += pixel.getRed();
 	            sumg += pixel.getGreen();

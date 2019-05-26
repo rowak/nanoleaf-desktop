@@ -31,6 +31,7 @@ import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyFireworksEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
+import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyStreakingNotesEffect;
 import io.github.rowak.nanoleafdesktop.tools.CanvasExtStreaming;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.panel.SpotifyPanel;
@@ -179,6 +180,9 @@ public class SpotifyPlayer
 				break;
 			case FIREWORKS:
 				effect = new SpotifyFireworksEffect(palette, aurora);
+				break;
+			case STREAKING_NOTES:
+				effect = new SpotifyStreakingNotesEffect(palette, aurora);
 				break;
 		}
 	}
@@ -395,6 +399,7 @@ public class SpotifyPlayer
 			currentTrack = current.getItem();
 			currentTrackAnalysis = getTrackAnalysis(currentTrack.getId());
 			progress = current.getProgress_ms();
+			effect.reset();
 			updateTrackInfoText();
 			updateTrackProgressText();
 		}
@@ -410,6 +415,7 @@ public class SpotifyPlayer
 		{
 			playing = true;
 			progress = current.getProgress_ms()+500;
+			effect.reset();
 			updateTrackInfoText();
 			updateTrackProgressText();
 		}
@@ -418,6 +424,7 @@ public class SpotifyPlayer
 		{
 			playing = false;
 			progress = current.getProgress_ms();
+			effect.reset();
 			updateTrackInfoText();
 			updateTrackProgressText();
 		}

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.wrapper.spotify.model_objects.miscellaneous.AudioAnalysisSection;
 import com.wrapper.spotify.model_objects.miscellaneous.AudioAnalysisSegment;
 
 import io.github.rowak.Aurora;
@@ -21,10 +22,11 @@ import io.github.rowak.nanoleafdesktop.tools.SpotifyEffectUtils;
 public class SpotifySoundBarEffect extends SpotifyEffect
 {
 	private boolean updating;
-	private int beatCounter;
 	private float loudness;
 	private Panel[][] panelTable;
 	private Direction direction;
+	private List<Float> times;
+	private List<Float> sections;
 	
 	public SpotifySoundBarEffect(Color[] palette, Direction direction,
 			Aurora aurora) throws StatusCodeException
@@ -40,8 +42,17 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 	@Override
 	public void init() throws StatusCodeException
 	{
+		times = new ArrayList<Float>();
+		sections = new ArrayList<Float>();
 		initPanelTable();
 		initPalette();
+	}
+	
+	@Override
+	public void reset()
+	{
+		times.clear();
+		sections.clear();
 	}
 	
 	@Override
@@ -51,14 +62,19 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 		AudioAnalysisSegment segment = analysis.getSegment();
 		updateLoudness(segment);
 		
-		if (segment != null && palette.length > 0)
+		if (segment != null && palette.length > 0 &&
+				!times.contains(segment.getMeasure().getStart()))
 		{
+			times.add(segment.getMeasure().getStart());
 			List<Panel> updated = new ArrayList<Panel>();
 			int max = (int)(panelTable.length * loudness);
-			float duration = 0.5f;
-			if (segment != null)
+			float duration = segment.getMeasure().getDuration();
+			
+			AudioAnalysisSection section = analysis.getSection();
+			if (section != null && !sections.contains(section.getMeasure().getStart()))
 			{
-				duration = segment.getMeasure().getDuration();
+				sections.add(section.getMeasure().getStart());
+				setNextPaletteColor();
 			}
 			
 			for (int i = 0; i < panelTable.length; i++)
@@ -66,8 +82,6 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 				pulse(i, max, updated);
 			}
 			fadePanelsToBackground(max, duration);
-			
-			setNextPaletteColor();
 		}
 	}
 	
@@ -169,18 +183,13 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 	@Override
 	protected void setNextPaletteColor()
 	{
-		beatCounter++;
-		if (beatCounter >= 50)
+		if (paletteIndex == palette.length-1)
 		{
-			if (paletteIndex == palette.length-1)
-			{
-				paletteIndex = palette.length > 1 ? 1 : 0;
-			}
-			else
-			{
-				paletteIndex++;
-			}
-			beatCounter = 0;
+			paletteIndex = palette.length > 1 ? 1 : 0;
+		}
+		else
+		{
+			paletteIndex++;
 		}
 	}
 	

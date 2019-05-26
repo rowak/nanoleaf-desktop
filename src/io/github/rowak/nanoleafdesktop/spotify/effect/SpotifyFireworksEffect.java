@@ -30,6 +30,9 @@ public class SpotifyFireworksEffect extends SpotifyEffect
 
 	@Override
 	public void init(){}
+	
+	@Override
+	public void reset(){}
 
 	@Override
 	public void run(SpecificAudioAnalysis analysis)

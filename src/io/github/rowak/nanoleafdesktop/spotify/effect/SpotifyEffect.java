@@ -39,11 +39,16 @@ public abstract class SpotifyEffect
 		userOptions = new ArrayList<UserOption>();
 	}
 	
+	// Called when the effect is first created or needs to be hard-reset
 	public abstract void init()
 			throws StatusCodeException, IOException;
 	
+	// Called when the progress of the local player increases
 	public abstract void run(SpecificAudioAnalysis analysis)
 			throws StatusCodeException, IOException;
+	
+	// Called when the status of the track is modified (play/pause/seek)
+	public abstract void reset();
 	
 	public SpotifyEffectType getType()
 	{

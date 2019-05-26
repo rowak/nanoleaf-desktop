@@ -30,6 +30,9 @@ public class SpotifyPulseBeatsEffect extends SpotifyEffect
 	public void init(){}
 	
 	@Override
+	public void reset(){}
+	
+	@Override
 	public void run(SpecificAudioAnalysis analysis)
 					throws StatusCodeException, IOException
 	{

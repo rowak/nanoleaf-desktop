@@ -25,6 +25,7 @@ import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyFireworksEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
+import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyStreakingNotesEffect;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
@@ -429,6 +430,9 @@ public class SpotifyPanel extends JPanel
 								convertPalette(palette), Direction.RIGHT, aurora);
 					case FIREWORKS:
 						return new SpotifyFireworksEffect(
+								convertPalette(palette), aurora);
+					case STREAKING_NOTES:
+						return new SpotifyStreakingNotesEffect(
 								convertPalette(palette), aurora);
 				}
 			}

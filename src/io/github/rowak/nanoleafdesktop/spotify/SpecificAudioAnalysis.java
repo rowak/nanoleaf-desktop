@@ -24,6 +24,11 @@ public class SpecificAudioAnalysis
 		return specificAnalysis;
 	}
 	
+	public int getTime()
+	{
+		return time;
+	}
+	
 	public AudioAnalysisMeasure getBar()
 	{
 		return getMeasureAtTime(analysis, analysis.getBars(), time,
