@@ -28,6 +28,7 @@ The currently available effects include:
 - **Pulse Beats**: Changes the color of a single panel for each beat and creates a ripple around that panel that radiates outward to all other panels.
 - **Soundbar**: Creates a pulsating bar emanating from the top, bottom, left, or right. Reacts to changes in rhythm.
 - **Fireworks**: Creates multiple randomly colored pulses for each beat that quickly flash in then fade out.
+- **Streaking Notes**: Creates streaks of colorful light from one edge of the panels to the other. Reacts best to songs with prominent but not overwhelming notes.
 
 More effects will be added soon.
 
