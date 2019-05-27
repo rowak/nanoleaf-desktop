@@ -132,7 +132,7 @@ public class AuroraFinder extends JDialog
 	private Aurora connectToAurora(String item)
 	{
 		String text = "Press the power button on your " +
-				  "Aurora for 5-7 seconds until the LED starts flashing.";
+				  "device for 5-7 seconds until the LED starts flashing.";
 		TextDialog info = new TextDialog(this, text);
 		info.setVisible(true);
 		

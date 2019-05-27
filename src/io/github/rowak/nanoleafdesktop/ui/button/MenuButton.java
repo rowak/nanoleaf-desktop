@@ -3,16 +3,23 @@ package io.github.rowak.nanoleafdesktop.ui.button;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
+import org.json.JSONArray;
+
 import io.github.rowak.nanoleafdesktop.Main;
+import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.dialog.AboutDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.DeviceChangerDialog;
+import io.github.rowak.nanoleafdesktop.ui.dialog.GroupCreatorDialog;
+import io.github.rowak.nanoleafdesktop.ui.dialog.GroupDeleterDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.menu.ModernMenuItem;
@@ -47,6 +54,26 @@ public class MenuButton extends ModernButton
 				resetSettings();
 			}
 		});
+		JMenuItem itemCreateGroup = new ModernMenuItem("Create Group");
+		itemCreateGroup.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				new GroupCreatorDialog(MenuButton.this.getFocusCycleRootAncestor())
+					.setVisible(true);
+			}
+		});
+		JMenuItem itemDeleteGroup = new ModernMenuItem("Delete Group");
+		itemDeleteGroup.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				new GroupDeleterDialog(MenuButton.this.getFocusCycleRootAncestor())
+					.setVisible(true);
+			}
+		});
 		JMenuItem itemAbout = new ModernMenuItem("About");
 		itemAbout.addActionListener(new ActionListener()
 		{
@@ -59,6 +86,8 @@ public class MenuButton extends ModernButton
 		});
 		menu.add(itemChangeDevice);
 		menu.add(itemResetSettings);
+		menu.add(itemCreateGroup);
+		menu.add(itemDeleteGroup);
 		menu.add(itemAbout);
 		
 		URL menuIconUnpressedPath =
@@ -105,5 +134,21 @@ public class MenuButton extends ModernButton
 						((OptionDialog)source.getFocusCycleRootAncestor()).dispose();
 					}
 				}).setVisible(true);
+	}
+	
+	private List<DeviceGroup> getDeviceGroups()
+	{
+		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+		String devicesStr = manager.getProperty("deviceGroups");
+		if (devicesStr != null)
+		{
+			List<DeviceGroup> groups = new ArrayList<DeviceGroup>();
+			JSONArray json = new JSONArray(devicesStr);
+			for (int i = 0; i < json.length(); i++)
+			{
+				groups.add(DeviceGroup.fromJSON(json.getJSONObject(i).toString()));
+			}
+		}
+		return new ArrayList<DeviceGroup>();
 	}
 }
