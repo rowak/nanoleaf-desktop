@@ -19,21 +19,21 @@ public class GlobalShortcutListener implements NativeKeyListener
 	private List<String> pressedKeys;
 	private List<String> processes;
 	private List<Shortcut> shortcuts;
-	private Aurora device;
+	private Aurora[] devices;
 	private Effect[] effects;
 	
-	public GlobalShortcutListener(List<Shortcut> shortcuts, Aurora device)
+	public GlobalShortcutListener(List<Shortcut> shortcuts, Aurora[] devices)
 	{
 		this.shortcuts = shortcuts;
-		this.device = device;
+		this.devices = devices;
 		pressedKeys = new ArrayList<String>();
 		processes = new ArrayList<String>();
 		getEffects();
 	}
 	
-	public void setAurora(Aurora device)
+	public void setAuroras(Aurora[] devices)
 	{
-		this.device = device;
+		this.devices = devices;
 		getEffects();
 	}
 	
@@ -44,19 +44,19 @@ public class GlobalShortcutListener implements NativeKeyListener
 			if (s.getKeys().equals(pressedKeys) &&
 					s.getRunType() != RunType.WHILE_HELD && trigger == 0)
 			{
-				s.execute(device, effects);
+				s.execute(devices, effects);
 			}
 			else if (s.getKeys().equals(pressedKeys) &&
 					s.getRunType() == RunType.WHILE_HELD &&
 					s.getAction().getPreviousState() == null)
 			{
-				s.execute(device, effects);
+				s.execute(devices, effects);
 			}
 			else if (!s.getKeys().equals(pressedKeys) &&
 					s.getRunType() == RunType.WHILE_HELD &&
 					s.getAction().getPreviousState() != null)
 			{
-				s.getAction().reset(device, effects);
+				s.getAction().reset(devices, effects);
 			}
 		}
 	}
@@ -93,7 +93,7 @@ public class GlobalShortcutListener implements NativeKeyListener
 				{
 					if (!running && runType == RunType.WHEN_APP_RUN)
 					{
-						s.execute(device, effects);
+						s.execute(devices, effects);
 					}
 					s.getAction().setArgs(new Object[]{args[0], appName, true});
 				}
@@ -101,7 +101,7 @@ public class GlobalShortcutListener implements NativeKeyListener
 				{
 					if (running && runType == RunType.WHEN_APP_CLOSED)
 					{
-						s.execute(device, effects);
+						s.execute(devices, effects);
 					}
 					s.getAction().setArgs(new Object[]{args[0], appName, false});
 				}
@@ -133,9 +133,21 @@ public class GlobalShortcutListener implements NativeKeyListener
 	{
 		new Thread(() ->
 		{
+			List<Effect> effectsList = new ArrayList<Effect>();
 			try
 			{
-				effects = device.effects().getAllEffects();
+				for (Aurora device : devices)
+				{
+					for (Effect effect : device.effects().getAllEffects())
+					{
+						effectsList.add(effect);
+					}
+				}
+				effects = new Effect[effectsList.size()];
+				for (int i = 0; i < effects.length; i++)
+				{
+					effects[i] = effectsList.get(i);
+				}
 			}
 			catch (Exception e)
 			{

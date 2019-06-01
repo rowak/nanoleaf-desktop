@@ -42,63 +42,99 @@ public class Action
 		return previousState;
 	}
 	
-	public void execute(Aurora device, Effect[] effects)
+	public void execute(Aurora[] devices, Effect[] effects)
 	{
 		try
 		{
 			switch (type)
 			{
 				case DEVICE_ON:
-					previousState = device.state().getOn();
-					device.state().setOn(true);
+					previousState = devices[0].state().getOn();
+					for (Aurora device : devices)
+					{
+						device.state().setOn(true);
+					}
 					break;
 				case DEVICE_OFF:
-					previousState = device.state().getOn();
-					device.state().setOn(false);
+					previousState = devices[0].state().getOn();
+					for (Aurora device : devices)
+					{
+						device.state().setOn(false);
+					}
 					break;
 				case DEVICE_TOGGLE:
-					previousState = device.state().getOn();
-					device.state().toggleOn();
+					previousState = devices[0].state().getOn();
+					for (Aurora device : devices)
+					{
+						device.state().toggleOn();
+					}
 					break;
 				case INCREASE_BRIGHTNESS:
-					previousState = device.state().getBrightness();
-					device.state().increaseBrightness((int)args[0]);
+					previousState = devices[0].state().getBrightness();
+					for (Aurora device : devices)
+					{
+						device.state().increaseBrightness((int)args[0]);
+					}
 					break;
 				case DECREASE_BRIGHTNESS:
-					previousState = device.state().getBrightness();
-					device.state().decreaseBrightness((int)args[0]);
+					previousState = devices[0].state().getBrightness();
+					for (Aurora device : devices)
+					{
+						device.state().decreaseBrightness((int)args[0]);
+					}
 					break;
 				case SET_BRIGHTNESS:
-					previousState = device.state().getBrightness();
-					device.state().setBrightness((int)args[0]);
+					previousState = devices[0].state().getBrightness();
+					for (Aurora device : devices)
+					{
+						device.state().setBrightness((int)args[0]);
+					}
 					break;
 				case INCREASE_COLOR_TEMP:
-					previousState = device.state().getColorTemperature();
-					device.state().setColorTemperature(device.state().getColorTemperature() + (int)args[0]);
+					previousState = devices[0].state().getColorTemperature();
+					for (Aurora device : devices)
+					{
+						device.state().setColorTemperature(device.state().getColorTemperature() + (int)args[0]);
+					}
 					break;
 				case DECREASE_COLOR_TEMP:
-					previousState = device.state().getColorTemperature();
-					device.state().setColorTemperature(device.state().getColorTemperature() + (int)args[0]);
+					previousState = devices[0].state().getColorTemperature();
+					for (Aurora device : devices)
+					{
+						device.state().setColorTemperature(device.state().getColorTemperature() + (int)args[0]);
+					}
 					break;
 				case SET_COLOR_TEMP:
-					previousState = device.state().getColorTemperature();
-					device.state().setColorTemperature((int)args[0]);
+					previousState = devices[0].state().getColorTemperature();
+					for (Aurora device : devices)
+					{
+						device.state().setColorTemperature((int)args[0]);
+					}
 					break;
 				case SET_HUE:
-					previousState = device.state().getHue();
-					device.state().setHue((int)args[0]);
+					previousState = devices[0].state().getHue();
+					for (Aurora device : devices)
+					{
+						device.state().setHue((int)args[0]);
+					}
 					break;
 				case SET_SATURATION:
-					previousState = device.state().getSaturation();
-					device.state().setSaturation((int)args[0]);
+					previousState = devices[0].state().getSaturation();
+					for (Aurora device : devices)
+					{
+						device.state().setSaturation((int)args[0]);
+					}
 					break;
 				case SET_EFFECT:
-					previousState = device.effects().getCurrentEffectName();
-					device.effects().setEffect((String)args[0]);
+					previousState = devices[0].effects().getCurrentEffectName();
+					for (Aurora device : devices)
+					{
+						device.effects().setEffect((String)args[0]);
+					}
 					break;
 				case NEXT_EFFECT:
-					String[] effectNames = device.effects().getEffectsList();
-					String currentEffect = device.effects().getCurrentEffectName();
+					String[] effectNames = devices[0].effects().getEffectsList();
+					String currentEffect = devices[0].effects().getCurrentEffectName();
 					previousState = currentEffect;
 					int nextEffect = -1;
 					for (int i = 0; i < effects.length; i++)
@@ -125,18 +161,21 @@ public class Action
 							break;
 						}
 					}
-					if (nextEffect == -1)
+					for (Aurora device : devices)
 					{
-						device.effects().setEffect(effectNames[0]);
-					}
-					else
-					{
-						device.effects().setEffect(effectNames[nextEffect]);
+						if (nextEffect == -1)
+						{
+							device.effects().setEffect(effectNames[0]);
+						}
+						else
+						{
+							device.effects().setEffect(effectNames[nextEffect]);
+						}
 					}
 					break;
 				case PREVIOUS_EFFECT:
-					effectNames = device.effects().getEffectsList();
-					currentEffect = device.effects().getCurrentEffectName();
+					effectNames = devices[0].effects().getEffectsList();
+					currentEffect = devices[0].effects().getCurrentEffectName();
 					previousState = currentEffect;
 					nextEffect = -1;
 					for (int i = 0; i < effects.length; i++)
@@ -163,29 +202,41 @@ public class Action
 							break;
 						}
 					}
-					if (nextEffect == -1)
+					for (Aurora device : devices)
 					{
-						device.effects().setEffect(effectNames[effectNames.length-1]);
-					}
-					else
-					{
-						device.effects().setEffect(effectNames[nextEffect]);
+						if (nextEffect == -1)
+						{
+							device.effects().setEffect(effectNames[effectNames.length-1]);
+						}
+						else
+						{
+							device.effects().setEffect(effectNames[nextEffect]);
+						}
 					}
 					break;
 				case SET_RED:
-					Color c = device.state().getColor();
+					Color c = devices[0].state().getColor();
 					previousState = c;
-					device.state().setColor(Color.fromRGB((int)args[0], c.getGreen(), c.getBlue()));
+					for (Aurora device : devices)
+					{
+						device.state().setColor(Color.fromRGB((int)args[0], c.getGreen(), c.getBlue()));
+					}
 					break;
 				case SET_GREEN:
-					c = device.state().getColor();
+					c = devices[0].state().getColor();
 					previousState = c;
-					device.state().setColor(Color.fromRGB(c.getRed(), (int)args[0], c.getBlue()));
+					for (Aurora device : devices)
+					{
+						device.state().setColor(Color.fromRGB(c.getRed(), (int)args[0], c.getBlue()));
+					}
 					break;
 				case SET_BLUE:
-					c = device.state().getColor();
+					c = devices[0].state().getColor();
 					previousState = c;
-					device.state().setColor(Color.fromRGB(c.getRed(), c.getGreen(), (int)args[0]));
+					for (Aurora device : devices)
+					{
+						device.state().setColor(Color.fromRGB(c.getRed(), c.getGreen(), (int)args[0]));
+					}
 					break;
 			}
 		}
@@ -195,65 +246,116 @@ public class Action
 		}
 	}
 	
-	public void reset(Aurora device, Effect[] effects)
+	public void reset(Aurora[] devices, Effect[] effects)
 	{
 		try
 		{
 			switch (type)
 			{
 				case DEVICE_ON:
-					device.state().setOn((boolean)previousState);
+					for (Aurora device : devices)
+					{
+						device.state().setOn((boolean)previousState);
+					}
 					break;
 				case DEVICE_OFF:
-					device.state().setOn((boolean)previousState);
+					for (Aurora device : devices)
+					{
+						device.state().setOn((boolean)previousState);
+					}
 					break;
 				case DEVICE_TOGGLE:
-					device.state().setOn((boolean)previousState);
+					for (Aurora device : devices)
+					{
+						device.state().setOn((boolean)previousState);
+					}
 					break;
 				case INCREASE_BRIGHTNESS:
-					device.state().increaseBrightness((int)previousState);
+					for (Aurora device : devices)
+					{
+						device.state().increaseBrightness((int)previousState);
+					}
 					break;
 				case DECREASE_BRIGHTNESS:
-					device.state().decreaseBrightness((int)previousState);
+					for (Aurora device : devices)
+					{
+						device.state().decreaseBrightness((int)previousState);
+					}
 					break;
 				case SET_BRIGHTNESS:
-					device.state().setBrightness((int)previousState);
+					for (Aurora device : devices)
+					{
+						device.state().setBrightness((int)previousState);
+					}
 					break;
 				case INCREASE_COLOR_TEMP:
-					device.state().setColorTemperature((int)previousState);
+					for (Aurora device : devices)
+					{
+						device.state().setColorTemperature((int)previousState);
+					}
 					break;
 				case DECREASE_COLOR_TEMP:
-					device.state().setColorTemperature((int)previousState);
+					for (Aurora device : devices)
+					{
+						device.state().setColorTemperature((int)previousState);
+					}
 					break;
 				case SET_COLOR_TEMP:
-					device.state().setColorTemperature((int)previousState);
+					for (Aurora device : devices)
+					{
+						device.state().setColorTemperature((int)previousState);
+					}
 					break;
 				case SET_HUE:
-					device.state().setHue((int)previousState);
+					for (Aurora device : devices)
+					{
+						device.state().setHue((int)previousState);
+					}
 					break;
 				case SET_SATURATION:
-					device.state().setSaturation((int)previousState);
+					for (Aurora device : devices)
+					{
+						device.state().setSaturation((int)previousState);
+					}
 					break;
 				case SET_EFFECT:
-					device.effects().setEffect((String)previousState);
+					for (Aurora device : devices)
+					{
+						device.effects().setEffect((String)previousState);
+					}
 					break;
 				case NEXT_EFFECT:
-					device.effects().setEffect((String)previousState);
+					for (Aurora device : devices)
+					{
+						device.effects().setEffect((String)previousState);
+					}
 					break;
 				case PREVIOUS_EFFECT:
-					device.effects().setEffect((String)previousState);
+					for (Aurora device : devices)
+					{
+						device.effects().setEffect((String)previousState);
+					}
 					break;
 				case SET_RED:
 					Color c = (Color)previousState;
-					device.state().setColor(Color.fromRGB(c.getRed(), c.getGreen(), c.getBlue()));
+					for (Aurora device : devices)
+					{
+						device.state().setColor(Color.fromRGB(c.getRed(), c.getGreen(), c.getBlue()));
+					}
 					break;
 				case SET_GREEN:
 					c = (Color)previousState;
-					device.state().setColor(Color.fromRGB(c.getRed(), c.getGreen(), c.getBlue()));
+					for (Aurora device : devices)
+					{
+						device.state().setColor(Color.fromRGB(c.getRed(), c.getGreen(), c.getBlue()));
+					}
 					break;
 				case SET_BLUE:
 					c = (Color)previousState;
-					device.state().setColor(Color.fromRGB(c.getRed(), c.getGreen(), c.getBlue()));
+					for (Aurora device : devices)
+					{
+						device.state().setColor(Color.fromRGB(c.getRed(), c.getGreen(), c.getBlue()));
+					}
 					break;
 			}
 			previousState = null;

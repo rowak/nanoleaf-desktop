@@ -12,7 +12,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -30,6 +32,9 @@ import javax.swing.border.LineBorder;
 import io.github.rowak.Aurora;
 import io.github.rowak.Effect;
 import io.github.rowak.StatusCodeException;
+import io.github.rowak.StatusCodeException.UnauthorizedException;
+import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
+import io.github.rowak.nanoleafdesktop.models.DeviceInfo;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.tools.UpdateManager;
 import io.github.rowak.nanoleafdesktop.tools.Version;
@@ -56,6 +61,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.InsetsUIResource;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
@@ -78,7 +84,7 @@ public class Main extends JFrame
 	private final int DEFAULT_WINDOW_WIDTH = 1050;
 	private final int DEFAULT_WINDOW_HEIGHT = 800;
 	
-	private Aurora device;
+	private Aurora[] devices;
 	
 	private JPanel contentPane;
 	private PanelCanvas canvas;
@@ -239,23 +245,32 @@ public class Main extends JFrame
 		return this.canvas;
 	}
 	
-	public void setDevice(Aurora device)
+	public void setDevices(Aurora[] devices)
 	{
-		this.device = device;
-		PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
-		manager.setProperty("lastSession",
-				device.getHostName() + " " +
-				device.getPort() + " v1 " +
-				device.getAccessToken());
-		loadAuroraData();
-		loadDeviceName();
-		canvas.setAurora(device);
-		canvas.initCanvas();
-		infoPanel.setAurora(device);
-		discoveryPanel.setAurora(device);
-		ambilightPanel.setAurora(device);
-		spotifyPanel.setAurora(device);
-		shortcutsPanel.setAurora(device);
+		EventQueue.invokeLater(() ->
+		{
+			this.devices = devices;
+			PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
+			String lastSession = manager.getProperty("lastSession");
+			if (lastSession != null && devices.length == 1)
+			{
+				manager.setProperty("lastSession",
+						devices[0].getHostName() + " " +
+						devices[0].getPort() + " v1 " +
+						devices[0].getAccessToken());
+			}
+			loadAuroraData();
+			loadDeviceName();
+			canvas.setAuroras(devices);
+			canvas.initCanvas();
+			infoPanel.setAuroras(devices);
+			regEffectsPanel.setAuroras(devices);
+			rhythEffectsPanel.setAuroras(devices);
+			discoveryPanel.setAuroras(devices);
+			ambilightPanel.setAuroras(devices);
+			spotifyPanel.setAuroras(devices);
+			shortcutsPanel.setAuroras(devices);
+		});
 	}
 	
 	public void loadEffects() throws StatusCodeException
@@ -270,16 +285,19 @@ public class Main extends JFrame
 					rhythEffectsPanel.clearEffects();
 					try
 					{
-						for (Effect effect : device.effects().getAllEffects())
+						for (Aurora device : devices)
 						{
-							if (effect.getAnimType() == Effect.Type.PLUGIN &&
-									effect.getPluginType().equals("rhythm"))
+							for (Effect effect : device.effects().getAllEffects())
 							{
-								rhythEffectsPanel.addEffect(effect.getName());
-							}
-							else
-							{
-								regEffectsPanel.addEffect(effect.getName());
+								if (effect.getAnimType() == Effect.Type.PLUGIN &&
+										effect.getPluginType().equals("rhythm"))
+								{
+									rhythEffectsPanel.addEffect(effect.getName());
+								}
+								else
+								{
+									regEffectsPanel.addEffect(effect.getName());
+								}
 							}
 						}
 					}
@@ -303,7 +321,7 @@ public class Main extends JFrame
 	
 	public void loadStateComponents() throws StatusCodeException
 	{
-		if (device.state().getOn())
+		if (devices[0].state().getOn())
 		{
 			infoPanel.getBtnOnOff().setText("Turn Off");
 		}
@@ -312,15 +330,15 @@ public class Main extends JFrame
 			infoPanel.getBtnOnOff().setText("Turn On");
 		}
 		
-		infoPanel.setSliderBrightness(device.state().getBrightness());
-		infoPanel.setSliderColorTemp(device.state().getColorTemperature());
+		infoPanel.setSliderBrightness(devices[0].state().getBrightness());
+		infoPanel.setSliderColorTemp(devices[0].state().getColorTemperature());
 		
 		loadActiveScene();
 	}
 	
 	public void loadActiveScene() throws StatusCodeException
 	{
-		String currentEffect = device.effects().getCurrentEffectName();
+		String currentEffect = devices[0].effects().getCurrentEffectName();
 		infoPanel.setScene(currentEffect);
 	}
 	
@@ -339,58 +357,57 @@ public class Main extends JFrame
 	
 	private void setupOldAurora(String lastSession)
 	{
-		String[] data = lastSession.split(" ");
-		try
+		if (lastSession.startsWith("GROUP:"))
 		{
-			device = new Aurora(data[0],
-					Integer.parseInt(data[1]),
-					data[2], data[3]);
-			EventQueue.invokeLater(() ->
+			String groupName = lastSession.split(":")[1];
+			DeviceGroup group = null;
+			List<DeviceGroup> groups = getDeviceGroups();
+			for (DeviceGroup g : groups)
 			{
-				loadDeviceName();
-			});
-		}
-		catch (StatusCodeException | HttpRequestException schre)
-		{
-			new TextDialog(Main.this, "Failed to connect to the device. " +
-					"Please try again.").setVisible(true);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-			OptionDialog errorDialog = new OptionDialog(this,
-					"The data file has been modified or has become corrupt. " +
-					"Would you like to fix this now?", "Yes", "No",
-					new ActionListener()
-					{
-						@Override
-						public void actionPerformed(ActionEvent e)
-						{
-							new PropertyManager(PROPERTIES_FILEPATH)
-								.removeProperty("lastSession");
-							OptionDialog dialog = (OptionDialog)((JButton)e.getSource())
-										.getTopLevelAncestor();
-							dialog.dispose();
-							new TextDialog(Main.this,
-									"Relaunch the application to setup a new device.")
-									.setVisible(true);
-						}
-					},
-					new ActionListener()
-					{
-						@Override
-						public void actionPerformed(ActionEvent e)
-						{
-							OptionDialog dialog = (OptionDialog)((JButton)e.getSource())
-									.getTopLevelAncestor();
-							dialog.dispose();
-						}
-					});
-			errorDialog.setVisible(true);
-			EventQueue.invokeLater(() ->
+				if (g.getName().equals(groupName))
+				{
+					group = g;
+				}
+			}
+			
+			if (group != null)
 			{
-				errorDialog.requestFocus();
-			});
+				connectToGroup(group);
+				EventQueue.invokeLater(() ->
+				{
+					lblTitle.setText("Connected to " + groupName);
+					loadAuroraData();
+				});
+			}
+			else
+			{
+				resetDataFile();
+			}
+		}
+		else
+		{
+			String[] data = lastSession.split(" ");
+			try
+			{
+				devices = new Aurora[1];
+				devices[0] = new Aurora(data[0],
+						Integer.parseInt(data[1]),
+						data[2], data[3]);
+				EventQueue.invokeLater(() ->
+				{
+					loadDeviceName();
+				});
+			}
+			catch (StatusCodeException | HttpRequestException schre)
+			{
+				new TextDialog(Main.this, "Failed to connect to the device. " +
+						"Please try again.").setVisible(true);
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+				resetDataFile();
+			}
 		}
 	}
 	
@@ -408,18 +425,18 @@ public class Main extends JFrame
 					{
 						try
 						{
-							device = new Aurora(finder.getHostName(),
+							devices[0] = new Aurora(finder.getHostName(),
 									finder.getPort(), "v1", finder.getAccessToken());
 							this.cancel();
 							
 							PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
 							manager.setProperty("lastSession",
-									device.getHostName() + " " +
-									device.getPort() + " v1 " +
-									device.getAccessToken());
-							lblTitle.setText("Connected to " + device.getName());
-							Map<String, Object> devices = getDevices();
-							if (devices.containsKey(device.getHostName()))
+									devices[0].getHostName() + " " +
+									devices[0].getPort() + " v1 " +
+									devices[0].getAccessToken());
+							lblTitle.setText("Connected to " + devices[0].getName());
+							Map<String, Object> localDevices = getDevices();
+							if (localDevices.containsKey(devices[0].getHostName()))
 							{
 								loadDeviceName();
 							}
@@ -435,7 +452,7 @@ public class Main extends JFrame
 									"An error occurred while connecting to the Aurora." +
 									"Please try again.").setVisible(true);
 						}
-						canvas.setAurora(device);
+						canvas.setAuroras(devices);
 					}
 				}
 			}, 0, 1000);
@@ -462,7 +479,7 @@ public class Main extends JFrame
 										SingleEntryDialog entryDialog =
 												(SingleEntryDialog)okButton.getFocusCycleRootAncestor();
 										String name = entryDialog.getEntryField().getText();
-										setDeviceName(device.getHostName(), name);
+										setDeviceName(devices[0].getHostName(), name);
 										lblTitle.setText("Connected to " + name);
 										entryDialog.dispose();
 										optionDialog.dispose();
@@ -485,16 +502,83 @@ public class Main extends JFrame
 		nameDeviceDialog.setVisible(true);
 	}
 	
+	private void connectToGroup(DeviceGroup group)
+	{
+		DeviceInfo[] groupDevices = group.getDevices();
+		Aurora[] auroraDevices = new Aurora[groupDevices.length];
+		for (int i = 0; i < groupDevices.length; i++)
+		{
+			try
+			{
+				auroraDevices[i] = new Aurora(groupDevices[i].getHostName(),
+						groupDevices[i].getPort(), "v1", groupDevices[i].getAccessToken());
+			}
+			catch (HttpRequestException hre)
+			{
+				new TextDialog(this, "The device " + groupDevices[i].getHostName() +
+						" is offline.").setVisible(true);
+			}
+			catch (UnauthorizedException uae)
+			{
+				new TextDialog(this, "The device " + groupDevices[i].getHostName() +
+						" is unauthorized.").setVisible(true);
+			}
+			catch (StatusCodeException sce)
+			{
+				new TextDialog(this, "Unknown connection error for device " +
+						groupDevices[i].getHostName() + ".").setVisible(true);
+			}
+		}
+		setDevices(auroraDevices);
+	}
+	
+	private void resetDataFile()
+	{
+		OptionDialog errorDialog = new OptionDialog(this,
+				"The data file has been modified or has become corrupt. " +
+				"Would you like to fix this now?", "Yes", "No",
+				new ActionListener()
+				{
+					@Override
+					public void actionPerformed(ActionEvent e)
+					{
+						new PropertyManager(PROPERTIES_FILEPATH)
+							.removeProperty("lastSession");
+						OptionDialog dialog = (OptionDialog)((JButton)e.getSource())
+									.getTopLevelAncestor();
+						dialog.dispose();
+						new TextDialog(Main.this,
+								"Relaunch the application to setup a new device.")
+								.setVisible(true);
+					}
+				},
+				new ActionListener()
+				{
+					@Override
+					public void actionPerformed(ActionEvent e)
+					{
+						OptionDialog dialog = (OptionDialog)((JButton)e.getSource())
+								.getTopLevelAncestor();
+						dialog.dispose();
+					}
+				});
+		errorDialog.setVisible(true);
+		EventQueue.invokeLater(() ->
+		{
+			errorDialog.requestFocus();
+		});
+	}
+	
 	private void loadDeviceName()
 	{
-		String deviceName = getDeviceName(device.getHostName());
+		String deviceName = getDeviceName(devices[0].getHostName());
 		if (deviceName != null)
 		{
 			lblTitle.setText("Connected to " + deviceName);
 		}
 		else
 		{
-			lblTitle.setText("Connected to " + device.getName());
+			lblTitle.setText("Connected to " + devices[0].getName());
 			setupDeviceName("It looks like you haven't set a name for your device yet. " +
 				"Do you want to do this now?");
 		}
@@ -525,6 +609,23 @@ public class Main extends JFrame
 			return json.toMap();
 		}
 		return new HashMap<String, Object>();
+	}
+	
+	private List<DeviceGroup> getDeviceGroups()
+	{
+		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+		String devicesStr = manager.getProperty("deviceGroups");
+		if (devicesStr != null)
+		{
+			List<DeviceGroup> groups = new ArrayList<DeviceGroup>();
+			JSONArray json = new JSONArray(devicesStr);
+			for (int i = 0; i < json.length(); i++)
+			{
+				groups.add(DeviceGroup.fromJSON(json.getJSONObject(i).toString()));
+			}
+			return groups;
+		}
+		return new ArrayList<DeviceGroup>();
 	}
 	
 	private void initUI()
@@ -589,7 +690,7 @@ public class Main extends JFrame
 	
 	private void initPanelCanvas()
 	{
-		canvas = new PanelCanvas(device);
+		canvas = new PanelCanvas(devices);
 		canvas.setLayout(new GridBagLayout());
 		canvas.setBorder(new TitledBorder(new LineBorder(Color.GRAY),
 				"Preview", TitledBorder.LEFT, TitledBorder.TOP, null, Color.WHITE));
@@ -600,10 +701,10 @@ public class Main extends JFrame
 	
 	private void initEffectsPanels()
 	{
-		regEffectsPanel = new EffectsPanel("Regular Effects", this, device, canvas);
+		regEffectsPanel = new EffectsPanel("Regular Effects", this, devices, canvas);
 		add(regEffectsPanel, "cell 0 1,grow");
 		
-		rhythEffectsPanel = new EffectsPanel("Rhythm Effects", this, device, canvas);
+		rhythEffectsPanel = new EffectsPanel("Rhythm Effects", this, devices, canvas);
 		add(rhythEffectsPanel, "cell 0 2,grow");
 	}
 	
@@ -633,20 +734,20 @@ public class Main extends JFrame
 		});
 		contentPane.add(editor, "cell 1 2,grow");
 		
-		infoPanel = new InformationPanel(this, device, canvas);
+		infoPanel = new InformationPanel(this, devices, canvas);
 		editor.setFont(new Font("Tahoma", Font.BOLD, 17));
 		editor.addTab("Control", null, infoPanel, null);
 		
-		discoveryPanel = new DiscoveryPanel(device);
+		discoveryPanel = new DiscoveryPanel(devices);
 		editor.addTab("Discovery", null, discoveryPanel, null);
 		
 		ambilightPanel = new AmbilightPanel(canvas);
 		editor.addTab("Ambient Lighting", null, ambilightPanel, null);
 		
-		spotifyPanel = new SpotifyPanel(device);
+		spotifyPanel = new SpotifyPanel(devices);
 		editor.addTab("Spotify Visualizer", null, spotifyPanel, null);
 		
-		shortcutsPanel = new KeyShortcutsPanel(device);
+		shortcutsPanel = new KeyShortcutsPanel(devices);
 		shortcutsPanel.setBorder(new LineBorder(Color.GRAY, 1, true));
 		editor.addTab("Shortcuts", null, shortcutsPanel, null);
 		
@@ -701,7 +802,7 @@ public class Main extends JFrame
 			}
 		});
 		
-		if (device != null)
+		if (devices != null && devices[0] != null)
 		{
 			EventQueue.invokeLater(new Runnable()
 			{

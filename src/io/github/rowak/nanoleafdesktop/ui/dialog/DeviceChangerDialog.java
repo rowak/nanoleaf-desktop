@@ -2,6 +2,7 @@ package io.github.rowak.nanoleafdesktop.ui.dialog;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -24,12 +25,19 @@ import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.LineBorder;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
+
+import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
 import io.github.rowak.Aurora;
 import io.github.rowak.AuroraMetadata;
 import io.github.rowak.Setup;
+import io.github.rowak.StatusCodeException;
+import io.github.rowak.StatusCodeException.UnauthorizedException;
 import io.github.rowak.nanoleafdesktop.Main;
+import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
+import io.github.rowak.nanoleafdesktop.models.DeviceInfo;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
@@ -53,6 +61,7 @@ public class DeviceChangerDialog extends JDialog
 		
 		new Thread(() ->
 		{
+			findGroups();
 			findAuroras();
 		}).start();
 	}
@@ -92,7 +101,7 @@ public class DeviceChangerDialog extends JDialog
 					"Please try again or create an issue on GitHub.")
 					.setVisible(true);
 		}
-		lblTitle.setText("Select a Device");
+		lblTitle.setText("Select a Device or Group");
 	}
 	
 	private boolean findMethod1()
@@ -154,7 +163,7 @@ public class DeviceChangerDialog extends JDialog
 					Aurora device = new Aurora(hostName, port, "v1", accessToken);
 					if (device != null)
 					{
-						parent.setDevice(device);
+						parent.setDevices(new Aurora[]{device});
 					}
 					this.cancel();
 					info.dispose();
@@ -168,6 +177,43 @@ public class DeviceChangerDialog extends JDialog
 			}
 		}, 1000, 1000);
 		return device;
+	}
+	
+	private void connectToGroup(DeviceGroup group)
+	{
+		DeviceInfo[] groupDevices = group.getDevices();
+		Aurora[] auroraDevices = new Aurora[groupDevices.length];
+		for (int i = 0; i < groupDevices.length; i++)
+		{
+			try
+			{
+				auroraDevices[i] = new Aurora(groupDevices[i].getHostName(),
+						groupDevices[i].getPort(), "v1", groupDevices[i].getAccessToken());
+			}
+			catch (HttpRequestException hre)
+			{
+				new TextDialog(this, "The device " + groupDevices[i].getHostName() +
+						" is offline.").setVisible(true);
+			}
+			catch (UnauthorizedException uae)
+			{
+				new TextDialog(this, "The device " + groupDevices[i].getHostName() +
+						" is unauthorized.").setVisible(true);
+			}
+			catch (StatusCodeException sce)
+			{
+				new TextDialog(this, "Unknown connection error for the device " +
+						groupDevices[i].getHostName() + ".").setVisible(true);
+			}
+		}
+		DeviceChangerDialog.this.parent.setDevices(auroraDevices);
+		EventQueue.invokeLater(() ->
+		{
+			DeviceChangerDialog.this.parent.setTitle("Connected to " + group.getName());
+		});
+		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+		manager.setProperty("lastSession", "GROUP:" + group.getName());
+		this.dispose();
 	}
 	
 	private void addDeviceToList(AuroraMetadata metadata)
@@ -205,6 +251,47 @@ public class DeviceChangerDialog extends JDialog
 		return new HashMap<String, Object>();
 	}
 	
+	private void findGroups()
+	{
+		for (DeviceGroup group : getDeviceGroups())
+		{
+			listModel.addElement("GROUP: " + group.getName());
+		}
+	}
+	
+	private DeviceGroup getGroupByName(String name)
+	{
+		if (name.startsWith("GROUP: "))
+		{
+			name = name.replaceFirst("GROUP: ", "");
+		}
+		for (DeviceGroup group : getDeviceGroups())
+		{
+			if (group.getName().equals(name))
+			{
+				return group;
+			}
+		}
+		return null;
+	}
+	
+	private List<DeviceGroup> getDeviceGroups()
+	{
+		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+		String devicesStr = manager.getProperty("deviceGroups");
+		if (devicesStr != null)
+		{
+			List<DeviceGroup> groups = new ArrayList<DeviceGroup>();
+			JSONArray json = new JSONArray(devicesStr);
+			for (int i = 0; i < json.length(); i++)
+			{
+				groups.add(DeviceGroup.fromJSON(json.getJSONObject(i).toString()));
+			}
+			return groups;
+		}
+		return new ArrayList<DeviceGroup>();
+	}
+	
 	private void initUI(Component parent)
 	{
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -221,7 +308,7 @@ public class DeviceChangerDialog extends JDialog
 		addMouseListener(wdl);
 		addMouseMotionListener(wdl);
 		
-		lblTitle = new JLabel("Searching for Devices...");
+		lblTitle = new JLabel("Searching for Devices and Groups...");
 		lblTitle.setFont(new Font("Tahoma", Font.PLAIN, 22));
 		lblTitle.setForeground(Color.WHITE);
 		contentPane.add(lblTitle, "gapx 15 0, cell 0 0");
@@ -248,9 +335,17 @@ public class DeviceChangerDialog extends JDialog
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				if (listAuroras.getSelectedValue() != null)
+				String selected = listAuroras.getSelectedValue();
+				if (selected != null)
 				{
-					connectToAurora(listAuroras.getSelectedValue());
+					if (selected.startsWith("GROUP: "))
+					{
+						connectToGroup(getGroupByName(selected));
+					}
+					else
+					{
+						connectToAurora(selected);
+					}
 				}
 			}
 		});
@@ -301,7 +396,7 @@ public class DeviceChangerDialog extends JDialog
 													if (aurora != null)
 													{
 														info.dispose();
-														DeviceChangerDialog.this.parent.setDevice(aurora);
+														DeviceChangerDialog.this.parent.setDevices(new Aurora[]{device});
 														thisDialog.dispose();
 														DeviceChangerDialog.this.dispose();
 													}
@@ -331,6 +426,6 @@ public class DeviceChangerDialog extends JDialog
 						}).setVisible(true);
 			}
 		});
-		contentPane.add(btnAddExternalDevice, "cell 0 2,alignx left");
+		contentPane.add(btnAddExternalDevice, "flowx,cell 0 2,alignx left");
 	}
 }

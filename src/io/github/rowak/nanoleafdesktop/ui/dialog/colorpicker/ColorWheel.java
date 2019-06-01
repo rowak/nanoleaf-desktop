@@ -218,6 +218,10 @@ public class ColorWheel extends JPanel
 		
 		public void setColor(Color color)
 		{
+			float[] hsb = new float[3];
+			hsb = Color.RGBtoHSB(color.getRed(), color.getGreen(),
+					color.getBlue(), hsb);
+			int hue = (int)(hsb[0]*360);
 			float centerX = width/2;
 			float centerY = height/2;
 			float radius = centerX;
@@ -234,10 +238,8 @@ public class ColorWheel extends JPanel
 					float dist = (float)Math.sqrt(dx*dx + dy*dy);
 					if (dist <= radius)
 					{
-						float hue = (float)(((Math.atan2(dx, dy) / Math.PI) + 1f) / 2f);
-						Color colorX = new Color(Color.HSBtoRGB(hue, 1f, 1f));
-						
-						if (colorX.equals(color))
+						int hueX = (int)((((Math.atan2(dx, dy) / Math.PI) + 1f) / 2f)*360);
+						if (hueX == hue)
 						{
 							this.x = x;
 							this.y = y;

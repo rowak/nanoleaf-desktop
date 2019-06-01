@@ -20,9 +20,9 @@ public class SpotifyPulseBeatsEffect extends SpotifyEffect
 	private float loudness = 0.5f;
 	private Random random;
 	
-	public SpotifyPulseBeatsEffect(Color[] palette, Aurora aurora)
+	public SpotifyPulseBeatsEffect(Color[] palette, Aurora[] auroras)
 	{
-		super(SpotifyEffectType.PULSE_BEATS, palette, aurora);
+		super(SpotifyEffectType.PULSE_BEATS, palette, auroras);
 		random = new Random();
 	}
 	
@@ -40,45 +40,49 @@ public class SpotifyPulseBeatsEffect extends SpotifyEffect
 		
 		if (analysis.getBeat() != null && palette.length > 0)
 		{
-			int panelIndex = random.nextInt(panels.length);
-			int panelId = panels[panelIndex].getId();
-			int r = palette[paletteIndex].getRed();
-			int g = palette[paletteIndex].getGreen();
-			int b = palette[paletteIndex].getBlue();
-			java.awt.Color original = new java.awt.Color(r, g, b);
-			original = applyLoudnessToColor(original);
-			java.awt.Color darker = original.darker().darker().darker();
-			CustomEffectBuilder ceb = new CustomEffectBuilder(aurora);
-			ceb.addFrame(panelId, new Frame(original.getRed(),
-					original.getGreen(), original.getBlue(), 0, 1));
-			ceb.addFrame(panelId, new Frame(0, 0, 0, 0, 5));
-			List<Integer> marked = new ArrayList<Integer>();
-			marked.add(panelId);
-			final int INITIAL_TIME = 1;
-			setNeighbors(panels[panelIndex], marked, 
-					panels, ceb, darker, INITIAL_TIME);
-			
-			new Thread(() ->
+			for (int i = 0; i < auroras.length; i++)
 			{
-				try
+				int panelIndex = random.nextInt(panels[i].length);
+				int panelId = panels[i][panelIndex].getId();
+				int r = palette[paletteIndex].getRed();
+				int g = palette[paletteIndex].getGreen();
+				int b = palette[paletteIndex].getBlue();
+				java.awt.Color original = new java.awt.Color(r, g, b);
+				original = applyLoudnessToColor(original);
+				java.awt.Color darker = original.darker().darker().darker();
+				CustomEffectBuilder ceb = new CustomEffectBuilder(auroras[i]);
+				ceb.addFrame(panelId, new Frame(original.getRed(),
+						original.getGreen(), original.getBlue(), 0, 1));
+				ceb.addFrame(panelId, new Frame(0, 0, 0, 0, 5));
+				List<Integer> marked = new ArrayList<Integer>();
+				marked.add(panelId);
+				final int INITIAL_TIME = 1;
+				setNeighbors(i, panels[i][panelIndex], marked, 
+						panels, ceb, darker, INITIAL_TIME);
+				
+				final int fi = i;
+				new Thread(() ->
 				{
-					aurora.effects().displayEffect(ceb.build("", false));
-				}
-				catch (StatusCodeException sce)
-				{
-					sce.printStackTrace();
-				}
-			}).start();
+					try
+					{
+						auroras[fi].effects().displayEffect(ceb.build("", false));
+					}
+					catch (StatusCodeException sce)
+					{
+						sce.printStackTrace();
+					}
+				}).start();
+			}
 			setNextPaletteColor();
 		}
 	}
 	
-	public void setNeighbors(Panel panel, final List<Integer> marked,
-			Panel[] panels, CustomEffectBuilder ceb, java.awt.Color color,
+	public void setNeighbors(int auroraIndex, Panel panel, final List<Integer> marked,
+			Panel[][] panels, CustomEffectBuilder ceb, java.awt.Color color,
 			int time) throws StatusCodeException, IOException
 	{
 		time += 1;
-		for (Panel p : panel.getNeighbors(panels))
+		for (Panel p : panel.getNeighbors(panels[auroraIndex]))
 		{
 			if (!marked.contains(p.getId()))
 			{
@@ -86,7 +90,7 @@ public class SpotifyPulseBeatsEffect extends SpotifyEffect
 						color.getGreen(), color.getBlue(), 0, time));
 				ceb.addFrame(p, new Frame(0, 0, 0, 0, 5));
 				marked.add(p.getId());
-				setNeighbors(p, marked, panels, ceb, color, time);
+				setNeighbors(auroraIndex, p, marked, panels, ceb, color, time);
 			}
 		}
 	}

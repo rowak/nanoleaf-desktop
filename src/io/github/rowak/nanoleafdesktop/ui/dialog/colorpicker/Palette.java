@@ -28,17 +28,15 @@ public class Palette extends JPanel
 	private int width, height;
 	private Color selectedColor;
 	private List<Color> palette;
-	private ColorWheel wheel;
-	private BrightnessSlider slider;
+	private ColorEntry colorEntry;
 	private JScrollBar scrollBar;
 	
 	public Palette(int width, int height,
-			ColorWheel wheel, BrightnessSlider slider)
+			ColorEntry colorEntry)
 	{
 		this.width = width;
 		this.height = height;
-		this.wheel = wheel;
-		this.slider = slider;
+		this.colorEntry = colorEntry;
 		initUI();
 	}
 	
@@ -88,13 +86,18 @@ public class Palette extends JPanel
 	
 	private Color getCurrentColor()
 	{
-		Color hue = wheel.getColor();
-		float brightness = slider.getValue()/100f;
-		float[] hsb = new float[3];
-		hsb = Color.RGBtoHSB(hue.getRed(), hue.getGreen(),
-				hue.getBlue(), hsb);
-		return Color.getHSBColor(hsb[0], hsb[1], brightness);
+		return colorEntry.getColor();
 	}
+	
+//	private Color getCurrentColor()
+//	{
+//		Color hue = wheel.getColor();
+//		float brightness = slider.getValue()/100f;
+//		float[] hsb = new float[3];
+//		hsb = Color.RGBtoHSB(hue.getRed(), hue.getGreen(),
+//				hue.getBlue(), hsb);
+//		return Color.getHSBColor(hsb[0], hsb[1], brightness);
+//	}
 	
 	@Override
 	public void paintComponent(Graphics g)

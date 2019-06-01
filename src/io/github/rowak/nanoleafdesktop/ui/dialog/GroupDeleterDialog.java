@@ -56,8 +56,13 @@ public class GroupDeleterDialog extends JDialog
 		{
 			if (group.getName().equals(name))
 			{
-				groups.remove(groups);
+				groups.remove(group);
 				groupsModel.removeElement(name);
+				PropertyManager manager =
+						new PropertyManager(Main.PROPERTIES_FILEPATH);
+				manager.setProperty("deviceGroups",
+						new JSONArray(groups).toString());
+				break;
 			}
 		}
 	}
@@ -74,6 +79,7 @@ public class GroupDeleterDialog extends JDialog
 			{
 				groups.add(DeviceGroup.fromJSON(json.getJSONObject(i).toString()));
 			}
+			return groups;
 		}
 		return new ArrayList<DeviceGroup>();
 	}

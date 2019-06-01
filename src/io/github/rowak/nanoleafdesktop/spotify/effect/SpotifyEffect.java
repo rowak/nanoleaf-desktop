@@ -17,24 +17,28 @@ public abstract class SpotifyEffect
 	protected boolean requiresExtControl;
 	protected int paletteIndex;
 	protected SpotifyEffectType type;
-	protected Aurora aurora;
-	protected Panel[] panels;
+	protected Aurora[] auroras;
+	protected Panel[][] panels;
 	protected Color[] palette;
 	protected List<UserOption> userOptions;
 	
 	public SpotifyEffect(SpotifyEffectType type,
-			Color[] palette, Aurora aurora)
+			Color[] palette, Aurora[] auroras)
 	{
 		this.type = type;
 		this.palette = palette;
-		this.aurora = aurora;
+		this.auroras = auroras;
 		try
 		{
-			panels = aurora.panelLayout().getPanels();
+			panels = new Panel[auroras.length][];
+			for (int i = 0; i < auroras.length; i++)
+			{
+				panels[i] = auroras[i].panelLayout().getPanelsRotated();
+			}
 		}
 		catch (StatusCodeException sce)
 		{
-			panels = new Panel[0];
+			panels = new Panel[auroras.length][];
 		}
 		userOptions = new ArrayList<UserOption>();
 	}

@@ -21,9 +21,9 @@ public class SpotifyFireworksEffect extends SpotifyEffect
 	private float loudness = 0.5f;
 	private Random random;
 	
-	public SpotifyFireworksEffect(Color[] palette, Aurora aurora)
+	public SpotifyFireworksEffect(Color[] palette, Aurora[] auroras)
 	{
-		super(SpotifyEffectType.FIREWORKS, palette, aurora);
+		super(SpotifyEffectType.FIREWORKS, palette, auroras);
 		requiresExtControl = true;
 		random = new Random();
 	}
@@ -44,39 +44,43 @@ public class SpotifyFireworksEffect extends SpotifyEffect
 		
 		if (beat != null && palette.length > 0)
 		{
-			new Thread(() ->
-			{				
-				try
+			for (int i = 0; i < auroras.length; i++)
+			{
+				final int fi = i;
+				new Thread(() ->
 				{
-					int colorIndex = random.nextInt(palette.length);
-					List<Panel> updatedPanels = new ArrayList<Panel>();
-					for (Panel p : panels)
+					try
 					{
-						if (random.nextBoolean())
+						int colorIndex = random.nextInt(palette.length);
+						List<Panel> updatedPanels = new ArrayList<Panel>();
+						for (Panel p : panels[fi])
 						{
-							updatedPanels.add(p);
-							int r = palette[colorIndex].getRed();
-							int g = palette[colorIndex].getGreen();
-							int b = palette[colorIndex].getBlue();
-							java.awt.Color color =
-									applyLoudnessToColor(new java.awt.Color(r, g, b));
-							setPanel(p, color.getRed(), color.getGreen(),
-									color.getBlue(), 1);
+							if (random.nextBoolean())
+							{
+								updatedPanels.add(p);
+								int r = palette[colorIndex].getRed();
+								int g = palette[colorIndex].getGreen();
+								int b = palette[colorIndex].getBlue();
+								java.awt.Color color =
+										applyLoudnessToColor(new java.awt.Color(r, g, b));
+								setPanel(auroras[fi], p, color.getRed(), color.getGreen(),
+										color.getBlue(), 1);
+							}
+						}
+						
+						Thread.sleep(50);
+						
+						for (Panel p : updatedPanels)
+						{
+							setPanel(auroras[fi], p, 0, 0, 0, (int)(beat.getDuration()*10));
 						}
 					}
-					
-					Thread.sleep(50);
-					
-					for (Panel p : updatedPanels)
+					catch (Exception e)
 					{
-						setPanel(p, 0, 0, 0, (int)(beat.getDuration()*10));
+						e.printStackTrace();
 					}
-				}
-				catch (Exception e)
-				{
-					e.printStackTrace();
-				}
-			}).start();
+				}).start();
+			}
 		}
 	}
 	
@@ -90,11 +94,11 @@ public class SpotifyFireworksEffect extends SpotifyEffect
 		return color;
 	}
 	
-	private void setPanel(Panel panel, int red,
+	private void setPanel(Aurora aurora, Panel panel, int red,
 			int green, int blue, int transitionTime)
 					throws StatusCodeException, IOException
 	{
-		String deviceType = getDeviceType();
+		String deviceType = getDeviceType(aurora);
 		if (deviceType.equals("aurora"))
 		{
 			aurora.externalStreaming().setPanel(panel, red,
@@ -107,7 +111,7 @@ public class SpotifyFireworksEffect extends SpotifyEffect
 		}
 	}
 	
-	private String getDeviceType()
+	private String getDeviceType(Aurora aurora)
 	{
 		if (aurora.getName().toLowerCase().contains("light panels") ||
 				aurora.getName().toLowerCase().contains("aurora"))

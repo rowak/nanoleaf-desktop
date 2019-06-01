@@ -24,6 +24,7 @@ import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernToggleButton;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.BrightnessSlider;
+import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.ColorEntry;
 import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.ColorPicker;
 import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.ColorWheel;
 import io.github.rowak.nanoleafdesktop.ui.label.LargeModernLabel;
@@ -36,7 +37,7 @@ public class InformationPanel extends JPanel
 {
 	private boolean adjusting;
 	private Main parent;
-	private Aurora device;
+	private Aurora[] devices;
 	private PanelCanvas canvas;
 	
 	private JToggleButton btnOnOff;
@@ -44,10 +45,10 @@ public class InformationPanel extends JPanel
 	private JSlider brightnessSlider;
 	private JSlider ctSlider;
 	
-	public InformationPanel(Main parent, Aurora device, PanelCanvas canvas)
+	public InformationPanel(Main parent, Aurora[] devices, PanelCanvas canvas)
 	{
 		this.parent = parent;
-		this.device = device;
+		this.devices = devices;
 		this.canvas = canvas;
 		init();
 	}
@@ -57,9 +58,9 @@ public class InformationPanel extends JPanel
 		return btnOnOff;
 	}
 	
-	public void setAurora(Aurora device)
+	public void setAuroras(Aurora[] devices)
 	{
-		this.device = device;
+		this.devices = devices;
 	}
 	
 	public void setScene(String scene)
@@ -100,7 +101,10 @@ public class InformationPanel extends JPanel
 				
 				try
 				{
-					device.state().toggleOn();
+					for (Aurora device : devices)
+					{
+						device.state().toggleOn();
+					}
 					canvas.toggleOn();
 				}
 				catch (HttpRequestException hre)
@@ -146,7 +150,10 @@ public class InformationPanel extends JPanel
 							JSlider slider = (JSlider)e.getSource();
 							if (slider.getValueIsAdjusting())
 							{
-								device.state().setBrightness(slider.getValue());
+								for (Aurora device : devices)
+								{
+									device.state().setBrightness(slider.getValue());
+								}
 							}
 							else
 							{
@@ -196,7 +203,10 @@ public class InformationPanel extends JPanel
 							JSlider slider = (JSlider)e.getSource();
 							if (slider.getValueIsAdjusting())
 							{
-								device.state().setColorTemperature(slider.getValue());
+								for (Aurora device : devices)
+								{
+									device.state().setColorTemperature(slider.getValue());
+								}
 							}
 							else
 							{
@@ -236,6 +246,47 @@ public class InformationPanel extends JPanel
 				JFrame frame = (JFrame)btn.getFocusCycleRootAncestor();
 				ColorPicker colorPicker = new ColorPicker(frame);
 				colorPicker.setVisible(true);
+				colorPicker.getColorEntry().addChangeListener(new ComponentChangeListener()
+				{
+					@Override
+					public void stateChanged(ChangeEvent e)
+					{
+						if (!adjusting)
+						{
+							adjusting = true;
+							new Thread(() ->
+							{
+								ColorEntry entry = (ColorEntry)e.getSource();
+								int[] hsb = entry.getHSB();
+								try
+								{
+									for (Aurora device : devices)
+									{
+										device.state().setHue(hsb[0]);
+										device.state().setSaturation(hsb[1]);
+										device.state().setBrightness(hsb[2]);
+										parent.loadStateComponents();
+									}
+								}
+								catch (HttpRequestException hre)
+								{
+									new TextDialog(parent,
+											"Lost connection to the device. " +
+											"Please try again.").setVisible(true);
+								}
+								catch (StatusCodeException sce)
+								{
+									new TextDialog(parent,
+											"The requested action could not be completed. " +
+											"Please try again.").setVisible(true);
+								}
+								
+								canvas.setColor(entry.getColor());
+								adjusting = false;
+							}).start();
+						}
+					}
+				});
 				colorPicker.getColorWheel().addChangeListener(new ComponentChangeListener()
 				{
 					@Override
@@ -254,10 +305,13 @@ public class InformationPanel extends JPanel
 								
 								try
 								{
-									device.state().setHue((int)(hsb[0]*360));
-									device.state().setSaturation((int)(hsb[1]*100));
-									device.state().setBrightness((int)(hsb[2]*100));
-									parent.loadStateComponents();
+									for (Aurora device : devices)
+									{
+										device.state().setHue((int)(hsb[0]*360));
+										device.state().setSaturation((int)(hsb[1]*100));
+										device.state().setBrightness((int)(hsb[2]*100));
+										parent.loadStateComponents();
+									}
 								}
 								catch (HttpRequestException hre)
 								{
@@ -278,7 +332,8 @@ public class InformationPanel extends JPanel
 						}
 					}
 				});
-				colorPicker.getBrightnessSlider().addChangeListener(new ComponentChangeListener()
+				colorPicker.getBrightnessSlider().addChangeListener(
+						new ComponentChangeListener()
 				{
 					@Override
 					public void stateChanged(ChangeEvent e)
@@ -292,10 +347,14 @@ public class InformationPanel extends JPanel
 								int brightness = slider.getValue();
 								try
 								{
-									device.state().setBrightness(brightness);
-									int hue = device.state().getHue();
-									int sat = device.state().getSaturation();
-									canvas.setColor(Color.getHSBColor(hue/360f, sat/100f, brightness/100f));
+									for (Aurora device : devices)
+									{
+										device.state().setBrightness(brightness);
+										int hue = device.state().getHue();
+										int sat = device.state().getSaturation();
+										canvas.setColor(Color.getHSBColor(hue/360f,
+												sat/100f, brightness/100f));
+									}
 									parent.loadStateComponents();
 								}
 								catch (HttpRequestException hre)

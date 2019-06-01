@@ -45,23 +45,23 @@ public class SpotifyPlayer
 	private SpotifyApi spotifyApi;
 	private Track currentTrack;
 	private AudioAnalysis currentTrackAnalysis;
-	private Aurora aurora;
+	private Aurora[] auroras;
 	private SpotifyEffect effect;
 	private Color[] palette;
 	private Color[] defaultPalette;
 	private SpotifyPanel panel;
 	
 	public SpotifyPlayer(SpotifyApi spotifyApi, SpotifyEffectType defaultEffect,
-			Color[] defaultPalette, Aurora aurora, SpotifyPanel panel) throws UnauthorizedException,
+			Color[] defaultPalette, Aurora[] auroras, SpotifyPanel panel) throws UnauthorizedException,
 			HttpRequestException, StatusCodeException
 	{
 		this.spotifyApi = spotifyApi;
 		this.defaultPalette = defaultPalette.clone();
 		palette = defaultPalette.clone();
-		this.aurora = aurora;
+		this.auroras = auroras;
 		this.panel = panel;
 		setEffect(defaultEffect);
-		if (aurora != null)
+		if (auroras != null)
 		{
 			enableExternalStreaming();
 			start();
@@ -136,10 +136,10 @@ public class SpotifyPlayer
 		}
 	}
 	
-	public void setAurora(Aurora aurora)
+	public void setAuroras(Aurora[] auroras)
 	{
-		this.aurora = aurora;
-		if (aurora != null)
+		this.auroras = auroras;
+		if (auroras != null)
 		{
 			try
 			{
@@ -166,7 +166,7 @@ public class SpotifyPlayer
 		switch (effectType)
 		{
 			case PULSE_BEATS:
-				effect = new SpotifyPulseBeatsEffect(palette, aurora);
+				effect = new SpotifyPulseBeatsEffect(palette, auroras);
 				break;
 			case SOUNDBAR:
 				if (palette.length > 1 &&
@@ -176,13 +176,13 @@ public class SpotifyPlayer
 				}
 				String directionStr = (String)getUserOptionArgs().get("direction");
 				Direction direction = getDirectionFromStr(directionStr);
-				effect = new SpotifySoundBarEffect(palette, direction, aurora);
+				effect = new SpotifySoundBarEffect(palette, direction, auroras);
 				break;
 			case FIREWORKS:
-				effect = new SpotifyFireworksEffect(palette, aurora);
+				effect = new SpotifyFireworksEffect(palette, auroras);
 				break;
 			case STREAKING_NOTES:
-				effect = new SpotifyStreakingNotesEffect(palette, aurora);
+				effect = new SpotifyStreakingNotesEffect(palette, auroras);
 				break;
 		}
 	}
@@ -208,7 +208,7 @@ public class SpotifyPlayer
 	{
 		try
 		{
-			previousEffect = aurora.effects().getCurrentEffectName();
+			previousEffect = auroras[0].effects().getCurrentEffectName();
 		}
 		catch (StatusCodeException sce)
 		{
@@ -221,7 +221,7 @@ public class SpotifyPlayer
 	{
 		try
 		{
-			aurora.effects().setEffect(previousEffect);
+			auroras[0].effects().setEffect(previousEffect);
 		}
 		catch (StatusCodeException | NullPointerException scenpe)
 		{
@@ -273,10 +273,13 @@ public class SpotifyPlayer
 	
 	private void clearDisplay() throws StatusCodeException
 	{
-		Effect clear = new CustomEffectBuilder(aurora)
-				.addFrameToAllPanels(new Frame(0, 0, 0, 0, 1))
-				.build("", false);
-		aurora.effects().displayEffect(clear);
+		for (Aurora aurora : auroras)
+		{
+			Effect clear = new CustomEffectBuilder(aurora)
+					.addFrameToAllPanels(new Frame(0, 0, 0, 0, 1))
+					.build("", false);
+			aurora.effects().displayEffect(clear);
+		}
 	}
 	
 	private void update() throws UnauthorizedException,
@@ -302,18 +305,21 @@ public class SpotifyPlayer
 	
 	private void enableExternalStreaming() throws StatusCodeException
 	{
-		String deviceType = getDeviceType();
-		if (deviceType.equals("aurora"))
+		for (Aurora aurora : auroras)
 		{
-			aurora.externalStreaming().enable();
-		}
-		else if (deviceType.equals("canvas"))
-		{
-			CanvasExtStreaming.enable(aurora);
+			String deviceType = getDeviceType(aurora);
+			if (deviceType.equals("aurora"))
+			{
+				aurora.externalStreaming().enable();
+			}
+			else if (deviceType.equals("canvas"))
+			{
+				CanvasExtStreaming.enable(aurora);
+			}
 		}
 	}
 	
-	private String getDeviceType()
+	private String getDeviceType(Aurora aurora)
 	{
 		if (aurora.getName().toLowerCase().contains("light panels") ||
 				aurora.getName().toLowerCase().contains("aurora"))

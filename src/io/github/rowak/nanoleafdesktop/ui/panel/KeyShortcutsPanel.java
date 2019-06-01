@@ -39,13 +39,13 @@ public class KeyShortcutsPanel extends JPanel
 	private List<Shortcut> shortcuts;
 	private DefaultListModel<Shortcut> model;
 	private GlobalShortcutListener shortcutListener;
-	private Aurora device;
+	private Aurora[] devices;
 	private Timer refreshTimer;
 	private Timer appRunningTimer;
 	
-	public KeyShortcutsPanel(Aurora device)
+	public KeyShortcutsPanel(Aurora[] devices)
 	{
-		this.device = device;
+		this.devices = devices;
 		shortcuts = new ArrayList<Shortcut>();
 		model = new DefaultListModel<Shortcut>();
 		refreshShortcuts();
@@ -53,12 +53,12 @@ public class KeyShortcutsPanel extends JPanel
 		startKeyListener();
 	}
 	
-	public void setAurora(Aurora device)
+	public void setAuroras(Aurora[] devices)
 	{
-		this.device = device;
+		this.devices = devices;
 		if (shortcutListener != null)
 		{
-			shortcutListener.setAurora(device);
+			shortcutListener.setAuroras(devices);
 		}
 	}
 	
@@ -169,7 +169,7 @@ public class KeyShortcutsPanel extends JPanel
 				{
 					Shortcut s = shortcutsList.getSelectedValue();
 					new ShortcutCreatorDialog(KeyShortcutsPanel.this.getFocusCycleRootAncestor(),
-							s, device).setVisible(true);
+							s, devices).setVisible(true);
 					startRefreshTimer();
 				}
 			}
@@ -216,7 +216,7 @@ public class KeyShortcutsPanel extends JPanel
 	{
 		try
 		{
-			shortcutListener = new GlobalShortcutListener(shortcuts, device);
+			shortcutListener = new GlobalShortcutListener(shortcuts, devices);
 			GlobalScreen.registerNativeHook();
 			GlobalScreen.addNativeKeyListener(shortcutListener);
 			Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
@@ -245,14 +245,14 @@ public class KeyShortcutsPanel extends JPanel
 	private void openShortcutCreatorDialog()
 	{
 		new ShortcutCreatorDialog(KeyShortcutsPanel.this.getFocusCycleRootAncestor(),
-				device).setVisible(true);
+				devices).setVisible(true);
 		startRefreshTimer();
 	}
 	
 	private void openShortcutEditorDialog(Shortcut shortcut)
 	{
 		new ShortcutCreatorDialog(KeyShortcutsPanel.this.getFocusCycleRootAncestor(),
-				shortcut, device).setVisible(true);
+				shortcut, devices).setVisible(true);
 		startRefreshTimer();
 	}
 	

@@ -45,7 +45,7 @@ public class AmbilightPanel extends JPanel
 	
 	private int delay, brightness, monitor, mode;
 	private Rectangle captureArea;
-	private Aurora aurora;
+	private Aurora[] auroras;
 	private AmbilightHandler handler;
 	
 	private JToggleButton btnAmbilightOnOff;
@@ -58,7 +58,7 @@ public class AmbilightPanel extends JPanel
 	{
 		init();
 		loadUserSettings();
-		handler = new AmbilightHandler(aurora, canvas, this);
+		handler = new AmbilightHandler(auroras, canvas, this);
 	}
 	
 	private void init()
@@ -307,10 +307,10 @@ public class AmbilightPanel extends JPanel
 		}
 	}
 	
-	public void setAurora(Aurora aurora)
+	public void setAuroras(Aurora[] auroras)
 	{
-		this.aurora = aurora;
-		handler.setAurora(aurora);
+		this.auroras = auroras;
+		handler.setAuroras(auroras);
 		if (handler.isRunning())
 		{
 			btnAmbilightOnOff.setText("Enable");

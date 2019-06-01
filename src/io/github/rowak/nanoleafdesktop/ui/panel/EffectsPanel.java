@@ -22,13 +22,15 @@ import io.github.rowak.nanoleafdesktop.ui.scrollbar.ModernScrollBarUI;
 
 public class EffectsPanel extends JScrollPane
 {
+	private Aurora[] devices;
 	private JList<String> effects;
 	private DefaultListModel<String> model;
 	
 	public EffectsPanel(String label, Main parent,
-			Aurora device, PanelCanvas canvas)
+			Aurora[] devices, PanelCanvas canvas)
 	{
-		init(label, parent, device, canvas);
+		this.devices = devices;
+		init(label, parent, canvas);
 	}
 	
 	public void addEffect(String effect)
@@ -47,6 +49,11 @@ public class EffectsPanel extends JScrollPane
 		}
 	}
 	
+	public void setAuroras(Aurora[] auroras)
+	{
+		this.devices = auroras;
+	}
+	
 	public void clearEffects()
 	{
 		model.clear();
@@ -62,7 +69,7 @@ public class EffectsPanel extends JScrollPane
 		return effects;
 	}
 	
-	private void init(String label, Main parent, Aurora device, PanelCanvas canvas)
+	private void init(String label, Main parent, PanelCanvas canvas)
 	{
 		getVerticalScrollBar().setUI(new ModernScrollBarUI());
 		getHorizontalScrollBar().setUI(new ModernScrollBarUI());
@@ -86,7 +93,10 @@ public class EffectsPanel extends JScrollPane
 				JList<String> list = (JList<String>)e.getSource();
 				try
 				{
-					device.effects().setEffect(list.getSelectedValue());
+					for (Aurora device : devices)
+					{
+						device.effects().setEffect(list.getSelectedValue());
+					}
 					canvas.checkAuroraState();
 					parent.loadStateComponents();
 				}

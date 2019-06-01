@@ -26,13 +26,13 @@ public class AuroraNullListener extends Timer
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				if (canvas.getAurora() != null)
+				if (canvas.getAuroras() != null)
 				{
-					infoPanel.setAurora(canvas.getAurora());
-					discoveryPanel.setAurora(canvas.getAurora());
-					ambilightPanel.setAurora(canvas.getAurora());
-					spotifyPanel.setAurora(canvas.getAurora());
-					shortcutsPanel.setAurora(canvas.getAurora());
+					infoPanel.setAuroras(canvas.getAuroras());
+					discoveryPanel.setAuroras(canvas.getAuroras());
+					ambilightPanel.setAuroras(canvas.getAuroras());
+					spotifyPanel.setAuroras(canvas.getAuroras());
+					shortcutsPanel.setAuroras(canvas.getAuroras());
 					canvas.initCanvas();
 					canvas.repaint();
 					

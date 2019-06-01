@@ -36,13 +36,13 @@ public class DiscoveryPanel extends JScrollPane
 {
 	private boolean isUpdating;
 	private int topPage = 0, recentPage = 0;
-	private Aurora aurora;
+	private Aurora[] auroras;
 	private DefaultListModel<EffectMetadata> discoveryEffects;
 	private OptionDialog activeDialog;
 	
-	public DiscoveryPanel(Aurora aurora)
+	public DiscoveryPanel(Aurora[] auroras)
 	{
-		this.aurora = aurora;
+		this.auroras = auroras;
 		getVerticalScrollBar().setUI(new ModernScrollBarUI());
 		setHorizontalScrollBar(null);
 		setBackground(UIConstants.darkBackground);
@@ -121,7 +121,10 @@ public class DiscoveryPanel extends JScrollPane
 										JButton source = (JButton)e.getSource();
 										((OptionDialog)source.getFocusCycleRootAncestor()).dispose();
 										Effect ef = ((EffectMetadata)list.getSelectedValue()).getEffect();
-										panel.aurora.effects().displayEffect(ef);
+										for (Aurora aurora : panel.auroras)
+										{
+											aurora.effects().displayEffect(ef);
+										}
 										
 										updateMain(list);
 									}
@@ -150,7 +153,10 @@ public class DiscoveryPanel extends JScrollPane
 										JButton source = (JButton)e.getSource();
 										((OptionDialog)source.getFocusCycleRootAncestor()).dispose();
 										Effect ef = ((EffectMetadata)list.getSelectedValue()).getEffect();
-										panel.aurora.effects().addEffect(ef);
+										for (Aurora aurora : panel.auroras)
+										{
+											aurora.effects().addEffect(ef);
+										}
 										
 										updateMain(list);
 									}
@@ -183,14 +189,14 @@ public class DiscoveryPanel extends JScrollPane
 		}
 	}
 	
-	public Aurora getAurora()
+	public Aurora[] getAuroras()
 	{
-		return this.aurora;
+		return this.auroras;
 	}
 	
-	public void setAurora(Aurora aurora)
+	public void setAuroras(Aurora[] auroras)
 	{
-		this.aurora = aurora;
+		this.auroras = auroras;
 	}
 	
 	public int getTopPage()

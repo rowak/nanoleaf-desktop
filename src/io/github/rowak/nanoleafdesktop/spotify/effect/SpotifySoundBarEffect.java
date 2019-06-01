@@ -23,15 +23,15 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 {
 	private boolean updating;
 	private float loudness;
-	private Panel[][] panelTable;
+	private Panel[][][] panelTable;
 	private Direction direction;
 	private List<Float> times;
 	private List<Float> sections;
 	
 	public SpotifySoundBarEffect(Color[] palette, Direction direction,
-			Aurora aurora) throws StatusCodeException
+			Aurora[] auroras) throws StatusCodeException
 	{
-		super(SpotifyEffectType.SOUNDBAR, palette, aurora);
+		super(SpotifyEffectType.SOUNDBAR, palette, auroras);
 		userOptions.add(new UserOption("Direction",
 				new String[]{"Right", "Up", "Down", "Left"}));
 		requiresExtControl = true;
@@ -65,31 +65,34 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 		if (segment != null && palette.length > 0 &&
 				!times.contains(segment.getMeasure().getStart()))
 		{
-			times.add(segment.getMeasure().getStart());
-			List<Panel> updated = new ArrayList<Panel>();
-			int max = (int)(panelTable.length * loudness);
-			float duration = segment.getMeasure().getDuration();
-			
-			AudioAnalysisSection section = analysis.getSection();
-			if (section != null && !sections.contains(section.getMeasure().getStart()))
+			for (int p = 0; p < auroras.length; p++)
 			{
-				sections.add(section.getMeasure().getStart());
-				setNextPaletteColor();
+				times.add(segment.getMeasure().getStart());
+				List<Panel> updated = new ArrayList<Panel>();
+				int max = (int)(panelTable[p].length * loudness);
+				float duration = segment.getMeasure().getDuration();
+				
+				AudioAnalysisSection section = analysis.getSection();
+				if (section != null && !sections.contains(section.getMeasure().getStart()))
+				{
+					sections.add(section.getMeasure().getStart());
+					setNextPaletteColor();
+				}
+				
+				for (int i = 0; i < panelTable[p].length; i++)
+				{
+					pulse(p, i, max, updated);
+				}
+				fadePanelsToBackground(p, max, duration);
 			}
-			
-			for (int i = 0; i < panelTable.length; i++)
-			{
-				pulse(i, max, updated);
-			}
-			fadePanelsToBackground(max, duration);
 		}
 	}
 	
-	private void pulse(int i, int max, List<Panel> updated)
+	private void pulse(int auroraIndex, int i, int max, List<Panel> updated)
 	{
 		if (i < max)
 		{
-			for (Panel p : panelTable[i])
+			for (Panel p : panelTable[auroraIndex][i])
 			{
 				int r = palette[paletteIndex].getRed();
 				int g = palette[paletteIndex].getGreen();
@@ -99,7 +102,7 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 				updated.add(p);
 				try
 				{
-					setPanel(p, c.getRed(), c.getGreen(),
+					setPanel(auroras[auroraIndex], p, c.getRed(), c.getGreen(),
 							c.getBlue(), 1);
 				}
 				catch (Exception e)
@@ -110,7 +113,7 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 		}
 	}
 	
-	private void fadePanelsToBackground(int max, float duration)
+	private void fadePanelsToBackground(int auroraIndex, int max, float duration)
 	{
 		if (!updating)
 		{
@@ -120,12 +123,12 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 				try
 				{
 					Thread.sleep((int)(duration*1000));
-					for (int i = 0; i < panelTable.length; i++)
+					for (int i = 0; i < panelTable[auroraIndex].length; i++)
 					{
-						for (Panel p : panelTable[i])
+						for (Panel p : panelTable[auroraIndex][i])
 						{
 							Color c = getBackgroundColor();
-							setPanel(p, c.getRed(), c.getGreen(),
+							setPanel(auroras[auroraIndex], p, c.getRed(), c.getGreen(),
 									c.getBlue(), (max-i)-1);
 						}
 					}
@@ -141,19 +144,22 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 	
 	private void initPanelTable() throws StatusCodeException
 	{
-		Panel[] panels = aurora.panelLayout().getPanelsRotated();
-		if (direction == Direction.RIGHT || direction == Direction.LEFT || direction == null)
+		panelTable = new Panel[auroras.length][][];
+		for (int p = 0; p < auroras.length; p++)
 		{
-			panelTable = PanelTableSort.getColumns(panels);
-		}
-		else if (direction == Direction.UP || direction == Direction.DOWN)
-		{
-			panelTable = PanelTableSort.getRows(panels);
-		}
-		
-		if (direction == Direction.UP || direction == Direction.LEFT)
-		{
-			reversePanelTable(panelTable);
+			if (direction == Direction.RIGHT || direction == Direction.LEFT || direction == null)
+			{
+				panelTable[p] = PanelTableSort.getColumns(panels[p]);
+			}
+			else if (direction == Direction.UP || direction == Direction.DOWN)
+			{
+				panelTable[p] = PanelTableSort.getRows(panels[p]);
+			}
+			
+			if (direction == Direction.UP || direction == Direction.LEFT)
+			{
+				reversePanelTable(panelTable[p]);
+			}
 		}
 	}
 	
@@ -231,11 +237,11 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 		return c;
 	}
 	
-	private void setPanel(Panel panel, int red,
+	private void setPanel(Aurora aurora, Panel panel, int red,
 			int green, int blue, int transitionTime)
 					throws StatusCodeException, IOException
 	{
-		String deviceType = getDeviceType();
+		String deviceType = getDeviceType(aurora);
 		if (deviceType.equals("aurora"))
 		{
 			aurora.externalStreaming().setPanel(panel, red,
@@ -248,7 +254,7 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 		}
 	}
 	
-	private String getDeviceType()
+	private String getDeviceType(Aurora aurora)
 	{
 		if (aurora.getName().toLowerCase().contains("light panels") ||
 				aurora.getName().toLowerCase().contains("aurora"))

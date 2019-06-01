@@ -22,14 +22,14 @@ public class Shortcut
 		this.action = action;
 	}
 	
-	public void execute(Aurora device, Effect[] effects)
+	public void execute(Aurora[] devices, Effect[] effects)
 	{
-		action.execute(device, effects);
+		action.execute(devices, effects);
 	}
 	
-	public void reset(Aurora device, Effect[] effects)
+	public void reset(Aurora[] devices, Effect[] effects)
 	{
-		action.reset(device, effects);
+		action.reset(devices, effects);
 	}
 	
 	public String getName()

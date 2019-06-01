@@ -33,6 +33,11 @@ public class BrightnessSlider extends JPanel
 		return getValue(tracker.getY());
 	}
 	
+	public void setValue(int value)
+	{
+		tracker.setY(value);
+	}
+	
 	public void setColor(Color color)
 	{
 		float[] hsbVals = new float[3];

@@ -39,7 +39,7 @@ import javax.swing.JTextField;
 
 public class ShortcutCreatorDialog extends JDialog
 {
-	private Aurora device;
+	private Aurora[] devices;
 	private Component parent;
 	private Shortcut oldShortcut;
 	private JPanel contentPane;
@@ -59,18 +59,18 @@ public class ShortcutCreatorDialog extends JDialog
 	/**
 	 * @wbp.parser.constructor
 	 */
-	public ShortcutCreatorDialog(Component parent, Aurora device)
+	public ShortcutCreatorDialog(Component parent, Aurora[] devices)
 	{
 		this.parent = parent;
-		this.device = device;
+		this.devices = devices;
 		initUI(parent);
 	}
 	
-	public ShortcutCreatorDialog(Component parent, Shortcut shortcut, Aurora device)
+	public ShortcutCreatorDialog(Component parent, Shortcut shortcut, Aurora[] devices)
 	{
 		this.parent = parent;
 		oldShortcut = shortcut;
-		this.device = device;
+		this.devices = devices;
 		initUI(parent);
 		loadUIFromShortcut(shortcut);
 	}
@@ -379,15 +379,27 @@ public class ShortcutCreatorDialog extends JDialog
 	
 	private String[] getEffects()
 	{
+		List<String> effectsList = new ArrayList<String>();
 		try
 		{
-			return device.effects().getEffectsList();
+			for (Aurora device : devices)
+			{
+				for (String effect : device.effects().getEffectsList())
+				{
+					effectsList.add(effect);
+				}
+			}
 		}
 		catch (StatusCodeException sce)
 		{
 			sce.printStackTrace();
 		}
-		return null;
+		String[] effects = new String[effectsList.size()];
+		for (int i = 0; i < effects.length; i++)
+		{
+			effects[i] = effectsList.get(i);
+		}
+		return effects;
 	}
 	
 	private int getNumberFieldValue()

@@ -71,7 +71,7 @@ public class SpotifyPanel extends JPanel
 	private int sensitivity;
 	private SpotifyAuthenticator authenticator;
 	private SpotifyPlayer player;
-	private Aurora aurora;
+	private Aurora[] auroras;
 	private Map<String, Object> userOptionArgs;
 	
 	private JToggleButton btnEnableDisable;
@@ -84,20 +84,20 @@ public class SpotifyPanel extends JPanel
 	private JLabel lblAudioOffset;
 	private JSlider audioOffsetSlider;
 	
-	public SpotifyPanel(Aurora aurora)
+	public SpotifyPanel(Aurora[] auroras)
 	{
-		this.aurora = aurora;
+		this.auroras = auroras;
 		userOptionArgs = new HashMap<String, Object>();
 		initUI();
 		loadUserSettings();
 	}
 	
-	public void setAurora(Aurora aurora)
+	public void setAuroras(Aurora[] auroras)
 	{
-		this.aurora = aurora;
+		this.auroras = auroras;
 		if (player != null)
 		{
-			player.setAurora(aurora);
+			player.setAuroras(auroras);
 		}
 	}
 	
@@ -330,7 +330,7 @@ public class SpotifyPanel extends JPanel
 		{
 			authenticator = new SpotifyAuthenticator();
 			player = new SpotifyPlayer(authenticator.getSpotifyApi(),
-					getSelectedEffect(), convertPalette(palette), aurora, this);
+					getSelectedEffect(), convertPalette(palette), auroras, this);
 			player.setSensitivity(sensitivity);
 			player.setAudioOffset(audioOffset);
 		}
@@ -424,16 +424,16 @@ public class SpotifyPanel extends JPanel
 				{
 					case PULSE_BEATS:
 						return new SpotifyPulseBeatsEffect(
-								convertPalette(palette), aurora);
+								convertPalette(palette), auroras);
 					case SOUNDBAR:
 						return new SpotifySoundBarEffect(
-								convertPalette(palette), Direction.RIGHT, aurora);
+								convertPalette(palette), Direction.RIGHT, auroras);
 					case FIREWORKS:
 						return new SpotifyFireworksEffect(
-								convertPalette(palette), aurora);
+								convertPalette(palette), auroras);
 					case STREAKING_NOTES:
 						return new SpotifyStreakingNotesEffect(
-								convertPalette(palette), aurora);
+								convertPalette(palette), auroras);
 				}
 			}
 			catch (StatusCodeException sce)

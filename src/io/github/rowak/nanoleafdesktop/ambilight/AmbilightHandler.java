@@ -36,20 +36,20 @@ public class AmbilightHandler
 	private int delay, brightness, mode;
 	private boolean running, updating;
 	private String previousEffect;
-	private Aurora aurora;
+	private Aurora[] auroras;
 	private Rectangle captureArea;
 	private Color currentColor;
 	private Timer timer;
 	private Robot robot;
 	private AmbilightPanel parent;
-	private Panel[] panels;
-	private Panel[][] rows;
+	private Panel[][] panels;
+	private Panel[][][] rows;
 	private PanelCanvas canvas;
 	
-	public AmbilightHandler(Aurora aurora,
+	public AmbilightHandler(Aurora[] auroras,
 			PanelCanvas canvas, AmbilightPanel parent)
 	{
-		this.aurora = aurora;
+		this.auroras = auroras;
 		this.canvas = canvas;
 		this.parent = parent;
 		delay = parent.getUpdateDelay();
@@ -69,8 +69,13 @@ public class AmbilightHandler
 	
 	public void start()
 	{
-		panels = getSortedPanels();
-		rows = PanelTableSort.getRows(panels);
+		panels = new Panel[auroras.length][];
+		rows = new Panel[auroras.length][][];
+		for (int i = 0; i < auroras.length; i++)
+		{
+			panels[i] = getSortedPanels(auroras[i]);
+			rows[i] = PanelTableSort.getRows(panels[i]);
+		}
 		saveCurrentEffect();
 		startExternalStreaming();
 		timer = new Timer(delay, new ActionListener()
@@ -133,25 +138,28 @@ public class AmbilightHandler
 		originalColor = addAdditionalBrightness(originalColor, brightness);
 		if (!sameColor(originalColor, currentColor))
 		{
-			String deviceType = getDeviceType();
-			if (deviceType.equals("aurora"))
+			for (Aurora aurora : auroras)
 			{
-				Effect ef = new CustomEffectBuilder(aurora)
-						.addFrameToAllPanels(new Frame(originalColor.getRed(),
-								originalColor.getGreen(), originalColor.getBlue(), 0, 5))
-						.build("", false);
-				aurora.externalStreaming().sendStaticEffect(ef);
-				currentColor = originalColor;
-				ef = null;
-			}
-			else if (deviceType.equals("canvas"))
-			{
-				String animData = new CanvasAnimDataBuilder(aurora)
-						.addFrameToAllPanels(new Frame(originalColor.getRed(),
-								originalColor.getGreen(), originalColor.getBlue(), 0, 5))
-						.build();
-				CanvasExtStreaming.sendAnimData(animData, aurora);
-				currentColor = originalColor;
+				String deviceType = getDeviceType(aurora);
+				if (deviceType.equals("aurora"))
+				{
+					Effect ef = new CustomEffectBuilder(aurora)
+							.addFrameToAllPanels(new Frame(originalColor.getRed(),
+									originalColor.getGreen(), originalColor.getBlue(), 0, 3))
+							.build("", false);
+					aurora.externalStreaming().sendStaticEffect(ef);
+					currentColor = originalColor;
+					ef = null;
+				}
+				else if (deviceType.equals("canvas"))
+				{
+					String animData = new CanvasAnimDataBuilder(aurora)
+							.addFrameToAllPanels(new Frame(originalColor.getRed(),
+									originalColor.getGreen(), originalColor.getBlue(), 0, 3))
+							.build();
+					CanvasExtStreaming.sendAnimData(animData, aurora);
+					currentColor = originalColor;
+				}
 			}
 			
 			new Thread(() ->
@@ -164,52 +172,55 @@ public class AmbilightHandler
 	private void applySelectionMode()
 			throws StatusCodeException, IOException
 	{
-		String deviceType = getDeviceType();
-		CustomEffectBuilder ceb = new CustomEffectBuilder(aurora);
-		CanvasAnimDataBuilder cadb = new CanvasAnimDataBuilder(aurora);
-		BufferedImage img = getScreenImage();
-		final int VERTICAL_SEPARATOR = captureArea.height/rows.length;
-		for (int i = 0; i < rows.length; i++)
+		for (int p = 0; p < auroras.length; p++)
 		{
-			int captureY = VERTICAL_SEPARATOR*i + VERTICAL_SEPARATOR/2;
-			
-			Map<Panel, Color> colors = new HashMap<Panel, Color>();
-			for (int j = 0; j < rows[i].length; j++)
+			String deviceType = getDeviceType(auroras[p]);
+			CustomEffectBuilder ceb = new CustomEffectBuilder(auroras[p]);
+			CanvasAnimDataBuilder cadb = new CanvasAnimDataBuilder(auroras[p]);
+			BufferedImage img = getScreenImage();
+			final int VERTICAL_SEPARATOR = captureArea.height/rows[p].length;
+			for (int i = 0; i < rows[p].length; i++)
 			{
-				final int HORIZONTAL_SEPARATOR = captureArea.width/rows[i].length;
-				int captureX = HORIZONTAL_SEPARATOR*j + HORIZONTAL_SEPARATOR/2;
+				int captureY = VERTICAL_SEPARATOR*i + VERTICAL_SEPARATOR/2;
 				
-				try
+				Map<Panel, Color> colors = new HashMap<Panel, Color>();
+				for (int j = 0; j < rows[p][i].length; j++)
 				{
-					if (img.getSubimage(captureX, captureY, 1, 1) != null)
+					final int HORIZONTAL_SEPARATOR = captureArea.width/rows[p][i].length;
+					int captureX = HORIZONTAL_SEPARATOR*j + HORIZONTAL_SEPARATOR/2;
+					
+					try
 					{
-						Color color = new Color(img.getRGB(captureX, captureY));
-						if (deviceType.equals("aurora"))
+						if (img.getSubimage(captureX, captureY, 1, 1) != null)
 						{
-							ceb.addFrame(rows[i][j], new Frame(color.getRed(),
-									color.getGreen(), color.getBlue(), 0, 5));
+							Color color = new Color(img.getRGB(captureX, captureY));
+							if (deviceType.equals("aurora"))
+							{
+								ceb.addFrame(rows[p][i][j], new Frame(color.getRed(),
+										color.getGreen(), color.getBlue(), 0, 2));
+							}
+							else if (deviceType.equals("canvas"))
+							{
+								cadb.addFrame(rows[p][i][j], new Frame(color.getRed(),
+										color.getGreen(), color.getBlue(), 0, 2));
+							}
+							colors.put(rows[p][i][j], color);
 						}
-						else if (deviceType.equals("canvas"))
-						{
-							cadb.addFrame(rows[i][j], new Frame(color.getRed(),
-									color.getGreen(), color.getBlue(), 0, 5));
-						}
-						colors.put(rows[i][j], color);
+					}
+					catch (RasterFormatException rfe)
+					{
+						// catch, but ignore
 					}
 				}
-				catch (RasterFormatException rfe)
-				{
-					// catch, but ignore
-				}
 			}
-		}
-		if (deviceType.equals("aurora"))
-		{
-			aurora.externalStreaming().sendStaticEffect(ceb.build("", false));
-		}
-		else if (deviceType.equals("canvas"))
-		{
-			CanvasExtStreaming.sendAnimData(cadb.build(), aurora);
+			if (deviceType.equals("aurora"))
+			{
+				auroras[p].externalStreaming().sendStaticEffect(ceb.build("", false));
+			}
+			else if (deviceType.equals("canvas"))
+			{
+				CanvasExtStreaming.sendAnimData(cadb.build(), auroras[p]);
+			}
 		}
 	}
 	
@@ -227,7 +238,7 @@ public class AmbilightHandler
 				captureArea.width, captureArea.height);
 	}
 	
-	private Panel[] getSortedPanels() 
+	private Panel[] getSortedPanels(Aurora aurora) 
 	{
 		Panel[] panels = null;
 		try
@@ -242,9 +253,9 @@ public class AmbilightHandler
 		return panels;
 	}
 	
-	public void setAurora(Aurora aurora)
+	public void setAuroras(Aurora[] auroras)
 	{
-		this.aurora = aurora;
+		this.auroras = auroras;
 	}
 	
 	public void setUpdateDelay(int delay)
@@ -285,7 +296,7 @@ public class AmbilightHandler
 	{
 		try
 		{
-			previousEffect = aurora.effects().getCurrentEffectName();
+			previousEffect = auroras[0].effects().getCurrentEffectName();
 		}
 		catch (StatusCodeException sce)
 		{
@@ -298,7 +309,7 @@ public class AmbilightHandler
 	{
 		try
 		{
-			aurora.effects().setEffect(previousEffect);
+			auroras[0].effects().setEffect(previousEffect);
 		}
 		catch (StatusCodeException | NullPointerException scenpe)
 		{
@@ -308,39 +319,42 @@ public class AmbilightHandler
 	
 	private void startExternalStreaming()
 	{
-		String deviceType = getDeviceType();
-		if (deviceType.equals("aurora"))
+		for (Aurora aurora : auroras)
 		{
-			try
+			String deviceType = getDeviceType(aurora);
+			if (deviceType.equals("aurora"))
 			{
-				aurora.externalStreaming().enable();
+				try
+				{
+					aurora.externalStreaming().enable();
+				}
+				catch (StatusCodeException sce)
+				{
+					showMessageBox("Failed to start ambient lighting server. " +
+							"Please reload the application and try again.");
+				}
 			}
-			catch (StatusCodeException sce)
+			else if (deviceType.equals("canvas"))
 			{
-				showMessageBox("Failed to start ambient lighting server. " +
-						"Please reload the application and try again.");
+				try
+				{
+					CanvasExtStreaming.enable(aurora);
+				}
+				catch (StatusCodeException sce)
+				{
+					showMessageBox("Failed to start ambient lighting server. " +
+							"Please reload the application and try again.");
+				}
 			}
-		}
-		else if (deviceType.equals("canvas"))
-		{
-			try
+			else
 			{
-				CanvasExtStreaming.enable(aurora);
+				showMessageBox("Your device is not supported by this feature " +
+						"or it has not been recognized correctly.");
 			}
-			catch (StatusCodeException sce)
-			{
-				showMessageBox("Failed to start ambient lighting server. " +
-						"Please reload the application and try again.");
-			}
-		}
-		else
-		{
-			showMessageBox("Your device is not supported by this feature " +
-					"or it has not been recognized correctly.");
 		}
 	}
 	
-	private String getDeviceType()
+	private String getDeviceType(Aurora aurora)
 	{
 		if (aurora.getName().toLowerCase().contains("light panels") ||
 				aurora.getName().toLowerCase().contains("aurora"))

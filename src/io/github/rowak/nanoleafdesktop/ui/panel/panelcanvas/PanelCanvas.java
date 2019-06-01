@@ -35,7 +35,7 @@ public class PanelCanvas extends JPanel
 {
 	private int rotation;
 	private float scaleFactor = 1f;
-	private Aurora device;
+	private Aurora[] devices;
 	private Panel[] panels;
 	private DeviceType deviceType;
 	private Map<Panel, Point> originalPanelLocations;
@@ -45,10 +45,10 @@ public class PanelCanvas extends JPanel
 	private Graphics buffG;
 	private BufferedImage buff;
 	
-	public PanelCanvas(Aurora device)
+	public PanelCanvas(Aurora[] devices)
 	{
-		this.device = device;
-		if (device != null)
+		this.devices = devices;
+		if (devices != null && devices.length == 1)
 		{
 			initCanvas();
 		}
@@ -64,7 +64,7 @@ public class PanelCanvas extends JPanel
 	{
 		try
 		{
-			panels = device.panelLayout().getPanels();
+			panels = devices[0].panelLayout().getPanels();
 			setDeviceType();
 		}
 		catch (NullPointerException npe)
@@ -81,7 +81,7 @@ public class PanelCanvas extends JPanel
 			new TextDialog(this, "An error occurred while getting data from the device. " +
 					"Please relaunch the application.").setVisible(true);
 		}
-		if (device != null)
+		if (devices != null && devices[0] != null)
 		{
 			panelLocations = new HashMap<Panel, Point>();
 			for (Panel p : panels)
@@ -116,7 +116,7 @@ public class PanelCanvas extends JPanel
 	
 	private void startLoadingSpinner()
 	{
-		if (device == null)
+		if (devices != null && devices[0] == null)
 		{
 			spinner = new LoadingSpinner(Color.DARK_GRAY);
 			add(spinner);
@@ -125,7 +125,7 @@ public class PanelCanvas extends JPanel
 	
 	private void stopLoadingSpinner()
 	{
-		if (device != null && this.isAncestorOf(spinner))
+		if (devices[0] != null && this.isAncestorOf(spinner))
 		{
 			remove(spinner);
 		}
@@ -133,27 +133,31 @@ public class PanelCanvas extends JPanel
 	
 	private void setDeviceType()
 	{
-		if (device.getName().toLowerCase().contains("light panels") ||
-				device.getName().toLowerCase().contains("aurora"))
+		if (devices[0].getName().toLowerCase().contains("light panels") ||
+				devices[0].getName().toLowerCase().contains("aurora"))
 		{
 			deviceType = DeviceType.AURORA;
 		}
-		else if (device.getName().toLowerCase().contains("canvas"))
+		else if (devices[0].getName().toLowerCase().contains("canvas"))
 		{
 			deviceType = DeviceType.CANVAS;
 		}
 	}
 	
-	public void setAurora(Aurora device)
+	public void setAuroras(Aurora[] devices)
 	{
-		this.device = device;
-		setDeviceType();
-		loadUserPanelRotation();
+		this.devices = devices;
+		initCanvas();
+		if (devices.length == 1)
+		{
+			setDeviceType();
+			loadUserPanelRotation();
+		}
 	}
 	
-	public Aurora getAurora()
+	public Aurora[] getAuroras()
 	{
-		return device;
+		return devices;
 	}
 	
 	public Panel[] getPanels()
@@ -178,24 +182,24 @@ public class PanelCanvas extends JPanel
 	
 	public void checkAuroraState() throws StatusCodeException
 	{
-		if (device != null)
+		if (devices != null && devices[0] != null)
 		{
 			stopLoadingSpinner();
 			
-			String colorMode = device.state().getColorMode();
+			String colorMode = devices[0].state().getColorMode();
 			if (colorMode.equals("hs") || colorMode.equals("ct"))
 			{
 				customEffectDisplay.stop();
 				
-				int hue = device.state().getHue();
-				int sat = device.state().getSaturation();
-				int bri = device.state().getBrightness();
+				int hue = devices[0].state().getHue();
+				int sat = devices[0].state().getSaturation();
+				int bri = devices[0].state().getBrightness();
 				setHSB(hue, sat, bri);
 			}
-			else if (colorMode.equals("effects"))
+			else if (colorMode.equals("effects") || colorMode.equals("effect"))
 			{
-				String currentEffectName = device.effects().getCurrentEffectName();
-				Effect currentEffect = device.effects().getCurrentEffect();
+				String currentEffectName = devices[0].effects().getCurrentEffectName();
+				Effect currentEffect = devices[0].effects().getCurrentEffect();
 				if (currentEffect != null && currentEffect.getAnimType() != null)
 				{
 					if (currentEffectName.equals("*Static*") ||
@@ -239,9 +243,9 @@ public class PanelCanvas extends JPanel
 	{
 		try
 		{
-			if (device != null)
+			if (devices[0] != null)
 			{
-				Color c = device.state().getOn() ?
+				Color c = devices[0].state().getOn() ?
 						Color.WHITE : Color.BLACK;
 				setColor(c);
 				
@@ -507,7 +511,7 @@ public class PanelCanvas extends JPanel
 		buffG.setColor(new Color(0, 0, 0, 187));
 		buffG.fillRect(0, 0, getWidth(), getHeight());
 		
-		if (device != null)
+		if (devices != null && devices[0] != null && devices.length == 1)
 		{
 			// Draw the panels
 			for (Panel panel : panels)
@@ -552,15 +556,25 @@ public class PanelCanvas extends JPanel
 			
 			if (deviceType != DeviceType.AURORA && deviceType != DeviceType.CANVAS)
 			{
-				buffG.setFont(new Font("Tahoma", Font.PLAIN, 20));
-				FontMetrics fm = g.getFontMetrics();
-				String message = "Error while loading preview. Your device may not be supported.";
-				buffG.setColor(Color.WHITE);
-				buffG.drawString(message, (getWidth() - fm.stringWidth(message))/2,
-						(getHeight() + fm.getHeight())/2);
+				displayMessage("Error while loading preview. Your device may not be supported.",
+						Color.WHITE, new Font("Tahoma", Font.PLAIN, 20), buffG);
 			}
 		}
+		else
+		{
+			displayMessage("Preview disabled in group mode.", Color.WHITE,
+					new Font("Tahoma", Font.PLAIN, 20), buffG);
+		}
 		g.drawImage(buff, 0, 0, this);
+	}
+	
+	private void displayMessage(String message, Color color, Font font, Graphics g)
+	{
+		buffG.setFont(font);
+		FontMetrics fm = g.getFontMetrics();
+		buffG.setColor(color);
+		buffG.drawString(message, (getWidth() - fm.stringWidth(message))/2,
+				(getHeight() + fm.getHeight())/2);
 	}
 	
 	private void initBuffer()

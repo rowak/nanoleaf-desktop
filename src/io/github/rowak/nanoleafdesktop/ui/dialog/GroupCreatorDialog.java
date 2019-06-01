@@ -383,24 +383,12 @@ public class GroupCreatorDialog extends JDialog
 				else
 				{
 					new TextDialog(GroupCreatorDialog.this,
-							"You must select at least two devices.").setVisible(true);
+							"You must select at least two devices.")
+							.setVisible(true);
 				}
 			}
 		});
 		contentPane.add(btnCreateGroup, "cell 2 2");
 		groupScrollPane.getColumnHeader().setBackground(Color.DARK_GRAY);
-	}
-	
-	public static void main(String[] args)
-	{
-		try
-		{
-			GroupCreatorDialog frame = new GroupCreatorDialog(null);
-			frame.setVisible(true);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
 	}
 }
