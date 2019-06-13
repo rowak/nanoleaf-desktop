@@ -14,18 +14,20 @@ import io.github.rowak.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.spotify.SpecificAudioAnalysis;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
 import io.github.rowak.nanoleafdesktop.tools.CanvasExtStreaming;
+import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 
 public class SpotifyStreakingNotesEffect extends SpotifyEffect
 {
 	private List<Panel> edges;
 	private List<Float> times;
 	private Random random;
+	private PanelCanvas canvas;
 	
-	public SpotifyStreakingNotesEffect(Color[] palette, Aurora[] auroras)
+	public SpotifyStreakingNotesEffect(Color[] palette, Aurora[] auroras, PanelCanvas canvas)
 	{
 		super(SpotifyEffectType.STREAKING_NOTES, palette, auroras);
 		requiresExtControl = true;
-		random = new Random();
+		this.canvas = canvas;
 		init();
 	}
 
@@ -34,6 +36,7 @@ public class SpotifyStreakingNotesEffect extends SpotifyEffect
 	{
 		random = new Random();
 		times = new ArrayList<Float>();
+		panels[0] = canvas.getGroupPanels();
 		getEdgePanels();
 	}
 	
@@ -55,29 +58,26 @@ public class SpotifyStreakingNotesEffect extends SpotifyEffect
 			times.add(segment.getMeasure().getStart());
 			new Thread(() ->
 			{
-				for (int p = 0; p < auroras.length; p++)
+				List<Panel> path = getPath();
+				for (int i = 0; i < path.size(); i++)
 				{
-					List<Panel> path = getPath(p);
-					for (int i = 0; i < path.size(); i++)
+					try
 					{
-						try
+						Color dark = Color.fromRGB((int)(palette[paletteIndex].getRed()*0.5),
+								(int)(palette[paletteIndex].getGreen()*0.5),
+								(int)(palette[paletteIndex].getBlue()*0.5));
+						setPanel(path.get(i), dark, 3);
+						if (i+1 < path.size())
 						{
-							Color dark = Color.fromRGB((int)(palette[paletteIndex].getRed()*0.5),
-									(int)(palette[paletteIndex].getGreen()*0.5),
-									(int)(palette[paletteIndex].getBlue()*0.5));
-							setPanel(p, path.get(i), dark, 3);
-							if (i+1 < path.size())
-							{
-								setPanel(p, path.get(i+1), palette[paletteIndex], 3);
-							}
-							Thread.sleep((int)(path.size()/
-									segment.getMeasure().getDuration())*6);
-							setPanel(p, path.get(i), Color.BLACK, 3);
+							setPanel(path.get(i+1), palette[paletteIndex], 3);
 						}
-						catch (Exception e)
-						{
-							e.printStackTrace();
-						}
+						Thread.sleep((int)(path.size()/
+								segment.getMeasure().getDuration())*6);
+						setPanel(path.get(i), Color.BLACK, 3);
+					}
+					catch (Exception e)
+					{
+						e.printStackTrace();
 					}
 				}
 				setNextPaletteColor();
@@ -85,17 +85,17 @@ public class SpotifyStreakingNotesEffect extends SpotifyEffect
 		}
 	}
 	
-	private List<Panel> getPath(int auroraIndex)
+	private List<Panel> getPath()
 	{
 		List<Panel> path = new ArrayList<Panel>();
 		Panel start = edges.get(random.nextInt(edges.size()));
 		path.add(start);
-		Panel[] neighbors = start.getNeighbors(panels[auroraIndex]);
+		Panel[] neighbors = start.getNeighbors(panels[0]);
 		Panel p = neighbors[random.nextInt(neighbors.length)];
 		path.add(p);
-		while (!isEdgePanel(p, auroraIndex))
+		while (!isEdgePanel(p))
 		{
-			neighbors = p.getNeighbors(panels[auroraIndex]);
+			neighbors = p.getNeighbors(panels[0]);
 			int i = random.nextInt(neighbors.length);
 			if (!path.contains(neighbors[i]))
 			{
@@ -106,20 +106,20 @@ public class SpotifyStreakingNotesEffect extends SpotifyEffect
 		return path;
 	}
 	
-	private boolean isEdgePanel(Panel p, int auroraIndex)
+	private boolean isEdgePanel(Panel p)
 	{
-		return p.getNeighbors(panels[auroraIndex]).length < 2;
+		return p.getNeighbors(panels[0]).length < 2;
 	}
 	
 	// An "edge" panel is defined as a panel with less than two neighbors
 	private void getEdgePanels()
 	{
+		edges = new ArrayList<Panel>();
 		for (int i = 0; i < auroras.length; i++)
 		{
-			edges = new ArrayList<Panel>();
 			for (Panel p : panels[i])
 			{
-				if (isEdgePanel(p, i))
+				if (isEdgePanel(p))
 				{
 					edges.add(p);
 				}
@@ -127,20 +127,23 @@ public class SpotifyStreakingNotesEffect extends SpotifyEffect
 		}
 	}
 	
-	private void setPanel(int auroraIndex, Panel panel, Color color, int transitionTime)
+	private void setPanel(Panel panel, Color color, int transitionTime)
 					throws StatusCodeException, IOException
 	{
-		String deviceType = getDeviceType(auroras[auroraIndex]);
-		if (deviceType.equals("aurora"))
+		for (Aurora aurora : auroras)
 		{
-			auroras[auroraIndex].externalStreaming().setPanel(panel, color.getRed(),
-					color.getGreen(), color.getBlue(), transitionTime);
-		}
-		else if (deviceType.equals("canvas"))
-		{
-			CanvasExtStreaming.setPanel(panel, color.getRed(),
-					color.getGreen(), color.getBlue(),
-					transitionTime, auroras[auroraIndex]);
+			String deviceType = getDeviceType(aurora);
+			if (deviceType.equals("aurora"))
+			{
+				aurora.externalStreaming().setPanel(panel, color.getRed(),
+						color.getGreen(), color.getBlue(), transitionTime);
+			}
+			else if (deviceType.equals("canvas"))
+			{
+				CanvasExtStreaming.setPanel(panel, color.getRed(),
+						color.getGreen(), color.getBlue(),
+						transitionTime, aurora);
+			}
 		}
 	}
 	

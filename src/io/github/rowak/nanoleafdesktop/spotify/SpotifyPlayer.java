@@ -35,6 +35,7 @@ import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyStreakingNotesEffec
 import io.github.rowak.nanoleafdesktop.tools.CanvasExtStreaming;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.panel.SpotifyPanel;
+import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 
 public class SpotifyPlayer
 {
@@ -50,9 +51,11 @@ public class SpotifyPlayer
 	private Color[] palette;
 	private Color[] defaultPalette;
 	private SpotifyPanel panel;
+	private PanelCanvas canvas;
 	
 	public SpotifyPlayer(SpotifyApi spotifyApi, SpotifyEffectType defaultEffect,
-			Color[] defaultPalette, Aurora[] auroras, SpotifyPanel panel) throws UnauthorizedException,
+			Color[] defaultPalette, Aurora[] auroras, SpotifyPanel panel,
+			PanelCanvas canvas) throws UnauthorizedException,
 			HttpRequestException, StatusCodeException
 	{
 		this.spotifyApi = spotifyApi;
@@ -60,6 +63,7 @@ public class SpotifyPlayer
 		palette = defaultPalette.clone();
 		this.auroras = auroras;
 		this.panel = panel;
+		this.canvas = canvas;
 		setEffect(defaultEffect);
 		if (auroras != null)
 		{
@@ -176,13 +180,13 @@ public class SpotifyPlayer
 				}
 				String directionStr = (String)getUserOptionArgs().get("direction");
 				Direction direction = getDirectionFromStr(directionStr);
-				effect = new SpotifySoundBarEffect(palette, direction, auroras);
+				effect = new SpotifySoundBarEffect(palette, direction, auroras, canvas);
 				break;
 			case FIREWORKS:
 				effect = new SpotifyFireworksEffect(palette, auroras);
 				break;
 			case STREAKING_NOTES:
-				effect = new SpotifyStreakingNotesEffect(palette, auroras);
+				effect = new SpotifyStreakingNotesEffect(palette, auroras, canvas);
 				break;
 		}
 	}
@@ -234,6 +238,7 @@ public class SpotifyPlayer
 	{
 		try
 		{
+			System.out.println("init");
 			initEffect();
 			CurrentlyPlaying current = getCurrentlyPlaying();
 			currentTrack = current.getItem();
@@ -262,13 +267,15 @@ public class SpotifyPlayer
 		}
 	}
 	
-	public void initEffect() throws StatusCodeException
+	public void initEffect()
+			throws StatusCodeException, IOException
 	{
 		clearDisplay();
 		if (effect.requiresExtControl())
 		{
 			enableExternalStreaming();
 		}
+		effect.init();
 	}
 	
 	private void clearDisplay() throws StatusCodeException

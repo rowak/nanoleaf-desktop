@@ -3,6 +3,7 @@ package io.github.rowak.nanoleafdesktop.ui.panel;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,6 +38,7 @@ import io.github.rowak.nanoleafdesktop.ui.dialog.colorpicker.PalettePicker;
 import io.github.rowak.nanoleafdesktop.ui.label.LargeModernLabel;
 import io.github.rowak.nanoleafdesktop.ui.label.SmallModernLabel;
 import io.github.rowak.nanoleafdesktop.ui.listener.ComponentChangeListener;
+import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 import io.github.rowak.nanoleafdesktop.ui.slider.ModernSliderUI;
 import net.miginfocom.swing.MigLayout;
 import javax.swing.JLabel;
@@ -83,10 +85,12 @@ public class SpotifyPanel extends JPanel
 	private List<JComboBox<String>> cmbxOptions;
 	private JLabel lblAudioOffset;
 	private JSlider audioOffsetSlider;
+	private PanelCanvas canvas;
 	
-	public SpotifyPanel(Aurora[] auroras)
+	public SpotifyPanel(Aurora[] auroras, PanelCanvas canvas)
 	{
 		this.auroras = auroras;
+		this.canvas = canvas;
 		userOptionArgs = new HashMap<String, Object>();
 		initUI();
 		loadUserSettings();
@@ -172,6 +176,10 @@ public class SpotifyPanel extends JPanel
 						catch (StatusCodeException sce)
 						{
 							sce.printStackTrace();
+						}
+						catch (IOException ioe)
+						{
+							ioe.printStackTrace();
 						}
 					}
 					else
@@ -290,6 +298,7 @@ public class SpotifyPanel extends JPanel
 									{
 										trySetupPlayer();
 										btnEnableDisable.setText("Disable");
+										// authenticated
 									}).start();
 								}
 							}, new ActionListener()
@@ -312,6 +321,7 @@ public class SpotifyPanel extends JPanel
 						{
 							trySetupPlayer();
 							btnEnableDisable.setText("Disable");
+							// authenticated
 						}).start();
 					}
 				}
@@ -330,7 +340,7 @@ public class SpotifyPanel extends JPanel
 		{
 			authenticator = new SpotifyAuthenticator();
 			player = new SpotifyPlayer(authenticator.getSpotifyApi(),
-					getSelectedEffect(), convertPalette(palette), auroras, this);
+					getSelectedEffect(), convertPalette(palette), auroras, this, canvas);
 			player.setSensitivity(sensitivity);
 			player.setAudioOffset(audioOffset);
 		}
@@ -375,6 +385,10 @@ public class SpotifyPanel extends JPanel
 							catch (StatusCodeException sce)
 							{
 								sce.printStackTrace();
+							}
+							catch (IOException ioe)
+							{
+								ioe.printStackTrace();
 							}
 						}
 					}
@@ -427,13 +441,15 @@ public class SpotifyPanel extends JPanel
 								convertPalette(palette), auroras);
 					case SOUNDBAR:
 						return new SpotifySoundBarEffect(
-								convertPalette(palette), Direction.RIGHT, auroras);
+								convertPalette(palette), Direction.RIGHT,
+								auroras, canvas);
 					case FIREWORKS:
 						return new SpotifyFireworksEffect(
 								convertPalette(palette), auroras);
 					case STREAKING_NOTES:
 						return new SpotifyStreakingNotesEffect(
-								convertPalette(palette), auroras);
+								convertPalette(palette),
+								auroras, canvas);
 				}
 			}
 			catch (StatusCodeException sce)

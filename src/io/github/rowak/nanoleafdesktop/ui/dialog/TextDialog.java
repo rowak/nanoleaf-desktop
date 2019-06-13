@@ -11,7 +11,7 @@ public class TextDialog extends BasicDialog
 	{
 		super();
 		
-		JLabel lblText = new JLabel(text);
+		JLabel lblText = new JLabel(addLineBreaks(text));
 		lblText.setFont(FONT);
 		lblText.setForeground(Color.WHITE);
 		contentPanel.add(lblText, "gapx 15 0, cell 0 1,alignx center,aligny bottom");
@@ -20,5 +20,10 @@ public class TextDialog extends BasicDialog
 		contentPanel.add(spacer, "cell 0 3");
 		
 		finalize(parent);
+	}
+	
+	private String addLineBreaks(String text)
+	{
+		return "<html>" + text.replace("\n", "<br>") + "</html>";
 	}
 }

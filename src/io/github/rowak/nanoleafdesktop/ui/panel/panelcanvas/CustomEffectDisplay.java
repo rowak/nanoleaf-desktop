@@ -96,7 +96,7 @@ public class CustomEffectDisplay
 				int t = data[x + 6 + i*5];
 				
 				PanelFrame frame = new PanelFrame(getPanelById(
-						panelId, canvas.getPanels()),
+						panelId, canvas.getPanels(0)),
 						new Frame(r, g, b, w, t));
 				if (!frames.containsKey(i))
 				{

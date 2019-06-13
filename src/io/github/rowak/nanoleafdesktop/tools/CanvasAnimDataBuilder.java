@@ -25,6 +25,14 @@ public class CanvasAnimDataBuilder
 			frames.put(panel.getId(), new ArrayList<Frame>());
 	}
 	
+	public CanvasAnimDataBuilder(Panel[] panels)
+	{
+		this.panels = panels;
+		frames = new HashMap<Integer, List<Frame>>();
+		for (Panel panel : panels)
+			frames.put(panel.getId(), new ArrayList<Frame>());
+	}
+	
 	public Map<Integer, List<Frame>> getFrames()
 	{
 		return frames;

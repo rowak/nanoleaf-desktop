@@ -73,7 +73,7 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.7.2", false);
+	public static final Version VERSION = new Version("v0.8.0", true);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
@@ -263,6 +263,7 @@ public class Main extends JFrame
 			loadDeviceName();
 			canvas.setAuroras(devices);
 			canvas.initCanvas();
+			canvas.repaint();
 			infoPanel.setAuroras(devices);
 			regEffectsPanel.setAuroras(devices);
 			rhythEffectsPanel.setAuroras(devices);
@@ -530,6 +531,16 @@ public class Main extends JFrame
 			}
 		}
 		setDevices(auroraDevices);
+		
+		EventQueue.invokeLater(() ->
+		{
+			new TextDialog(this, "You are now in group mode. Your devices are shown ON TOP " +
+					"of each other in the preview window. You can move your devices around " +
+					"to match your actual layout by dragging the panels in the preview window. " +
+					"By doing this, your devices will sync together to simulate having " +
+					"a single device.\n\n\n\n\n\n\n")
+					.setVisible(true);
+		});
 	}
 	
 	private void resetDataFile()
@@ -571,16 +582,19 @@ public class Main extends JFrame
 	
 	private void loadDeviceName()
 	{
-		String deviceName = getDeviceName(devices[0].getHostName());
-		if (deviceName != null)
+		if (devices.length == 1)
 		{
-			lblTitle.setText("Connected to " + deviceName);
-		}
-		else
-		{
-			lblTitle.setText("Connected to " + devices[0].getName());
-			setupDeviceName("It looks like you haven't set a name for your device yet. " +
-				"Do you want to do this now?");
+			String deviceName = getDeviceName(devices[0].getHostName());
+			if (deviceName != null)
+			{
+				lblTitle.setText("Connected to " + deviceName);
+			}
+			else
+			{
+				lblTitle.setText("Connected to " + devices[0].getName());
+				setupDeviceName("It looks like you haven't set a name for your device yet. " +
+					"Do you want to do this now?");
+			}
 		}
 	}
 	
@@ -744,7 +758,7 @@ public class Main extends JFrame
 		ambilightPanel = new AmbilightPanel(canvas);
 		editor.addTab("Ambient Lighting", null, ambilightPanel, null);
 		
-		spotifyPanel = new SpotifyPanel(devices);
+		spotifyPanel = new SpotifyPanel(devices, canvas);
 		editor.addTab("Spotify Visualizer", null, spotifyPanel, null);
 		
 		shortcutsPanel = new KeyShortcutsPanel(devices);
