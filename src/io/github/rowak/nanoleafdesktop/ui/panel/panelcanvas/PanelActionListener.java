@@ -62,8 +62,8 @@ public class PanelActionListener extends MouseAdapter
 	{
 		if (deviceIndex != -1)
 		{
-			int xdiff = roundToNearest(mouse.x - mouseLast.x, 149.5f/2f);
-			int ydiff = roundToNearest(mouse.y - mouseLast.y, 129.5f/2f);
+			int xdiff = roundToNearest(mouse.x - mouseLast.x, 150f/2f);
+			int ydiff = roundToNearest(mouse.y - mouseLast.y, 130f/2f);
 			
 			Point[] offset = canvas.getPanelOffset();
 			offset[deviceIndex].setLocation(xdiff, ydiff);

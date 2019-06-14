@@ -108,16 +108,28 @@ public class PanelCanvas extends JPanel
 			customEffectDisplay = new CustomEffectDisplay(this);
 			toggleOn();
 			
-			if (pdl == null)
+			if (pdl != null)
 			{
-				pdl = new PanelActionListener(
-						this, panels, devices);
-				addMouseListener(pdl);
-				addMouseMotionListener(pdl);
-				addMouseWheelListener(pdl);
+				removeMouseListener(pdl);
+				removeMouseMotionListener(pdl);
+				removeMouseWheelListener(pdl);
 			}
+			
+			pdl = new PanelActionListener(
+					this, panels, devices);
+			addMouseListener(pdl);
+			addMouseMotionListener(pdl);
+			addMouseWheelListener(pdl);
+			
 			initialized = true;
 		}
+	}
+	
+	public void reinitialize()
+	{
+		initialized = false;
+		panels = null;
+		initCanvas();
 	}
 	
 	private void loadUserPanelRotation()
@@ -163,7 +175,7 @@ public class PanelCanvas extends JPanel
 	public void setAuroras(Aurora[] devices)
 	{
 		this.devices = devices;
-		initCanvas();
+		reinitialize();
 		if (devices.length == 1)
 		{
 			setDeviceType();
@@ -212,22 +224,6 @@ public class PanelCanvas extends JPanel
 		return groupPanels.toArray(new Panel[]{});
 	}
 	
-//	public Panel[] getGroupPanels()
-//	{
-//		List<Panel> groupPanels = new ArrayList<Panel>();
-//		for (int i = 0; i < panels.length; i++)
-//		{
-//			for (Panel p : panels[i])
-//			{
-//				int x = p.getX() + panelOffset[i].x;
-//				int y = p.getY() + panelOffset[i].y;
-//				groupPanels.add(new Panel(p.getId(),
-//						x, y, p.getOrientation()));
-//			}
-//		}
-//		return groupPanels.toArray(new Panel[]{});
-//	}
-	
 	public int getRotation()
 	{
 		return rotation;
@@ -257,7 +253,10 @@ public class PanelCanvas extends JPanel
 			String colorMode = devices[0].state().getColorMode();
 			if (colorMode.equals("hs") || colorMode.equals("ct"))
 			{
-				customEffectDisplay.stop();
+				if (customEffectDisplay != null)
+				{
+					customEffectDisplay.stop();
+				}
 				
 				int hue = devices[0].state().getHue();
 				int sat = devices[0].state().getSaturation();
@@ -273,7 +272,10 @@ public class PanelCanvas extends JPanel
 					if (currentEffectName.equals("*Static*") ||
 							currentEffect.getAnimType().equals(Effect.Type.STATIC))
 					{
-						customEffectDisplay.stop();
+						if (customEffectDisplay != null)
+						{
+							customEffectDisplay.stop();
+						}
 						setStaticEffect(currentEffect);
 					}
 					else if (currentEffect.getAnimType().equals(Effect.Type.CUSTOM))
@@ -283,7 +285,10 @@ public class PanelCanvas extends JPanel
 					}
 					else if (!currentEffect.getAnimType().equals(Effect.Type.STATIC))
 					{
-						customEffectDisplay.stop();
+						if (customEffectDisplay != null)
+						{
+							customEffectDisplay.stop();
+						}
 						io.github.rowak.Color[] palette =
 								currentEffect.getPalette();
 						int[] avgRgb = new int[3];
@@ -358,17 +363,21 @@ public class PanelCanvas extends JPanel
 	
 	public void setColor(Color color)
 	{
-		if (customEffectDisplay.isRunning())
+		if (customEffectDisplay != null &&
+				customEffectDisplay.isRunning())
 		{
 			customEffectDisplay.stop();
 		}
 		
-		for (int i = 0; i < panels.length; i++)
+		if (panels != null)
 		{
-			for (Panel p : panels[i])
+			for (int i = 0; i < panels.length; i++)
 			{
-				p.setRGBW(color.getRed(), color.getGreen(),
-						color.getBlue(), 0);
+				for (Panel p : panels[i])
+				{
+					p.setRGBW(color.getRed(), color.getGreen(),
+							color.getBlue(), 0);
+				}
 			}
 		}
 		repaint();
@@ -382,7 +391,8 @@ public class PanelCanvas extends JPanel
 	
 	public void setPanelColor(Panel panel, Color color)
 	{
-		if (customEffectDisplay.isRunning())
+		if (customEffectDisplay != null &&
+				customEffectDisplay.isRunning())
 		{
 			customEffectDisplay.stop();
 		}
