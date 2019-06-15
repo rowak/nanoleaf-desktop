@@ -5,11 +5,11 @@ import java.awt.Polygon;
 
 public class PanelShape extends Polygon
 {
-	private PanelCanvas canvas;
+	private int rotation;
 	
-	public PanelShape(PanelCanvas canvas)
+	public PanelShape(int rotation)
 	{
-		this.canvas = canvas;
+		this.rotation = rotation;
 	}
 	
 	protected void rotate()
@@ -18,7 +18,7 @@ public class PanelShape extends Polygon
 		
 		for (int i = 0; i < npoints; i++)
 		{
-			double radAngle = Math.toRadians(canvas.getRotation());
+			double radAngle = Math.toRadians(rotation);
 			
 			xpoints[i] -= origin.x;
 			ypoints[i] -= origin.y;

@@ -11,8 +11,6 @@ import javax.swing.SwingUtilities;
 import io.github.rowak.Aurora;
 import io.github.rowak.Panel;
 import io.github.rowak.StatusCodeException;
-import io.github.rowak.nanoleafdesktop.Main;
-import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 
 public class PanelActionListener extends MouseAdapter
 {
@@ -62,8 +60,11 @@ public class PanelActionListener extends MouseAdapter
 	{
 		if (deviceIndex != -1)
 		{
-			int xdiff = roundToNearest(mouse.x - mouseLast.x, 150f/2f);
-			int ydiff = roundToNearest(mouse.y - mouseLast.y, 130f/2f);
+			// ******* "Snappy" layouts DISABLED **********
+//			int xdiff = roundToNearest(mouse.x - mouseLast.x, 150f/2f);
+//			int ydiff = roundToNearest(mouse.y - mouseLast.y, 130f/2f);
+			int xdiff = mouse.x - mouseLast.x;
+			int ydiff = mouse.y - mouseLast.y;
 			
 			Point[] offset = canvas.getPanelOffset();
 			offset[deviceIndex].setLocation(xdiff, ydiff);
@@ -72,14 +73,14 @@ public class PanelActionListener extends MouseAdapter
 		}
 	}
 	
-	private void rotatePanelsUsingMouse(Point mouse)
-	{
-		int xdiff = (mouse.x - mouseLast.x)/5;
-		int rotation = canvas.getRotation() + xdiff - lastXDiff;
-		canvas.setRotation(rotation);
-		lastXDiff = xdiff;
-		canvas.repaint();
-	}
+//	private void rotatePanelsUsingMouse(Point mouse)
+//	{
+//		int xdiff = (mouse.x - mouseLast.x)/5;
+//		int rotation = canvas.getRotation() + xdiff - lastXDiff;
+//		canvas.setRotation(rotation);
+//		lastXDiff = xdiff;
+//		canvas.repaint();
+//	}
 	
 	private void scalePanelsUsingMouse(int rotationdiff)
 	{
@@ -106,11 +107,11 @@ public class PanelActionListener extends MouseAdapter
 	@Override
 	public void mouseReleased(MouseEvent e)
 	{
-		if (lastXDiff != 0)
-		{
-			PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
-			manager.setProperty("panelRotation", canvas.getRotation());
-		}
+//		if (lastXDiff != 0)
+//		{
+//			PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+//			manager.setProperty("panelRotation", canvas.getRotation());
+//		}
 		
 		mouseLast = null;
 		lastXDiff = 0;
@@ -179,18 +180,18 @@ public class PanelActionListener extends MouseAdapter
 					if (o == 0 || Math.abs(o) % 120 == 0)
 					{
 						shape = new UprightPanel(p.getX(),
-								p.getY(), canvas);
+								p.getY(), canvas.getRotation(i));
 					}
 					else
 					{
 						shape = new InvertedPanel(p.getX(),
-								p.getY(), canvas);
+								p.getY(), canvas.getRotation(i));
 					}
 				}
 				else if (deviceType.equals("canvas"))
 				{
 					shape = new SquarePanel(p.getX(),
-							p.getY(), canvas);
+							p.getY(), canvas.getRotation(i));
 				}
 				
 				if (shape != null && shape.contains(mouse))

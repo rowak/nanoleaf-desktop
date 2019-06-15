@@ -20,8 +20,6 @@ import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
 import io.github.rowak.Aurora;
 import io.github.rowak.StatusCodeException;
-import io.github.rowak.nanoleafdesktop.Main;
-import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.dialog.LoadingSpinner;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.Panel;
@@ -32,7 +30,7 @@ import io.github.rowak.Frame;
 public class PanelCanvas extends JPanel
 {
 	private boolean initialized;
-	private int rotation;
+	private int[] rotation;
 	private float scaleFactor = 1f;
 	private Point[] panelOffset;
 	private Aurora[] devices;
@@ -76,6 +74,11 @@ public class PanelCanvas extends JPanel
 				{
 					panelOffset[i] = new Point();
 				}
+				rotation = new int[devices.length];
+				for (int i = 0; i < rotation.length; i++)
+				{
+					rotation[i] = 360 - devices[i].panelLayout().getGlobalOrientation();
+				}
 				setDeviceType();
 			}
 			catch (NullPointerException npe)
@@ -103,7 +106,7 @@ public class PanelCanvas extends JPanel
 				getDefaultPanelPositions(panels[i], i);
 			}
 			
-			loadUserPanelRotation();
+			//loadUserPanelRotation();
 			
 			customEffectDisplay = new CustomEffectDisplay(this);
 			toggleOn();
@@ -132,15 +135,15 @@ public class PanelCanvas extends JPanel
 		initCanvas();
 	}
 	
-	private void loadUserPanelRotation()
-	{
-		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
-		String defaultRotation = manager.getProperty("panelRotation");
-		if (defaultRotation != null)
-		{
-			rotation = Integer.parseInt(defaultRotation);
-		}
-	}
+//	private void loadUserPanelRotation()
+//	{
+//		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+//		String defaultRotation = manager.getProperty("panelRotation");
+//		if (defaultRotation != null)
+//		{
+//			rotation = Integer.parseInt(defaultRotation);
+//		}
+//	}
 	
 	private void startLoadingSpinner()
 	{
@@ -179,7 +182,7 @@ public class PanelCanvas extends JPanel
 		if (devices.length == 1)
 		{
 			setDeviceType();
-			loadUserPanelRotation();
+			//loadUserPanelRotation();
 		}
 	}
 	
@@ -224,14 +227,14 @@ public class PanelCanvas extends JPanel
 		return groupPanels.toArray(new Panel[]{});
 	}
 	
-	public int getRotation()
+	public int getRotation(int deviceIndex)
 	{
-		return rotation;
+		return rotation[deviceIndex];
 	}
 	
-	public void setRotation(int degrees)
+	public void setRotation(int deviceIndex, int degrees)
 	{
-		rotation = degrees;
+		rotation[deviceIndex] = degrees;
 	}
 	
 	public float getScaleFactor()
@@ -373,10 +376,13 @@ public class PanelCanvas extends JPanel
 		{
 			for (int i = 0; i < panels.length; i++)
 			{
-				for (Panel p : panels[i])
+				if (panels[i] != null)
 				{
-					p.setRGBW(color.getRed(), color.getGreen(),
-							color.getBlue(), 0);
+					for (Panel p : panels[i])
+					{
+						p.setRGBW(color.getRed(), color.getGreen(),
+								color.getBlue(), 0);
+					}
 				}
 			}
 		}
@@ -488,7 +494,7 @@ public class PanelCanvas extends JPanel
 		List<Integer> xpoints = new ArrayList<Integer>();
 		List<Integer> ypoints = new ArrayList<Integer>();
 		
-		for (Panel p : panels[deviceIndex])
+		for (Panel p : panels[0])
 		{
 			int x = p.getX();
 			int y = p.getY();
@@ -542,7 +548,6 @@ public class PanelCanvas extends JPanel
 			Point centroid = getCentroid(deviceIndex);
 			scaled.translate(centroid.getX(), centroid.getY());
 			scaled.scale(scaleFactor, scaleFactor);
-			scaled.rotate(Math.toRadians(rotation));
 			scaled.translate(-centroid.getX(), -centroid.getY());
 			g2d.setTransform(scaled);
 			g2d.drawPolygon(panel);
@@ -562,7 +567,6 @@ public class PanelCanvas extends JPanel
 			Point centroid = getCentroid(deviceIndex);
 			scaled.translate(centroid.getX(), centroid.getY());
 			scaled.scale(scaleFactor, scaleFactor);
-			scaled.rotate(Math.toRadians(rotation));
 			scaled.translate(-centroid.getX(), -centroid.getY());
 			g2d.setTransform(scaled);
 			g2d.fillPolygon(panel);
@@ -621,11 +625,11 @@ public class PanelCanvas extends JPanel
 							Polygon tri = new Polygon();
 							if (o == 0 || Math.abs(o) % 120 == 0)
 							{
-								tri = new UprightPanel(x, y, this);
+								tri = new UprightPanel(x, y, rotation[d]);
 							}
 							else
 							{
-								tri = new InvertedPanel(x, y, this);
+								tri = new InvertedPanel(x, y, rotation[d]);
 							}
 							buffG.setColor(new Color(panel.getRed(),
 									panel.getGreen(), panel.getBlue()));
@@ -638,7 +642,7 @@ public class PanelCanvas extends JPanel
 						else if (deviceType == DeviceType.CANVAS)
 						{
 							// Create the CANVAS panel outline shape
-							SquarePanel sq = new SquarePanel(x, y, this);
+							SquarePanel sq = new SquarePanel(x, y, rotation[d]);
 							buffG.setColor(new Color(panel.getRed(),
 									panel.getGreen(), panel.getBlue()));
 							fillTransformedPanel(sq, d, g2d);
