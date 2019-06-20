@@ -1,6 +1,5 @@
 package io.github.rowak.nanoleafdesktop.ui.panel;
 
-import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -74,7 +73,7 @@ public class DiscoveryPanel extends JScrollPane
 							{
 								// Update the discovery effects concurrently
 								// by evading the EDT
-								addTopEffects(++topPage, DiscoveryPanel.this.getTopLevelAncestor());
+								addTopEffects(++topPage);
 								DefaultListModel<EffectMetadata> dlm =
 										new DefaultListModel<EffectMetadata>();
 								for (int i = 0; i < discoveryEffects.size(); i++)
@@ -219,7 +218,7 @@ public class DiscoveryPanel extends JScrollPane
 		this.recentPage = page;
 	}
 	
-	public void addTopEffects(int page, Component component)
+	public void addTopEffects(int page)
 	{
 		try
 		{
@@ -228,13 +227,12 @@ public class DiscoveryPanel extends JScrollPane
 		catch (HttpRequestException hre)
 		{
 			hre.printStackTrace();
-			new TextDialog(component,
-					"Failed to get discovery data from the Nanoleaf server.")
-					.setVisible(true);
+			System.err.println("INFO: Failed to get discovery " +
+					"data from the Nanoleaf server.\n");
 		}
 	}
 	
-	public void addRecentEffects(int page, Component component)
+	public void addRecentEffects(int page)
 	{
 		try
 		{
@@ -243,9 +241,8 @@ public class DiscoveryPanel extends JScrollPane
 		catch (HttpRequestException hre)
 		{
 			hre.printStackTrace();
-			new TextDialog(component,
-					"Failed to get discovery data from the Nanoleaf server.")
-					.setVisible(true);
+			System.err.println("INFO: Failed to get discovery " +
+					"data from the Nanoleaf server.\n");
 		}
 	}
 	

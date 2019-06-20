@@ -771,7 +771,7 @@ public class Main extends JFrame
 				{
 					EventQueue.invokeLater(() ->
 					{
-						discoveryPanel.addTopEffects(1, Main.this);
+						discoveryPanel.addTopEffects(1);
 					});
 				}
 			}
