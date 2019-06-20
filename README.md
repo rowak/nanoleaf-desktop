@@ -10,6 +10,7 @@ No installation necessary! Simply download the latest release from the [releases
 - Live and responsive preview of the panels to show what is currently displayed on the physical device
 - Discover new scenes and plugins created by other Nanoleaf users
 - Control devices from a computer outside your local network
+- Control multiple devices as one with group mode
 - Ambient lighting with two modes, customizable capture zones, and multi-monitor support
 - Spotify integration to sync your lights with your music (works *without* rhythm module)
 - Custom dark modern UI
@@ -28,7 +29,7 @@ The currently available effects include:
 - **Pulse Beats**: Changes the color of a single panel for each beat and creates a ripple around that panel that radiates outward to all other panels.
 - **Soundbar**: Creates a pulsating bar emanating from the top, bottom, left, or right. Reacts to changes in rhythm.
 - **Fireworks**: Creates multiple randomly colored pulses for each beat that quickly flash in then fade out.
-- **Streaking Notes**: Creates streaks of colorful light from one edge of the panels to the other. Reacts best to songs with prominent but not overwhelming notes.
+- **Streaking Notes**: Creates streaks of colorful light from one edge of the panels to the other. Reacts best to songs with prominent  notes and no overwhelming "noise".
 
 More effects will be added soon.
 
