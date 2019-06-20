@@ -73,14 +73,17 @@ public class PanelActionListener extends MouseAdapter
 		}
 	}
 	
-//	private void rotatePanelsUsingMouse(Point mouse)
-//	{
-//		int xdiff = (mouse.x - mouseLast.x)/5;
-//		int rotation = canvas.getRotation() + xdiff - lastXDiff;
-//		canvas.setRotation(rotation);
-//		lastXDiff = xdiff;
-//		canvas.repaint();
-//	}
+	private void rotatePanelsUsingMouse(Point mouse)
+	{
+		if (deviceIndex != -1)
+		{
+			int xdiff = roundToNearest((mouse.x - mouseLast.x)/3, 10);
+			int rotation = canvas.getTempRotation(deviceIndex) + xdiff - lastXDiff;
+			canvas.setTempRotation(rotation, deviceIndex);
+			lastXDiff = xdiff;
+			canvas.repaint();
+		}
+	}
 	
 	private void scalePanelsUsingMouse(int rotationdiff)
 	{
@@ -107,11 +110,11 @@ public class PanelActionListener extends MouseAdapter
 	@Override
 	public void mouseReleased(MouseEvent e)
 	{
-//		if (lastXDiff != 0)
-//		{
-//			PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
-//			manager.setProperty("panelRotation", canvas.getRotation());
-//		}
+		if (lastXDiff != 0)
+		{
+			canvas.setRotation(canvas.getTempRotation(
+					deviceIndex), deviceIndex);
+		}
 		
 		mouseLast = null;
 		lastXDiff = 0;
@@ -128,7 +131,7 @@ public class PanelActionListener extends MouseAdapter
 			offset[deviceIndex] = new Point(0, 0);
 			deviceIndex = -1;
 		}
-				
+			
 		panels = clonePanels(tempPanels);
 		canvas.setPanels(panels);
 		try
@@ -152,11 +155,10 @@ public class PanelActionListener extends MouseAdapter
 			{
 				movePanelsUsingMouse(e.getPoint());
 			}
-			// ROTATION DISABLED
-//			else if (SwingUtilities.isRightMouseButton(e))
-//			{
-//				rotatePanelsUsingMouse(e.getPoint());
-//			}
+			else if (SwingUtilities.isRightMouseButton(e))
+			{
+				rotatePanelsUsingMouse(e.getPoint());
+			}
 		}
 	}
 	

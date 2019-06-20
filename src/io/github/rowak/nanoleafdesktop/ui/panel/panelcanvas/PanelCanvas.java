@@ -30,7 +30,7 @@ import io.github.rowak.Frame;
 public class PanelCanvas extends JPanel
 {
 	private boolean initialized;
-	private int[] rotation;
+	private int[] rotation, tempRotation;
 	private float scaleFactor = 1f;
 	private Point[] panelOffset;
 	private Aurora[] devices;
@@ -79,6 +79,7 @@ public class PanelCanvas extends JPanel
 				{
 					rotation[i] = 360 - devices[i].panelLayout().getGlobalOrientation();
 				}
+				tempRotation = new int[devices.length];
 				setDeviceType();
 			}
 			catch (NullPointerException npe)
@@ -106,8 +107,6 @@ public class PanelCanvas extends JPanel
 				getDefaultPanelPositions(panels[i], i);
 			}
 			
-			//loadUserPanelRotation();
-			
 			customEffectDisplay = new CustomEffectDisplay(this);
 			toggleOn();
 			
@@ -134,16 +133,6 @@ public class PanelCanvas extends JPanel
 		panels = null;
 		initCanvas();
 	}
-	
-//	private void loadUserPanelRotation()
-//	{
-//		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
-//		String defaultRotation = manager.getProperty("panelRotation");
-//		if (defaultRotation != null)
-//		{
-//			rotation = Integer.parseInt(defaultRotation);
-//		}
-//	}
 	
 	private void startLoadingSpinner()
 	{
@@ -182,7 +171,6 @@ public class PanelCanvas extends JPanel
 		if (devices.length == 1)
 		{
 			setDeviceType();
-			//loadUserPanelRotation();
 		}
 	}
 	
@@ -232,9 +220,39 @@ public class PanelCanvas extends JPanel
 		return rotation[deviceIndex];
 	}
 	
-	public void setRotation(int deviceIndex, int degrees)
+	public void setRotation(int degrees, int deviceIndex)
 	{
-		rotation[deviceIndex] = degrees;
+		try
+		{
+			degrees += rotation[deviceIndex];
+			if (degrees < 0)
+			{
+				degrees = 360 - Math.abs(degrees);
+			}
+			if (degrees > 360)
+			{
+				degrees = degrees % 360;
+			}
+			devices[deviceIndex].panelLayout()
+				.setGlobalOrientation(360-degrees);
+			rotation[deviceIndex] = degrees;
+			tempRotation[deviceIndex] = 0;
+			reloadPanels(deviceIndex);
+		}
+		catch (StatusCodeException sce)
+		{
+			sce.printStackTrace();
+		}
+	}
+	
+	public int getTempRotation(int deviceIndex)
+	{
+		return tempRotation[deviceIndex];
+	}
+	
+	public void setTempRotation(int degrees, int deviceIndex)
+	{
+		tempRotation[deviceIndex] = degrees;
 	}
 	
 	public float getScaleFactor()
@@ -245,6 +263,37 @@ public class PanelCanvas extends JPanel
 	public void setScaleFactor(float factor)
 	{
 		scaleFactor = factor;
+	}
+	
+	private void reloadPanels(int deviceIndex)
+	{
+		try
+		{
+			panels[deviceIndex] = devices[deviceIndex]
+					.panelLayout().getPanelsRotated();
+		}
+		catch (NullPointerException npe)
+		{
+			panels[deviceIndex] = new Panel[0];
+		}
+		catch (HttpRequestException hre)
+		{
+			new TextDialog(this, "Could not connect to the device. " +
+					"Please relaunch the application.").setVisible(true);
+		}
+		catch (StatusCodeException sce)
+		{
+			new TextDialog(this, "An error occurred while getting data from the device. " +
+					"Please relaunch the application.").setVisible(true);
+		}
+		
+		for (Panel p : panels[deviceIndex])
+		{
+			p.setX(p.getX() + getWidth()/2);
+			p.setY(-p.getY() + getHeight()/2);
+		}
+		getDefaultPanelPositions(
+				panels[deviceIndex], deviceIndex);
 	}
 	
 	public void checkAuroraState() throws StatusCodeException
@@ -461,27 +510,6 @@ public class PanelCanvas extends JPanel
 		}
 	}
 	
-//	public void rotatePanels(int angle)
-//	{
-//		Point origin = new Point(getWidth()/2, getHeight()/2);
-//		double radAngle = Math.toRadians(angle);
-//		
-//		for (Panel p : panels)
-//		{
-//			Point loc = originalPanelLocations.get(p);
-//			int x = loc.x - origin.x;
-//			int y = loc.y - origin.y;
-//			
-//			double newX = x * Math.cos(radAngle) - y * Math.sin(radAngle);
-//			double newY = x * Math.sin(radAngle) + y * Math.cos(radAngle);
-//			
-//			x = (int)(newX + origin.x);
-//			y = (int)(newY + origin.y);
-//			panelLocations.put(p, new Point(x, y));
-//		}
-//		rotation = angle;
-//	}
-	
 	public Panel getCenterPanel(int deviceIndex)
 	{
 		return getPanelClosestToPoint(getCentroid(deviceIndex), deviceIndex);
@@ -495,6 +523,35 @@ public class PanelCanvas extends JPanel
 		List<Integer> ypoints = new ArrayList<Integer>();
 		
 		for (Panel p : panels[0])
+		{
+			int x = p.getX();
+			int y = p.getY();
+			if (!xpoints.contains(x))
+			{
+				centroidX += x;
+				xpoints.add(x);
+				numXPoints++;
+			}
+			if (!ypoints.contains(y))
+			{
+				centroidY += y;
+				ypoints.add(y);
+				numYPoints++;
+			}
+		}
+		centroidX /= numXPoints;
+		centroidY /= numYPoints;
+		return new Point(centroidX, centroidY);
+	}
+	
+	public Point getCentroidFromPanels(int deviceIndex, Panel[] panels)
+	{
+		int centroidX = 0, centroidY = 0;
+		int numXPoints = 0, numYPoints = 0;
+		List<Integer> xpoints = new ArrayList<Integer>();
+		List<Integer> ypoints = new ArrayList<Integer>();
+		
+		for (Panel p : panels)
 		{
 			int x = p.getX();
 			int y = p.getY();
@@ -539,6 +596,20 @@ public class PanelCanvas extends JPanel
 		return point.distance(panelx, panely);
 	}
 	
+	private void getDefaultPanelPositions(Panel[] locations, int deviceIndex)
+	{
+		Panel firstPanel = getCenterPanel(deviceIndex);
+		int offX = (getWidth()/2) - firstPanel.getX();
+		int offY = (getHeight()/2) - firstPanel.getY();
+		for (int i = 0; i < locations.length; i++)
+		{
+			int x = locations[i].getX();
+			int y = locations[i].getY();
+			locations[i].setX(x + offX);
+			locations[i].setY(y + offY);
+		}
+	}
+	
 	private void drawTransformedPanel(Polygon panel, int deviceIndex, Graphics2D g2d)
 	{
 		AffineTransform original = g2d.getTransform();
@@ -549,6 +620,10 @@ public class PanelCanvas extends JPanel
 			scaled.translate(centroid.getX(), centroid.getY());
 			scaled.scale(scaleFactor, scaleFactor);
 			scaled.translate(-centroid.getX(), -centroid.getY());
+			Point tempCentroid = getCentroidFromPanels(deviceIndex,
+					pdl.getTempPanels()[deviceIndex]);
+			scaled.rotate(Math.toRadians(tempRotation[deviceIndex]),
+					tempCentroid.x, tempCentroid.y);
 			g2d.setTransform(scaled);
 			g2d.drawPolygon(panel);
 		}
@@ -568,26 +643,16 @@ public class PanelCanvas extends JPanel
 			scaled.translate(centroid.getX(), centroid.getY());
 			scaled.scale(scaleFactor, scaleFactor);
 			scaled.translate(-centroid.getX(), -centroid.getY());
+			Point tempCentroid = getCentroidFromPanels(deviceIndex,
+					pdl.getTempPanels()[deviceIndex]);
+			scaled.rotate(Math.toRadians(tempRotation[deviceIndex]),
+					tempCentroid.x, tempCentroid.y);
 			g2d.setTransform(scaled);
 			g2d.fillPolygon(panel);
 		}
 		finally
 		{
 			g2d.setTransform(original);
-		}
-	}
-	
-	private void getDefaultPanelPositions(Panel[] locations, int deviceIndex)
-	{
-		Panel firstPanel = getCenterPanel(deviceIndex);
-		int offX = (getWidth()/2) - firstPanel.getX();
-		int offY = (getHeight()/2) - firstPanel.getY();
-		for (int i = 0; i < locations.length; i++)
-		{
-			int x = locations[i].getX();
-			int y = locations[i].getY();
-			locations[i].setX(x + offX);
-			locations[i].setY(y + offY);
 		}
 	}
 	

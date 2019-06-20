@@ -250,10 +250,9 @@ public class Main extends JFrame
 		EventQueue.invokeLater(() ->
 		{
 			this.devices = devices;
-			PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
-			String lastSession = manager.getProperty("lastSession");
-			if (lastSession != null && devices.length == 1)
+			if (devices.length == 1)
 			{
+				PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
 				manager.setProperty("lastSession",
 						devices[0].getHostName() + " " +
 						devices[0].getPort() + " v1 " +
@@ -434,6 +433,7 @@ public class Main extends JFrame
 					{
 						try
 						{
+							devices = new Aurora[1];
 							devices[0] = new Aurora(finder.getHostName(),
 									finder.getPort(), "v1", finder.getAccessToken());
 							this.cancel();
