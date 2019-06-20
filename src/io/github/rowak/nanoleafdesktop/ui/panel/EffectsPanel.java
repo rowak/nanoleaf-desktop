@@ -17,6 +17,7 @@ import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 import io.github.rowak.nanoleafdesktop.ui.dialog.LoadingSpinner;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
+import io.github.rowak.nanoleafdesktop.ui.menu.EffectOptionsMenu;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 import io.github.rowak.nanoleafdesktop.ui.scrollbar.ModernScrollBarUI;
 
@@ -91,20 +92,28 @@ public class EffectsPanel extends JScrollPane
 			public void mouseClicked(MouseEvent e)
 			{
 				JList<String> list = (JList<String>)e.getSource();
-				try
+				if (e.getButton() == MouseEvent.BUTTON1)
 				{
-					for (Aurora device : devices)
+					try
 					{
-						device.effects().setEffect(list.getSelectedValue());
+						for (Aurora device : devices)
+						{
+							device.effects().setEffect(list.getSelectedValue());
+						}
+						canvas.checkAuroraState();
+						parent.loadStateComponents();
 					}
-					canvas.checkAuroraState();
-					parent.loadStateComponents();
+					catch (StatusCodeException sce)
+					{
+						new TextDialog(parent,
+								"The requested action could not be completed. " +
+								"Please try again.").setVisible(true);
+					}
 				}
-				catch (StatusCodeException sce)
+				else if (e.getButton() == MouseEvent.BUTTON3)
 				{
-					new TextDialog(parent,
-							"The requested action could not be completed. " +
-							"Please try again.").setVisible(true);
+					new EffectOptionsMenu(EffectsPanel.this,
+							devices, parent);
 				}
 			}
 		});
