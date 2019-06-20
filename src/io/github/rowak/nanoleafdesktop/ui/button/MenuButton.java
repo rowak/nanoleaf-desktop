@@ -1,20 +1,16 @@
 package io.github.rowak.nanoleafdesktop.ui.button;
 
+import java.awt.SystemTray;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
-import org.json.JSONArray;
-
 import io.github.rowak.nanoleafdesktop.Main;
-import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.dialog.AboutDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.DeviceChangerDialog;
@@ -27,12 +23,12 @@ import io.github.rowak.nanoleafdesktop.ui.menu.ModernPopupMenu;
 
 public class MenuButton extends ModernButton
 {
-	public MenuButton()
+	public MenuButton(Main main)
 	{
-		init();
+		init(main);
 	}
 	
-	private void init()
+	private void init(Main main)
 	{
 		JPopupMenu menu = new ModernPopupMenu();
 		JMenuItem itemChangeDevice = new ModernMenuItem("Change Device");
@@ -52,6 +48,15 @@ public class MenuButton extends ModernButton
 			public void actionPerformed(ActionEvent e)
 			{
 				resetSettings();
+			}
+		});
+		JMenuItem itemHideToTray = new ModernMenuItem("Hide to Tray");
+		itemHideToTray.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				main.hideToSystemTray();
 			}
 		});
 		JMenuItem itemCreateGroup = new ModernMenuItem("Create Group");
@@ -86,6 +91,10 @@ public class MenuButton extends ModernButton
 		});
 		menu.add(itemChangeDevice);
 		menu.add(itemResetSettings);
+		if (SystemTray.isSupported())
+		{
+			menu.add(itemHideToTray);
+		}
 		menu.add(itemCreateGroup);
 		menu.add(itemDeleteGroup);
 		menu.add(itemAbout);
@@ -134,21 +143,5 @@ public class MenuButton extends ModernButton
 						((OptionDialog)source.getFocusCycleRootAncestor()).dispose();
 					}
 				}).setVisible(true);
-	}
-	
-	private List<DeviceGroup> getDeviceGroups()
-	{
-		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
-		String devicesStr = manager.getProperty("deviceGroups");
-		if (devicesStr != null)
-		{
-			List<DeviceGroup> groups = new ArrayList<DeviceGroup>();
-			JSONArray json = new JSONArray(devicesStr);
-			for (int i = 0; i < json.length(); i++)
-			{
-				groups.add(DeviceGroup.fromJSON(json.getJSONObject(i).toString()));
-			}
-		}
-		return new ArrayList<DeviceGroup>();
 	}
 }

@@ -24,6 +24,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import net.miginfocom.swing.MigLayout;
+
+import java.awt.AWTException;
 import java.awt.Color;
 import java.awt.Dimension;
 
@@ -36,6 +38,7 @@ import io.github.rowak.StatusCodeException.UnauthorizedException;
 import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
 import io.github.rowak.nanoleafdesktop.models.DeviceInfo;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
+import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 import io.github.rowak.nanoleafdesktop.tools.UpdateManager;
 import io.github.rowak.nanoleafdesktop.tools.Version;
 import io.github.rowak.nanoleafdesktop.ui.button.*;
@@ -54,6 +57,11 @@ import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 
 import java.awt.Font;
 import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
+import java.awt.SystemTray;
+import java.awt.TrayIcon;
 
 import javax.swing.JLabel;
 import javax.swing.border.TitledBorder;
@@ -73,7 +81,7 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.8.1", false);
+	public static final Version VERSION = new Version("v0.8.2", false);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
@@ -85,6 +93,9 @@ public class Main extends JFrame
 	private final int DEFAULT_WINDOW_HEIGHT = 800;
 	
 	private Aurora[] devices;
+	
+	private SystemTray systemTray;
+	private TrayIcon trayIcon;
 	
 	private JPanel contentPane;
 	private PanelCanvas canvas;
@@ -243,6 +254,25 @@ public class Main extends JFrame
 	public PanelCanvas getCanvas()
 	{
 		return this.canvas;
+	}
+	
+	public void hideToSystemTray()
+	{
+		try
+		{
+			systemTray.add(trayIcon);
+			setVisible(false);
+		}
+		catch (AWTException awte)
+		{
+			awte.printStackTrace();
+		}
+	}
+	
+	public void openFromSystemTray()
+	{
+		systemTray.remove(trayIcon);
+		setVisible(true);
 	}
 	
 	public void setDevices(Aurora[] devices)
@@ -655,6 +685,8 @@ public class Main extends JFrame
 		initTabbedPane();
 		
 		initWindowListeners();
+		
+		initSystemTray();
 	}
 	
 	private void initWindow()
@@ -681,7 +713,7 @@ public class Main extends JFrame
 	private void initWindowButtons()
 	{
 		// Must be initiated before lblTitle
-		JButton btnMenu = new MenuButton();
+		JButton btnMenu = new MenuButton(this);
 		contentPane.add(btnMenu, "flowx,cell 0 0,gapx 0 10");
 		
 		lblTitle = new JLabel("Not Connected");
@@ -823,6 +855,55 @@ public class Main extends JFrame
 					loadAuroraData();
 				}
 			});
+		}
+	}
+	
+	private void initSystemTray()
+	{
+		if (SystemTray.isSupported())
+		{
+			systemTray = SystemTray.getSystemTray();
+			URL iconPath = Main.class.getResource(
+					"resources/images/icon.png");
+			Image img = new ImageIcon(iconPath).getImage();
+			PopupMenu menu = new PopupMenu();
+			MenuItem itemOpen = new MenuItem("Open");
+			itemOpen.setFont(UIConstants.smallLabelFont);
+			itemOpen.addActionListener((e) ->
+			{
+				setVisible(true);
+				setExtendedState(JFrame.NORMAL);
+				openFromSystemTray();
+			});
+			menu.add(itemOpen);
+			MenuItem itemExit = new MenuItem("Exit");
+			itemExit.setFont(UIConstants.smallLabelFont);
+			itemExit.addActionListener((e) ->
+			{
+				System.exit(0);
+			});
+			menu.add(itemExit);
+			trayIcon = new TrayIcon(img,
+					"Nanoleaf for Desktop", menu);
+			trayIcon.setImageAutoSize(true);
+			
+			addWindowStateListener((e) ->
+			{
+				if (e.getNewState() == JFrame.ICONIFIED)
+				{
+					hideToSystemTray();
+				}
+				else if (e.getNewState() == JFrame.NORMAL ||
+						e.getNewState() == JFrame.MAXIMIZED_BOTH)
+				{
+					openFromSystemTray();
+				}
+			});
+		}
+		else
+		{
+			System.err.println("INFO: System tray not supported by OS. " +
+					"Minimize to tray feature has been disabled.\n");
 		}
 	}
 	
