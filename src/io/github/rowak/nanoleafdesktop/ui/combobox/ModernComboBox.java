@@ -10,16 +10,16 @@ public class ModernComboBox<T> extends JComboBox<T>
 {
 	public ModernComboBox()
 	{
-		init();
+		initUI();
 	}
 	
 	public ModernComboBox(DefaultComboBoxModel<T> model)
 	{
-		init();
+		initUI();
 		setModel(model);
 	}
 	
-	private void init()
+	private void initUI()
 	{
 		setUI(new ModernComboBoxUI(this));
 		setFont(new Font("Tahoma", Font.PLAIN, 20));
