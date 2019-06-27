@@ -262,6 +262,12 @@ public class AmbilightPanel extends JPanel
 			{
 				monitor = -1;
 			}
+			catch (IllegalArgumentException iae)
+			{
+				iae.printStackTrace();
+				monitor = -1;
+				cmbxMonitor.setSelectedIndex(0);
+			}
 		}
 		
 		String lastDelay = manager.getProperty("ambilightDelay");
