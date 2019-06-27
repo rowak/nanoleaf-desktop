@@ -16,8 +16,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -37,12 +35,13 @@ import io.github.rowak.StatusCodeException;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
 import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
 import io.github.rowak.nanoleafdesktop.models.DeviceInfo;
+import io.github.rowak.nanoleafdesktop.tools.BasicEffects;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 import io.github.rowak.nanoleafdesktop.tools.UpdateManager;
 import io.github.rowak.nanoleafdesktop.tools.Version;
 import io.github.rowak.nanoleafdesktop.ui.button.*;
-import io.github.rowak.nanoleafdesktop.ui.dialog.AuroraFinder;
+import io.github.rowak.nanoleafdesktop.ui.dialog.DeviceChangerDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.SingleEntryDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
@@ -105,6 +104,7 @@ public class Main extends JFrame
 	private SpotifyPanel spotifyPanel;
 	private KeyShortcutsPanel shortcutsPanel;
 	private JLabel lblTitle;
+	private EffectsPanel basicEffectsPanel;
 	private EffectsPanel regEffectsPanel;
 	private EffectsPanel rhythEffectsPanel;
 	
@@ -287,6 +287,7 @@ public class Main extends JFrame
 						devices[0].getHostName() + " " +
 						devices[0].getPort() + " v1 " +
 						devices[0].getAccessToken());
+				System.out.println("**STORED LAST SESSION**");
 			}
 			else if (devices.length > 1)
 			{
@@ -352,6 +353,7 @@ public class Main extends JFrame
 					{
 						rhythEffectsPanel.setViewportView(rhythEffectsPanel.getList());
 					}
+					basicEffectsPanel.setViewportView(basicEffectsPanel.getList());
 				}).start();
 			}
 		});
@@ -378,6 +380,22 @@ public class Main extends JFrame
 	{
 		String currentEffect = devices[0].effects().getCurrentEffectName();
 		infoPanel.setScene(currentEffect);
+	}
+	
+	public void unselectAllExcept(EffectsPanel selected)
+	{
+		if (basicEffectsPanel != selected)
+		{
+			basicEffectsPanel.getList().clearSelection();
+		}
+		if (regEffectsPanel != selected)
+		{
+			regEffectsPanel.getList().clearSelection();
+		}
+		if (rhythEffectsPanel != selected)
+		{
+			rhythEffectsPanel.getList().clearSelection();
+		}
 	}
 	
 	private void loadAuroraData()
@@ -451,51 +469,11 @@ public class Main extends JFrame
 	
 	private void setupNewAurora()
 	{
-		new Thread(() ->
+		EventQueue.invokeLater(() ->
 		{
-			AuroraFinder finder = new AuroraFinder(Main.this);
+			DeviceChangerDialog finder = new DeviceChangerDialog(this);
 			finder.setVisible(true);
-			new Timer().scheduleAtFixedRate(new TimerTask()
-			{
-				public void run()
-				{
-					if (finder.getAccessToken() != null)
-					{
-						try
-						{
-							devices = new Aurora[1];
-							devices[0] = new Aurora(finder.getHostName(),
-									finder.getPort(), "v1", finder.getAccessToken());
-							this.cancel();
-							
-							PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
-							manager.setProperty("lastSession",
-									devices[0].getHostName() + " " +
-									devices[0].getPort() + " v1 " +
-									devices[0].getAccessToken());
-							lblTitle.setText("Connected to " + devices[0].getName());
-							Map<String, Object> localDevices = getDevices();
-							if (localDevices.containsKey(devices[0].getHostName()))
-							{
-								loadDeviceName();
-							}
-							else
-							{
-								setupDeviceName("Would you like to give this device a name?");
-							}
-							loadAuroraData();
-						}
-						catch (StatusCodeException | HttpRequestException schre)
-						{
-							new TextDialog(Main.this,
-									"An error occurred while connecting to the Aurora." +
-									"Please try again.").setVisible(true);
-						}
-						canvas.setAuroras(devices);
-					}
-				}
-			}, 0, 1000);
-		}).start();
+		});
 	}
 	
 	public void setupDeviceName(String message)
@@ -706,8 +684,7 @@ public class Main extends JFrame
 		contentPane.setBackground(Color.DARK_GRAY);
 		contentPane.setBorder(new LineBorder(new Color(128, 128, 128), 3, true));
 		setContentPane(contentPane);
-		contentPane.setLayout(new MigLayout("", "[-27.00,grow][755.00,grow]",
-				"[][680.00,growprio 105,grow][grow]"));
+		contentPane.setLayout(new MigLayout("", "[-27.00,grow][755.00,grow]", "[][120px:120px,grow][300px:400px,grow][100px:400px,grow]"));
 	}
 	
 	private void initWindowButtons()
@@ -740,28 +717,44 @@ public class Main extends JFrame
 				"Preview", TitledBorder.LEFT, TitledBorder.TOP, null, Color.WHITE));
 		((javax.swing.border.TitledBorder)canvas.getBorder())
 			.setTitleFont(new Font("Tahoma", Font.BOLD, 22));
-		contentPane.add(canvas, "cell 1 1,grow");
+		contentPane.add(canvas, "cell 1 1 1 2,grow");
 	}
 	
 	private void initEffectsPanels()
 	{
-		regEffectsPanel = new EffectsPanel("Regular Effects", this, devices, canvas);
-		add(regEffectsPanel, "cell 0 1,grow");
+		BasicEffects.initializeBasicEffects();
+		basicEffectsPanel = new EffectsPanel("Basic Effects", this, devices, canvas);
+		try
+		{
+			List<Effect> effects = BasicEffects.getBasicEffects(devices).get(0);
+			for (Effect ef : effects)
+			{
+				basicEffectsPanel.addEffect(ef.getName());
+			}
+		}
+		catch (StatusCodeException sce)
+		{
+			sce.printStackTrace();
+		}
+		getContentPane().add(basicEffectsPanel, "cell 0 1,grow");
+		
+		regEffectsPanel = new EffectsPanel("Color Effects", this, devices, canvas);
+		getContentPane().add(regEffectsPanel, "cell 0 2,grow");
 		
 		rhythEffectsPanel = new EffectsPanel("Rhythm Effects", this, devices, canvas);
-		add(rhythEffectsPanel, "cell 0 2,grow");
+		getContentPane().add(rhythEffectsPanel, "cell 0 3,grow");
 	}
 	
 	private void initTabbedPane()
 	{
-		JTabbedPane editor = new JTabbedPane(JTabbedPane.TOP);
-		editor.setForeground(Color.WHITE);
-		editor.setBackground(Color.DARK_GRAY);
-		editor.setBorder(new TitledBorder(new LineBorder(Color.GRAY, 1, true),
+		JTabbedPane editor_1 = new JTabbedPane(JTabbedPane.TOP);
+		editor_1.setForeground(Color.WHITE);
+		editor_1.setBackground(Color.DARK_GRAY);
+		editor_1.setBorder(new TitledBorder(new LineBorder(Color.GRAY, 1, true),
 				"Edit", TitledBorder.LEFT, TitledBorder.TOP, null, Color.WHITE));
-		((javax.swing.border.TitledBorder)editor.getBorder())
+		((javax.swing.border.TitledBorder)editor_1.getBorder())
 			.setTitleFont(new Font("Tahoma", Font.BOLD, 22));
-		editor.addChangeListener(new ChangeListener()
+		editor_1.addChangeListener(new ChangeListener()
 		{
 			@Override
 			public void stateChanged(ChangeEvent e)
@@ -776,24 +769,24 @@ public class Main extends JFrame
 				}
 			}
 		});
-		contentPane.add(editor, "cell 1 2,grow");
+		contentPane.add(editor_1, "cell 1 3,growx");
 		
 		infoPanel = new InformationPanel(this, devices, canvas);
-		editor.setFont(new Font("Tahoma", Font.BOLD, 17));
-		editor.addTab("Control", null, infoPanel, null);
+		editor_1.setFont(new Font("Tahoma", Font.BOLD, 17));
+		editor_1.addTab("Control", null, infoPanel, null);
 		
 		discoveryPanel = new DiscoveryPanel(devices);
-		editor.addTab("Discovery", null, discoveryPanel, null);
+		editor_1.addTab("Discovery", null, discoveryPanel, null);
 		
 		ambilightPanel = new AmbilightPanel(canvas);
-		editor.addTab("Ambient Lighting", null, ambilightPanel, null);
+		editor_1.addTab("Ambient Lighting", null, ambilightPanel, null);
 		
 		spotifyPanel = new SpotifyPanel(devices, canvas);
-		editor.addTab("Spotify Visualizer", null, spotifyPanel, null);
+		editor_1.addTab("Spotify Visualizer", null, spotifyPanel, null);
 		
 		shortcutsPanel = new KeyShortcutsPanel(devices);
 		shortcutsPanel.setBorder(new LineBorder(Color.GRAY, 1, true));
-		editor.addTab("Shortcuts", null, shortcutsPanel, null);
+		editor_1.addTab("Shortcuts", null, shortcutsPanel, null);
 		
 		AuroraNullListener anl = new AuroraNullListener(20, null,
 				infoPanel, canvas, discoveryPanel, ambilightPanel,

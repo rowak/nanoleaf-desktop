@@ -51,6 +51,7 @@ public class InformationPanel extends JPanel
 		this.devices = devices;
 		this.canvas = canvas;
 		init();
+		adjusting = false;
 	}
 	
 	public JToggleButton getBtnOnOff()

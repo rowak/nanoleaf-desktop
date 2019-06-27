@@ -38,6 +38,7 @@ import java.util.TimerTask;
 import javax.swing.ListSelectionModel;
 import javax.swing.JButton;
 
+@Deprecated
 public class AuroraFinder extends JDialog
 {
 	private String hostName, accessToken;

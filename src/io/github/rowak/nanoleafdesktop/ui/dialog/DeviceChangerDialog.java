@@ -59,11 +59,14 @@ public class DeviceChangerDialog extends JDialog
 		listModel = new DefaultListModel<String>();
 		initUI(parent);
 		
-		new Thread(() ->
+		EventQueue.invokeLater(() ->
 		{
-			findGroups();
-			findAuroras();
-		}).start();
+			new Thread(() ->
+			{
+				findGroups();
+				findAuroras();
+			}).start();
+		});
 	}
 	
 	private AuroraMetadata getMetadataFromListItem(String item)
@@ -164,6 +167,11 @@ public class DeviceChangerDialog extends JDialog
 					if (device != null)
 					{
 						parent.setDevices(new Aurora[]{device});
+						PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+						manager.setProperty("lastSession",
+								device.getHostName() + " " +
+								device.getPort() + " v1 " +
+								device.getAccessToken());
 					}
 					this.cancel();
 					info.dispose();
