@@ -12,18 +12,20 @@ import javax.swing.SwingUtilities;
 
 import io.github.rowak.Aurora;
 import io.github.rowak.StatusCodeException;
+import io.github.rowak.nanoleafdesktop.tools.BasicEffects;
 import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.SingleEntryDialog;
 import io.github.rowak.nanoleafdesktop.ui.panel.EffectsPanel;
 
 public class EffectOptionsMenu extends ModernPopupMenu
 {
+	private boolean basicEffectsMode;
 	private String effect;
 	private EffectsPanel effectsPanel;
 	private Aurora[] devices;
 	private Component parent;
 	
-	public EffectOptionsMenu(EffectsPanel effectsPanel,
+	public EffectOptionsMenu(EffectsPanel effectsPanel, String label,
 			Aurora[] devices, Component parent)
 	{
 		this.effectsPanel = effectsPanel;
@@ -31,6 +33,11 @@ public class EffectOptionsMenu extends ModernPopupMenu
 		this.parent = parent;
 		effect = getEffect();
 		initUI();
+		
+		if (label.equals("Basic Effects"))
+		{
+			basicEffectsMode = true;
+		}
 	}
 	
 	private void initUI()
@@ -39,12 +46,12 @@ public class EffectOptionsMenu extends ModernPopupMenu
 		ModernMenuItem itemRename = new ModernMenuItem("Rename");
 		itemRename.addActionListener((e) ->
 		{
-			renameEffect();
+			showRenameDialog();
 		});
 		ModernMenuItem itemDelete = new ModernMenuItem("Delete");
 		itemDelete.addActionListener((e) ->
 		{
-			deleteEffect();
+			showDeleteDialog();
 		});
 		
 		add(itemRename);
@@ -86,7 +93,22 @@ public class EffectOptionsMenu extends ModernPopupMenu
 		return listPoint;
 	}
 	
-	private void renameEffect()
+	private void renameEffectOnDevice(String newName)
+	{
+		try
+		{
+			for (Aurora device : devices)
+			{
+				device.effects().renameEffect(effect, newName);
+			}
+		}
+		catch (StatusCodeException sce)
+		{
+			sce.printStackTrace();
+		}
+	}
+	
+	private void showRenameDialog()
 	{
 		SingleEntryDialog renameDialog = new SingleEntryDialog(
 				parent, effect, "Ok",
@@ -99,16 +121,13 @@ public class EffectOptionsMenu extends ModernPopupMenu
 								(SingleEntryDialog)((JButton)e.getSource())
 								.getTopLevelAncestor();
 						String newName = dialog.getEntryField().getText();
-						try
+						if (basicEffectsMode)
 						{
-							for (Aurora device : devices)
-							{
-								device.effects().renameEffect(effect, newName);
-							}
+							BasicEffects.renameBasicEffect(effect, newName);
 						}
-						catch (StatusCodeException sce)
+						else
 						{
-							sce.printStackTrace();
+							renameEffectOnDevice(newName);
 						}
 						int i = effectsPanel.getModel().indexOf(effect);
 						effectsPanel.getModel().setElementAt(newName, i);
@@ -118,25 +137,42 @@ public class EffectOptionsMenu extends ModernPopupMenu
 		renameDialog.setVisible(true);
 	}
 	
-	private void deleteEffect()
+	private void deleteEffectFromDevice()
 	{
+		try
+		{
+			for (Aurora device : devices)
+			{
+				device.effects().deleteEffect(effect);
+			}
+		}
+		catch (StatusCodeException sce)
+		{
+			sce.printStackTrace();
+		}
+	}
+	
+	private void showDeleteDialog()
+	{
+		String target = " from your device?";
+		if (basicEffectsMode)
+		{
+			target = " from this computer?";
+		}
 		OptionDialog deleteDialog = new OptionDialog(parent,
-				"Are you sure you want to delete " + effect + " from your device?",
+				"Are you sure you want to delete " + effect + target,
 				"Yes", "No", new ActionListener()
 				{
 					@Override
 					public void actionPerformed(ActionEvent e)
 					{
-						try
+						if (basicEffectsMode)
 						{
-							for (Aurora device : devices)
-							{
-								device.effects().deleteEffect(effect);
-							}
+							BasicEffects.removeBasicEffect(effect);
 						}
-						catch (StatusCodeException sce)
+						else
 						{
-							sce.printStackTrace();
+							deleteEffectFromDevice();
 						}
 						effectsPanel.removeEffect(effect);
 						OptionDialog dialog = (OptionDialog)((JButton)e.getSource())
