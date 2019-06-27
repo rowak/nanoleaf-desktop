@@ -73,11 +73,6 @@ public class AmbilightHandler
 		panels[0] = canvas.getGroupPanels();
 		rows = new Panel[auroras.length][][];
 		rows[0] = PanelTableSort.getRows(panels[0]);
-//		for (int i = 0; i < auroras.length; i++)
-//		{
-//			panels[i] = getSortedPanels(auroras[i]);
-//			rows[i] = PanelTableSort.getRows(panels[i]);
-//		}
 		saveCurrentEffect();
 		startExternalStreaming();
 		timer = new Timer(delay, new ActionListener()
@@ -219,61 +214,6 @@ public class AmbilightHandler
 			}
 		}
 	}
-	
-//	private void applySelectionMode()
-//			throws StatusCodeException, IOException
-//	{
-//		for (int p = 0; p < auroras.length; p++)
-//		{
-//			String deviceType = getDeviceType(auroras[p]);
-//			CustomEffectBuilder ceb = new CustomEffectBuilder(auroras[p]);
-//			CanvasAnimDataBuilder cadb = new CanvasAnimDataBuilder(auroras[p]);
-//			BufferedImage img = getScreenImage();
-//			final int VERTICAL_SEPARATOR = captureArea.height/rows[p].length;
-//			for (int i = 0; i < rows[p].length; i++)
-//			{
-//				int captureY = VERTICAL_SEPARATOR*i + VERTICAL_SEPARATOR/2;
-//				
-//				Map<Panel, Color> colors = new HashMap<Panel, Color>();
-//				for (int j = 0; j < rows[p][i].length; j++)
-//				{
-//					final int HORIZONTAL_SEPARATOR = captureArea.width/rows[p][i].length;
-//					int captureX = HORIZONTAL_SEPARATOR*j + HORIZONTAL_SEPARATOR/2;
-//					
-//					try
-//					{
-//						if (img.getSubimage(captureX, captureY, 1, 1) != null)
-//						{
-//							Color color = new Color(img.getRGB(captureX, captureY));
-//							if (deviceType.equals("aurora"))
-//							{
-//								ceb.addFrame(rows[p][i][j], new Frame(color.getRed(),
-//										color.getGreen(), color.getBlue(), 0, 5));
-//							}
-//							else if (deviceType.equals("canvas"))
-//							{
-//								cadb.addFrame(rows[p][i][j], new Frame(color.getRed(),
-//										color.getGreen(), color.getBlue(), 0, 5));
-//							}
-//							colors.put(rows[p][i][j], color);
-//						}
-//					}
-//					catch (RasterFormatException rfe)
-//					{
-//						// catch, but ignore
-//					}
-//				}
-//			}
-//			if (deviceType.equals("aurora"))
-//			{
-//				auroras[p].externalStreaming().sendStaticEffect(ceb.build("", false));
-//			}
-//			else if (deviceType.equals("canvas"))
-//			{
-//				CanvasExtStreaming.sendAnimData(cadb.build(), auroras[p]);
-//			}
-//		}
-//	}
 	
 	public boolean isRunning()
 	{
