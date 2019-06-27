@@ -50,15 +50,6 @@ public class MenuButton extends ModernButton
 				resetSettings();
 			}
 		});
-		JMenuItem itemHideToTray = new ModernMenuItem("Hide to Tray");
-		itemHideToTray.addActionListener(new ActionListener()
-		{
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				main.hideToSystemTray();
-			}
-		});
 		JMenuItem itemCreateGroup = new ModernMenuItem("Create Group");
 		itemCreateGroup.addActionListener(new ActionListener()
 		{
@@ -79,6 +70,15 @@ public class MenuButton extends ModernButton
 					.setVisible(true);
 			}
 		});
+		JMenuItem itemHideToTray = new ModernMenuItem("Hide to Tray");
+		itemHideToTray.addActionListener(new ActionListener()
+		{
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				main.hideToSystemTray();
+			}
+		});
 		JMenuItem itemAbout = new ModernMenuItem("About");
 		itemAbout.addActionListener(new ActionListener()
 		{
@@ -91,12 +91,12 @@ public class MenuButton extends ModernButton
 		});
 		menu.add(itemChangeDevice);
 		menu.add(itemResetSettings);
+		menu.add(itemCreateGroup);
+		menu.add(itemDeleteGroup);
 		if (SystemTray.isSupported())
 		{
 			menu.add(itemHideToTray);
 		}
-		menu.add(itemCreateGroup);
-		menu.add(itemDeleteGroup);
 		menu.add(itemAbout);
 		
 		URL menuIconUnpressedPath =
