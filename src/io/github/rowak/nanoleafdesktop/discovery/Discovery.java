@@ -40,9 +40,6 @@ public class Discovery
 				HttpRequest request = HttpRequest.get(String.format(
 						"%s/effects/%s?page=%d&tags=%s", BASE_ENDPOINT,
 						type, page, tagsToString(tags)));
-				System.out.println(String.format(
-						"%s/effects/%s?page=%d&tags=%s", BASE_ENDPOINT,
-						type, page, tagsToString(tags)));
 				request.connectTimeout(20000);
 				request.readTimeout(20000);
 				return new JSONObject(request.body());
