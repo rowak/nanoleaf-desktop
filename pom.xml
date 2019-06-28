@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>nanoleaf-desktop</groupId>
   <artifactId>nanoleaf-desktop</artifactId>
-  <version>0.8.2</version>
+  <version>0.8.3</version>
   <build>
     <sourceDirectory>src</sourceDirectory>
     <plugins>
