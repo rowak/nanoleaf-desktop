@@ -80,7 +80,7 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.8.2", true);
+	public static final Version VERSION = new Version("v0.8.2", false);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
@@ -338,6 +338,20 @@ public class Main extends JFrame
 									regEffectsPanel.addEffect(effect.getName());
 								}
 							}
+						}
+					}
+					catch (StatusCodeException sce)
+					{
+						sce.printStackTrace();
+					}
+					
+					BasicEffects.initializeBasicEffects();
+					try
+					{
+						List<Effect> effects = BasicEffects.getBasicEffects(devices).get(0);
+						for (Effect ef : effects)
+						{
+							basicEffectsPanel.addEffect(ef.getName());
 						}
 					}
 					catch (StatusCodeException sce)
@@ -722,20 +736,7 @@ public class Main extends JFrame
 	
 	private void initEffectsPanels()
 	{
-		BasicEffects.initializeBasicEffects();
 		basicEffectsPanel = new EffectsPanel("Basic Effects", this, devices, canvas);
-		try
-		{
-			List<Effect> effects = BasicEffects.getBasicEffects(devices).get(0);
-			for (Effect ef : effects)
-			{
-				basicEffectsPanel.addEffect(ef.getName());
-			}
-		}
-		catch (StatusCodeException sce)
-		{
-			sce.printStackTrace();
-		}
 		getContentPane().add(basicEffectsPanel, "cell 0 1,grow");
 		
 		regEffectsPanel = new EffectsPanel("Color Effects", this, devices, canvas);

@@ -14,6 +14,7 @@ import io.github.rowak.StatusCodeException;
 import io.github.rowak.StatusCodeException.UnauthorizedException;
 import io.github.rowak.effectbuilder.StaticEffectBuilder;
 import io.github.rowak.nanoleafdesktop.Main;
+import io.github.rowak.nanoleafdesktop.models.BasicEffect;
 
 public class BasicEffects
 {
@@ -145,6 +146,26 @@ public class BasicEffects
 					basicEffects.get(d).add(getEffect(name,
 							hue, sat, devices[d]));
 				}
+			}
+		}
+		return basicEffects;
+	}
+	
+	public static List<BasicEffect> getBasicEffects()
+	{
+		List<BasicEffect> basicEffects = new ArrayList<BasicEffect>();
+		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+		String strEffects = manager.getProperty("basicEffects");
+		if (strEffects != null)
+		{
+			JSONArray arr = new JSONArray(strEffects);
+			for (int i = 0; i < arr.length(); i++)
+			{
+				JSONObject obj = arr.getJSONObject(i);
+				String name = obj.getString("name");
+				int hue = obj.getInt("hue");
+				int sat = obj.getInt("sat");
+				basicEffects.add(new BasicEffect(name, hue, sat));
 			}
 		}
 		return basicEffects;

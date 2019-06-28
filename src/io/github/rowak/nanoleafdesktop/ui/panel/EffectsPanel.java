@@ -17,6 +17,7 @@ import io.github.rowak.Aurora;
 import io.github.rowak.Effect;
 import io.github.rowak.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.Main;
+import io.github.rowak.nanoleafdesktop.models.BasicEffect;
 import io.github.rowak.nanoleafdesktop.tools.BasicEffects;
 import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 import io.github.rowak.nanoleafdesktop.ui.dialog.LoadingSpinner;
@@ -149,23 +150,20 @@ public class EffectsPanel extends JScrollPane
 	{
 		try
 		{
-			List<List<Effect>> basicEffects = BasicEffects.getBasicEffects(devices);
-			int efIndex = -1;
-			for (int i = 0; i < basicEffects.get(0).size(); i++)
+			List<BasicEffect> basicEffects = BasicEffects.getBasicEffects();
+			for (BasicEffect ef : basicEffects)
 			{
-				if (basicEffects.get(0).get(i).getName().equals(effectName))
+				if (ef.getName().equals(effectName))
 				{
-					efIndex = i;
+					for (int i = 0; i < devices.length; i++)
+					{
+						devices[i].state().setHue(ef.getHue());
+						devices[i].state().setSaturation(ef.getSaturation());
+					}
+					canvas.checkAuroraState();
+					parent.loadStateComponents();
+					break;
 				}
-			}
-			if (efIndex != -1)
-			{
-				for (int i = 0; i < devices.length; i++)
-				{
-					devices[i].effects().displayEffect(basicEffects.get(i).get(efIndex));
-				}
-				canvas.checkAuroraState();
-				parent.loadStateComponents();
 			}
 		}
 		catch (StatusCodeException sce)
