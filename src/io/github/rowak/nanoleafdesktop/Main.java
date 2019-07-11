@@ -89,7 +89,7 @@ public class Main extends JFrame
 	public static final String PROPERTIES_FILEPATH = getPropertiesFilePath();
 	
 	private final int DEFAULT_WINDOW_WIDTH = 1050;
-	private final int DEFAULT_WINDOW_HEIGHT = 800;
+	private final int DEFAULT_WINDOW_HEIGHT = 850;
 	
 	private Aurora[] devices;
 	
@@ -770,7 +770,7 @@ public class Main extends JFrame
 				}
 			}
 		});
-		contentPane.add(editor_1, "cell 1 3,growx");
+		contentPane.add(editor_1, "cell 1 3,grow");
 		
 		infoPanel = new InformationPanel(this, devices, canvas);
 		editor_1.setFont(new Font("Tahoma", Font.BOLD, 17));
