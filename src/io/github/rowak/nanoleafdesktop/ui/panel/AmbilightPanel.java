@@ -41,9 +41,13 @@ public class AmbilightPanel extends JPanel
 	private final int MIN_DELAY = 5;
 	private final int DEFAULT_BRIGHTNESS = 2; // default brightness as an arbitrary coefficient
 	private final int MAX_BRIGHTNESS = 5;
+	private final int DEFAULT_TRANSITION_TIME = 4;
+	private final int MIN_TRANSITION_TIME = 0;
+	private final int MAX_TRANSITION_TIME = 5;
 	private final String[] AMBILIGHT_MODES = {"Mode...", "Average", "Selection"};
 	
-	private int delay, brightness, monitor, mode;
+	private int delay, transTime,
+		brightness, monitor, mode;
 	private Rectangle captureArea;
 	private Aurora[] auroras;
 	private AmbilightHandler handler;
@@ -53,6 +57,7 @@ public class AmbilightPanel extends JPanel
 	private JComboBox<String> cmbxMode;
 	private JSlider updateDelaySlider;
 	private JSlider brightnessSlider;
+	private JSlider transitionTimeSlider;
 	
 	public AmbilightPanel(PanelCanvas canvas)
 	{
@@ -65,7 +70,7 @@ public class AmbilightPanel extends JPanel
 	{
 		setBorder(new LineBorder(Color.GRAY, 1, true));
 		setBackground(Color.DARK_GRAY);
-		setLayout(new MigLayout("", "[][grow][][]", "[][][][][][]"));
+		setLayout(new MigLayout("", "[][grow][][]", "[][][][][][][]"));
 		
 		JLabel lblAmbilightStatus = new LargeModernLabel("Status");
 		add(lblAmbilightStatus, "cell 0 0,gapx 0 15");
@@ -108,8 +113,35 @@ public class AmbilightPanel extends JPanel
 		});
 		add(updateDelaySlider, "cell 1 1 3 1,growx");
 		
+		JLabel lblTransitionTime = new LargeModernLabel("Transition Time");
+		add(lblTransitionTime, "cell 0 2");
+		
+		transitionTimeSlider = new JSlider();
+		transitionTimeSlider.setMaximum(MAX_TRANSITION_TIME);
+		transitionTimeSlider.setMinimum(MIN_TRANSITION_TIME);
+		transitionTimeSlider.setValue(DEFAULT_TRANSITION_TIME);
+		transitionTimeSlider.setBackground(UIConstants.darkBackground);
+		transitionTimeSlider.setUI(new ModernSliderUI(transitionTimeSlider));
+		transitionTimeSlider.addChangeListener(new ChangeListener()
+		{
+			@Override
+			public void stateChanged(ChangeEvent e)
+			{
+				if (transitionTimeSlider.getValueIsAdjusting())
+				{
+					transTime = transitionTimeSlider.getValue();
+					setProperty("ambilightTransitionTime", transTime);
+					if (handler != null)
+					{
+						handler.setTransitionTime(transTime);
+					}
+				}
+			}
+		});
+		add(transitionTimeSlider, "cell 1 2 3 1,growx");
+		
 		JLabel lblBrightness = new LargeModernLabel("Brightness");
-		add(lblBrightness, "cell 0 2");
+		add(lblBrightness, "cell 0 3");
 		
 		brightnessSlider = new JSlider();
 		brightnessSlider.setMaximum(MAX_BRIGHTNESS);
@@ -132,12 +164,12 @@ public class AmbilightPanel extends JPanel
 				}
 			}
 		});
-		add(brightnessSlider, "cell 1 2 3 1,growx");
+		add(brightnessSlider, "cell 1 3 3 1,growx");
 		
 		JLabel lblCaptureArea = new JLabel("Capture Area");
 		lblCaptureArea.setFont(UIConstants.largeLabelFont);
 		lblCaptureArea.setForeground(UIConstants.textPrimary);
-		add(lblCaptureArea, "cell 0 3");
+		add(lblCaptureArea, "cell 0 4");
 		
 		String[] monitors = getMonitors();
 		cmbxMonitor = new ModernComboBox<String>(
@@ -150,7 +182,7 @@ public class AmbilightPanel extends JPanel
 				setMonitor(cmbxMonitor.getSelectedIndex()-1);
 			}
 		});
-		add(cmbxMonitor, "flowx,cell 1 3,growx");
+		add(cmbxMonitor, "flowx,cell 1 4,growx");
 		
 		JButton btnSetArea = new ModernButton("Set Area");
 		btnSetArea.addActionListener(new ActionListener()
@@ -161,7 +193,7 @@ public class AmbilightPanel extends JPanel
 				new CaptureAreaWindow(monitor, AmbilightPanel.this);
 			}
 		});
-		add(btnSetArea, "cell 2 3");
+		add(btnSetArea, "cell 2 4");
 		
 		JButton btnResetArea = new ModernButton("Reset Area");
 		btnResetArea.addActionListener(new ActionListener()
@@ -172,10 +204,10 @@ public class AmbilightPanel extends JPanel
 				resetCaptureArea();
 			}
 		});
-		add(btnResetArea, "cell 3 3");
+		add(btnResetArea, "cell 3 4");
 		
 		JLabel lblMode = new LargeModernLabel("Mode");
-		add(lblMode, "cell 0 4,gapx 0 15");
+		add(lblMode, "cell 0 5,gapx 0 15");
 		
 		cmbxMode = new ModernComboBox<String>(
 				new DefaultComboBoxModel<String>(AMBILIGHT_MODES));
@@ -187,12 +219,17 @@ public class AmbilightPanel extends JPanel
 				setMode(cmbxMode.getSelectedIndex()-1);
 			}
 		});
-		add(cmbxMode, "cell 1 4,growx");
+		add(cmbxMode, "cell 1 5,growx");
 	}
 	
 	public int getUpdateDelay()
 	{
 		return delay;
+	}
+	
+	public int getTransitionTime()
+	{
+		return transTime;
 	}
 	
 	public int getBrightness()
@@ -281,6 +318,20 @@ public class AmbilightPanel extends JPanel
 			catch (NumberFormatException nfe)
 			{
 				delay = DEFAULT_DELAY;
+			}
+		}
+		
+		String lastTransTime = manager.getProperty("ambilightTransitionTime");
+		if (lastTransTime != null)
+		{
+			try
+			{
+				transTime = Integer.parseInt(lastTransTime);
+				transitionTimeSlider.setValue(transTime);
+			}
+			catch (NumberFormatException nfe)
+			{
+				transTime = DEFAULT_TRANSITION_TIME;
 			}
 		}
 		

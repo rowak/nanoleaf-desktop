@@ -33,7 +33,7 @@ import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 
 public class AmbilightHandler
 {
-	private int delay, brightness, mode;
+	private int delay, transTime, brightness, mode;
 	private boolean running, updating;
 	private String previousEffect;
 	private Aurora[] auroras;
@@ -53,6 +53,7 @@ public class AmbilightHandler
 		this.canvas = canvas;
 		this.parent = parent;
 		delay = parent.getUpdateDelay();
+		transTime = parent.getTransitionTime();
 		brightness = parent.getBrightness();
 		captureArea = parent.getCaptureArea();
 		mode = parent.getMode();
@@ -142,7 +143,7 @@ public class AmbilightHandler
 				{
 					Effect ef = new CustomEffectBuilder(aurora)
 							.addFrameToAllPanels(new Frame(originalColor.getRed(),
-									originalColor.getGreen(), originalColor.getBlue(), 0, 3))
+									originalColor.getGreen(), originalColor.getBlue(), 0, transTime))
 							.build("", false);
 					aurora.externalStreaming().sendStaticEffect(ef);
 					currentColor = originalColor;
@@ -152,7 +153,7 @@ public class AmbilightHandler
 				{
 					String animData = new CanvasAnimDataBuilder(aurora)
 							.addFrameToAllPanels(new Frame(originalColor.getRed(),
-									originalColor.getGreen(), originalColor.getBlue(), 0, 3))
+									originalColor.getGreen(), originalColor.getBlue(), 0, transTime))
 							.build();
 					CanvasExtStreaming.sendAnimData(animData, aurora);
 					currentColor = originalColor;
@@ -189,9 +190,9 @@ public class AmbilightHandler
 					{
 						Color color = new Color(img.getRGB(captureX, captureY));
 						ceb.addFrame(rows[0][i][j], new Frame(color.getRed(),
-								color.getGreen(), color.getBlue(), 0, 5));
+								color.getGreen(), color.getBlue(), 0, transTime));
 						cadb.addFrame(rows[0][i][j], new Frame(color.getRed(),
-								color.getGreen(), color.getBlue(), 0, 5));
+								color.getGreen(), color.getBlue(), 0, transTime));
 						colors.put(rows[0][i][j], color);
 					}
 				}
@@ -256,6 +257,11 @@ public class AmbilightHandler
 		{
 			restartTimer();
 		}
+	}
+	
+	public void setTransitionTime(int transTime)
+	{
+		this.transTime = transTime;
 	}
 	
 	public void setBrightness(int brightness)
