@@ -41,7 +41,7 @@ public class AmbilightPanel extends JPanel
 	private final int MIN_DELAY = 5;
 	private final int DEFAULT_BRIGHTNESS = 2; // default brightness as an arbitrary coefficient
 	private final int MAX_BRIGHTNESS = 5;
-	private final int DEFAULT_TRANSITION_TIME = 4;
+	private final int DEFAULT_TRANSITION_TIME = 3;
 	private final int MIN_TRANSITION_TIME = 0;
 	private final int MAX_TRANSITION_TIME = 5;
 	private final String[] AMBILIGHT_MODES = {"Mode...", "Average", "Selection"};
