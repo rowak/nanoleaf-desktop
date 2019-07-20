@@ -85,7 +85,7 @@ public class MenuButton extends ModernButton
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				new AboutDialog(MenuButton.this.getFocusCycleRootAncestor())
+				new AboutDialog(MenuButton.this.getFocusCycleRootAncestor(), main.VERSION)
 					.setVisible(true);
 			}
 		});

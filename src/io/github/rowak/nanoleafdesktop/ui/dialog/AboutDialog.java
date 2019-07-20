@@ -8,6 +8,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 
 import io.github.rowak.nanoleafdesktop.Main;
+import io.github.rowak.nanoleafdesktop.tools.Version;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 
 import java.awt.Font;
@@ -21,7 +22,7 @@ import java.awt.Color;
 
 public class AboutDialog extends BasicDialog
 {
-	public AboutDialog(Component parent)
+	public AboutDialog(Component parent, Version version)
 	{
 		super();
 		
@@ -34,6 +35,13 @@ public class AboutDialog extends BasicDialog
 		lblGithubUrl.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		lblGithubUrl.setForeground(Color.WHITE);
 		getContentPane().add(lblGithubUrl, "cell 0 1,alignx center");
+		
+		String versionText = "Version " + version.getName();
+		versionText += !version.getPreRelease() ? " (Pre-release)" : "";
+		JLabel lblVersion = new JLabel(versionText);
+		lblVersion.setFont(new Font("Tahoma", Font.PLAIN, 20));
+		lblVersion.setForeground(Color.WHITE);
+		getContentPane().add(lblVersion, "cell 0 1,alignx center");
 		
 		URL iconPath = Main.class.getResource("resources/images/icon_small.png");
 		JButton btnDonate = new ModernButton("Donate");
