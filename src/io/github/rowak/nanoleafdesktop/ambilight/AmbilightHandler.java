@@ -18,12 +18,12 @@ import java.util.Map;
 
 import javax.swing.Timer;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.Effect;
-import io.github.rowak.Frame;
-import io.github.rowak.Panel;
-import io.github.rowak.StatusCodeException;
-import io.github.rowak.effectbuilder.CustomEffectBuilder;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.Effect;
+import io.github.rowak.nanoleafapi.Frame;
+import io.github.rowak.nanoleafapi.Panel;
+import io.github.rowak.nanoleafapi.StatusCodeException;
+import io.github.rowak.nanoleafapi.effectbuilder.CustomEffectBuilder;
 import io.github.rowak.nanoleafdesktop.tools.CanvasAnimDataBuilder;
 import io.github.rowak.nanoleafdesktop.tools.CanvasExtStreaming;
 import io.github.rowak.nanoleafdesktop.tools.PanelTableSort;

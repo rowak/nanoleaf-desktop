@@ -3,7 +3,7 @@ package io.github.rowak.nanoleafdesktop.tools;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.rowak.Panel;
+import io.github.rowak.nanoleafapi.Panel;
 
 public class PanelTableSort
 {

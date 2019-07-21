@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.Color;
-import io.github.rowak.Panel;
-import io.github.rowak.StatusCodeException;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.Color;
+import io.github.rowak.nanoleafapi.Panel;
+import io.github.rowak.nanoleafapi.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.spotify.SpecificAudioAnalysis;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
 import io.github.rowak.nanoleafdesktop.spotify.UserOption;

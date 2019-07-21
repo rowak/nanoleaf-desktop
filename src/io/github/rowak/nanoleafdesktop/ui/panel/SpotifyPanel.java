@@ -14,9 +14,9 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.StatusCodeException;
-import io.github.rowak.Effect.Direction;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.StatusCodeException;
+import io.github.rowak.nanoleafapi.Effect.Direction;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyAuthenticator;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
@@ -525,13 +525,14 @@ public class SpotifyPanel extends JPanel
 		});
 	}
 	
-	private io.github.rowak.Color[] convertPalette(java.awt.Color[] awtPalette)
+	private io.github.rowak.nanoleafapi.Color[] convertPalette(java.awt.Color[] awtPalette)
 	{
-		io.github.rowak.Color[] palette = new io.github.rowak.Color[awtPalette.length];
+		io.github.rowak.nanoleafapi.Color[] palette =
+				new io.github.rowak.nanoleafapi.Color[awtPalette.length];
 		for (int i = 0; i < awtPalette.length; i++)
 		{
 			Color c = awtPalette[i];
-			palette[i] = io.github.rowak.Color.fromRGB(c.getRed(),
+			palette[i] = io.github.rowak.nanoleafapi.Color.fromRGB(c.getRed(),
 					c.getGreen(), c.getBlue());
 		}
 		return palette;

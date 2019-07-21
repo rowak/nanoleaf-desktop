@@ -10,8 +10,8 @@ import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.StatusCodeException;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.tools.BasicEffects;
 import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.SingleEntryDialog;

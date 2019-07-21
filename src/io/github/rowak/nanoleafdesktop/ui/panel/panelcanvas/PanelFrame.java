@@ -1,7 +1,7 @@
 package io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas;
 
-import io.github.rowak.Frame;
-import io.github.rowak.Panel;
+import io.github.rowak.nanoleafapi.Frame;
+import io.github.rowak.nanoleafapi.Panel;
 
 public class PanelFrame
 {

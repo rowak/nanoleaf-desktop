@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.github.rowak.Effect;
+import io.github.rowak.nanoleafapi.Effect;
 
 /*
  * This class can be used to map a legacy

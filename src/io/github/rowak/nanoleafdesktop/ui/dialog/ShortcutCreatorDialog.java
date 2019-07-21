@@ -21,8 +21,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.StatusCodeException;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.shortcuts.Action;
 import io.github.rowak.nanoleafdesktop.shortcuts.ActionType;
 import io.github.rowak.nanoleafdesktop.shortcuts.RunType;

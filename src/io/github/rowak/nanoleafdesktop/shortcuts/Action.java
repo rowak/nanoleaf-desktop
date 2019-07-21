@@ -1,9 +1,9 @@
 package io.github.rowak.nanoleafdesktop.shortcuts;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.Color;
-import io.github.rowak.Effect;
-import io.github.rowak.StatusCodeException;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.Color;
+import io.github.rowak.nanoleafapi.Effect;
+import io.github.rowak.nanoleafapi.StatusCodeException;
 
 public class Action
 {

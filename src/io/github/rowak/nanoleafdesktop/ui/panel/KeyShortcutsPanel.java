@@ -13,7 +13,7 @@ import javax.swing.JPanel;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
-import io.github.rowak.Aurora;
+import io.github.rowak.nanoleafapi.Aurora;
 import io.github.rowak.nanoleafdesktop.shortcuts.RunType;
 import io.github.rowak.nanoleafdesktop.shortcuts.Shortcut;
 import io.github.rowak.nanoleafdesktop.shortcuts.ShortcutManager;

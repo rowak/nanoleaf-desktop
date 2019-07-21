@@ -16,8 +16,8 @@ import javax.swing.event.ChangeListener;
 
 import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.StatusCodeException;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;

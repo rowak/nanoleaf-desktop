@@ -4,8 +4,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.github.rowak.Color;
-import io.github.rowak.Effect;
+import io.github.rowak.nanoleafapi.Color;
+import io.github.rowak.nanoleafapi.Effect;
 
 public class EffectMetadata
 {

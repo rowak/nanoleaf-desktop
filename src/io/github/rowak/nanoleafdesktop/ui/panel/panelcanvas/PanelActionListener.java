@@ -8,9 +8,9 @@ import java.awt.event.MouseWheelEvent;
 
 import javax.swing.SwingUtilities;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.Panel;
-import io.github.rowak.StatusCodeException;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.Panel;
+import io.github.rowak.nanoleafapi.StatusCodeException;
 
 public class PanelActionListener extends MouseAdapter
 {

@@ -11,14 +11,14 @@ import javax.swing.border.LineBorder;
 
 import org.json.JSONObject;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.AuroraMetadata;
-import io.github.rowak.Setup;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.AuroraMetadata;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.listener.WindowDragListener;
+import io.github.rowak.nanoleafapi.tools.Setup;
 
 import javax.swing.JScrollPane;
 import javax.swing.JList;

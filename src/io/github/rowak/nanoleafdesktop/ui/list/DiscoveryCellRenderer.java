@@ -13,7 +13,7 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
-import io.github.rowak.Color;
+import io.github.rowak.nanoleafapi.Color;
 import io.github.rowak.nanoleafdesktop.discovery.EffectMetadata;
 
 public class DiscoveryCellRenderer extends JLabel implements ListCellRenderer<EffectMetadata>

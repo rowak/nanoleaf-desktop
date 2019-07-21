@@ -16,7 +16,7 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import io.github.rowak.Aurora;
+import io.github.rowak.nanoleafapi.Aurora;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.ambilight.AmbilightHandler;
 import io.github.rowak.nanoleafdesktop.ambilight.CaptureAreaWindow;

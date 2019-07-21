@@ -6,9 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.github.rowak.Effect;
-import io.github.rowak.Frame;
-import io.github.rowak.Panel;
+import io.github.rowak.nanoleafapi.Effect;
+import io.github.rowak.nanoleafapi.Frame;
+import io.github.rowak.nanoleafapi.Panel;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 
 public class CustomEffectDisplay

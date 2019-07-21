@@ -5,11 +5,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.Frame;
-import io.github.rowak.Panel;
-import io.github.rowak.StatusCodeException;
-import io.github.rowak.StatusCodeException.UnauthorizedException;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.Frame;
+import io.github.rowak.nanoleafapi.Panel;
+import io.github.rowak.nanoleafapi.StatusCodeException;
+import io.github.rowak.nanoleafapi.StatusCodeException.UnauthorizedException;
 
 public class CanvasAnimDataBuilder
 {

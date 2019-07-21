@@ -9,8 +9,8 @@ import java.util.List;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.Effect;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.Effect;
 import io.github.rowak.nanoleafdesktop.shortcuts.RunType;
 import io.github.rowak.nanoleafdesktop.shortcuts.Shortcut;
 

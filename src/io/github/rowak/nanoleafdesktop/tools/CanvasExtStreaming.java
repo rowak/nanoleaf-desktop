@@ -9,10 +9,10 @@ import java.net.SocketException;
 import com.github.kevinsawicki.http.HttpRequest;
 import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.Panel;
-import io.github.rowak.StatusCodeException;
-import io.github.rowak.StatusCodeException.UnauthorizedException;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.Panel;
+import io.github.rowak.nanoleafapi.StatusCodeException;
+import io.github.rowak.nanoleafapi.StatusCodeException.UnauthorizedException;
 
 public class CanvasExtStreaming
 {

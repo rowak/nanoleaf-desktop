@@ -18,14 +18,14 @@ import javax.swing.JPanel;
 
 import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.StatusCodeException;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.ui.dialog.LoadingSpinner;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
-import io.github.rowak.Panel;
-import io.github.rowak.StaticAnimDataParser;
-import io.github.rowak.Effect;
-import io.github.rowak.Frame;
+import io.github.rowak.nanoleafapi.tools.StaticAnimDataParser;
+import io.github.rowak.nanoleafapi.Panel;
+import io.github.rowak.nanoleafapi.Effect;
+import io.github.rowak.nanoleafapi.Frame;
 
 public class PanelCanvas extends JPanel
 {
@@ -341,12 +341,12 @@ public class PanelCanvas extends JPanel
 						{
 							customEffectDisplay.stop();
 						}
-						io.github.rowak.Color[] palette =
+						io.github.rowak.nanoleafapi.Color[] palette =
 								currentEffect.getPalette();
 						int[] avgRgb = new int[3];
 						if (palette != null)
 						{
-							for (io.github.rowak.Color c : palette)
+							for (io.github.rowak.nanoleafapi.Color c : palette)
 							{
 								Color rgb = new Color(Color.HSBtoRGB(c.getHue()/360f,
 										c.getSaturation()/100f, c.getBrightness()/100f));

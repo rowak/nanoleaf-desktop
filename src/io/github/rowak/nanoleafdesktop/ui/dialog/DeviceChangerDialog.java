@@ -30,11 +30,10 @@ import org.json.JSONObject;
 
 import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.AuroraMetadata;
-import io.github.rowak.Setup;
-import io.github.rowak.StatusCodeException;
-import io.github.rowak.StatusCodeException.UnauthorizedException;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.AuroraMetadata;
+import io.github.rowak.nanoleafapi.StatusCodeException;
+import io.github.rowak.nanoleafapi.StatusCodeException.UnauthorizedException;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
 import io.github.rowak.nanoleafdesktop.models.DeviceInfo;
@@ -42,6 +41,7 @@ import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.listener.WindowDragListener;
+import io.github.rowak.nanoleafapi.tools.Setup;
 import net.miginfocom.swing.MigLayout;
 
 public class DeviceChangerDialog extends JDialog

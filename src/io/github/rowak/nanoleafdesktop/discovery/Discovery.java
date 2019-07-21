@@ -8,7 +8,7 @@ import org.json.JSONObject;
 
 import com.github.kevinsawicki.http.HttpRequest;
 
-import io.github.rowak.Effect;
+import io.github.rowak.nanoleafapi.Effect;
 
 public class Discovery
 {

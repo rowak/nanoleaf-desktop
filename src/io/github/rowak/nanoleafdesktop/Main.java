@@ -29,10 +29,10 @@ import java.awt.Dimension;
 
 import javax.swing.border.LineBorder;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.Effect;
-import io.github.rowak.StatusCodeException;
-import io.github.rowak.StatusCodeException.UnauthorizedException;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.Effect;
+import io.github.rowak.nanoleafapi.StatusCodeException;
+import io.github.rowak.nanoleafapi.StatusCodeException.UnauthorizedException;
 import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
 import io.github.rowak.nanoleafdesktop.models.DeviceInfo;
 import io.github.rowak.nanoleafdesktop.tools.BasicEffects;

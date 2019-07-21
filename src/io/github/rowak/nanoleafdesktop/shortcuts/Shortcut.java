@@ -3,8 +3,8 @@ package io.github.rowak.nanoleafdesktop.shortcuts;
 import java.util.Arrays;
 import java.util.List;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.Effect;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.Effect;
 
 public class Shortcut
 {

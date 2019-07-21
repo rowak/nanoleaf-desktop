@@ -6,13 +6,13 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.Color;
-import io.github.rowak.Effect;
-import io.github.rowak.Frame;
-import io.github.rowak.StatusCodeException;
-import io.github.rowak.StatusCodeException.UnauthorizedException;
-import io.github.rowak.effectbuilder.StaticEffectBuilder;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.Color;
+import io.github.rowak.nanoleafapi.Effect;
+import io.github.rowak.nanoleafapi.Frame;
+import io.github.rowak.nanoleafapi.StatusCodeException;
+import io.github.rowak.nanoleafapi.StatusCodeException.UnauthorizedException;
+import io.github.rowak.nanoleafapi.effectbuilder.StaticEffectBuilder;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.models.BasicEffect;
 

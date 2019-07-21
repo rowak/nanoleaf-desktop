@@ -7,10 +7,10 @@ import java.util.Random;
 
 import com.wrapper.spotify.model_objects.miscellaneous.AudioAnalysisSegment;
 
-import io.github.rowak.Aurora;
-import io.github.rowak.Color;
-import io.github.rowak.Panel;
-import io.github.rowak.StatusCodeException;
+import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.Color;
+import io.github.rowak.nanoleafapi.Panel;
+import io.github.rowak.nanoleafapi.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.spotify.SpecificAudioAnalysis;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
 import io.github.rowak.nanoleafdesktop.tools.CanvasExtStreaming;
