@@ -280,16 +280,7 @@ public class Main extends JFrame
 		EventQueue.invokeLater(() ->
 		{
 			this.devices = devices;
-			if (devices.length == 1)
-			{
-				PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
-				manager.setProperty("lastSession",
-						devices[0].getHostName() + " " +
-						devices[0].getPort() + " v1 " +
-						devices[0].getAccessToken());
-				System.out.println("**STORED LAST SESSION**");
-			}
-			else if (devices.length > 1)
+			if (devices.length > 1)
 			{
 				new TextDialog(this, "You are now in group mode. Your devices are displayed ON TOP " +
 						"of each other in the preview window. You can move your devices around " +
