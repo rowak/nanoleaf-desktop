@@ -60,3 +60,4 @@ An example of a custom effect being displayed on the live preview (below).
 ## Planned Features
 - More Spotify rhythmic effects
 - Create static and custom effects and edit existing dynamic effects
+- Manage schedules for your device to change scenes at set times
