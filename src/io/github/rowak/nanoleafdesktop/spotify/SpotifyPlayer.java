@@ -1,20 +1,29 @@
 package io.github.rowak.nanoleafdesktop.spotify;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.RasterFormatException;
 import java.io.IOException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import javax.imageio.ImageIO;
 
 import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 import com.wrapper.spotify.SpotifyApi;
 import com.wrapper.spotify.exceptions.SpotifyWebApiException;
 import com.wrapper.spotify.model_objects.miscellaneous.AudioAnalysis;
 import com.wrapper.spotify.model_objects.miscellaneous.CurrentlyPlaying;
+import com.wrapper.spotify.model_objects.specification.AlbumSimplified;
 import com.wrapper.spotify.model_objects.specification.ArtistSimplified;
+import com.wrapper.spotify.model_objects.specification.Image;
 import com.wrapper.spotify.model_objects.specification.Track;
 import com.wrapper.spotify.requests.data.player.GetUsersCurrentlyPlayingTrackRequest;
 import com.wrapper.spotify.requests.data.tracks.GetAudioAnalysisForTrackRequest;
@@ -24,6 +33,7 @@ import io.github.rowak.nanoleafapi.Color;
 import io.github.rowak.nanoleafapi.Effect;
 import io.github.rowak.nanoleafapi.Effect.Direction;
 import io.github.rowak.nanoleafapi.Frame;
+import io.github.rowak.nanoleafapi.Panel;
 import io.github.rowak.nanoleafapi.StatusCodeException;
 import io.github.rowak.nanoleafapi.StatusCodeException.UnauthorizedException;
 import io.github.rowak.nanoleafapi.effectbuilder.CustomEffectBuilder;
@@ -33,18 +43,20 @@ import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyStreakingNotesEffect;
 import io.github.rowak.nanoleafdesktop.tools.CanvasExtStreaming;
+import io.github.rowak.nanoleafdesktop.tools.PanelTableSort;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.panel.SpotifyPanel;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 
 public class SpotifyPlayer
 {
-	private boolean running, playing;
+	private boolean running, playing, usingDefaultPalette;
 	private int progress, sensitivity, audioOffset;
 	private String previousEffect;
 	private Timer effectTimer, spotifyActionTimer;
 	private SpotifyApi spotifyApi;
 	private Track currentTrack;
+	private AlbumSimplified currentAlbum;
 	private AudioAnalysis currentTrackAnalysis;
 	private Aurora[] auroras;
 	private SpotifyEffect effect;
@@ -61,6 +73,7 @@ public class SpotifyPlayer
 		this.spotifyApi = spotifyApi;
 		this.defaultPalette = defaultPalette.clone();
 		palette = defaultPalette.clone();
+		usingDefaultPalette = true;
 		this.auroras = auroras;
 		this.panel = panel;
 		this.canvas = canvas;
@@ -160,6 +173,11 @@ public class SpotifyPlayer
 		}
 	}
 	
+	public void setUsingDefaultPalette(boolean usingDefaultPalette)
+	{
+		this.usingDefaultPalette = usingDefaultPalette;
+	}
+	
 	public SpotifyEffect getEffect()
 	{
 		return effect;
@@ -174,7 +192,8 @@ public class SpotifyPlayer
 				break;
 			case SOUNDBAR:
 				if (palette.length > 1 &&
-						Arrays.asList(palette).equals(Arrays.asList(defaultPalette)))
+						(Arrays.asList(palette).equals(Arrays.asList(defaultPalette)) ||
+								usingDefaultPalette))
 				{
 					palette[0] = Color.fromRGB(0, 0, 0);
 				}
@@ -242,11 +261,17 @@ public class SpotifyPlayer
 			initEffect();
 			CurrentlyPlaying current = getCurrentlyPlaying();
 			currentTrack = current.getItem();
+			currentAlbum = currentTrack.getAlbum();
 			currentTrackAnalysis = getTrackAnalysis(currentTrack.getId());
 			progress = current.getProgress_ms();
 			playing = true;
 			updateTrackInfoText();
 			updateTrackProgressText();
+			
+			java.awt.Color[] newpalette = getAlbumImagePalette();
+			setPalette(convertPalette(newpalette));
+			System.out.println(Arrays.asList(newpalette));
+			panel.setPalette(newpalette);
 		}
 		catch (SpotifyWebApiException swe)
 		{
@@ -265,6 +290,19 @@ public class SpotifyPlayer
 		{
 			sce.printStackTrace();
 		}
+	}
+	
+	private io.github.rowak.nanoleafapi.Color[] convertPalette(java.awt.Color[] awtPalette)
+	{
+		io.github.rowak.nanoleafapi.Color[] palette =
+				new io.github.rowak.nanoleafapi.Color[awtPalette.length];
+		for (int i = 0; i < awtPalette.length; i++)
+		{
+			java.awt.Color c = awtPalette[i];
+			palette[i] = io.github.rowak.nanoleafapi.Color.fromRGB(c.getRed(),
+					c.getGreen(), c.getBlue());
+		}
+		return palette;
 	}
 	
 	public void initEffect()
@@ -377,6 +415,59 @@ public class SpotifyPlayer
 		return str;
 	}
 	
+	private BufferedImage getAlbumImage() throws IOException
+	{
+		BufferedImage img = null;
+		if (currentAlbum.getImages().length > 0)
+		{
+			Image raw = currentAlbum.getImages()[1];
+			img = ImageIO.read(new URL(raw.getUrl()));
+		}
+		return img;
+	}
+	
+	private java.awt.Color[] getAlbumImagePalette() throws StatusCodeException, IOException
+	{
+		Panel[][] rows = PanelTableSort.getRows(auroras[0].panelLayout().getPanelsRotated());
+		BufferedImage img = getAlbumImage();
+		Set<java.awt.Color> colors = new HashSet<java.awt.Color>();
+		if (img != null)
+		{
+			final int VERTICAL_SEPARATOR = img.getHeight()/rows.length;
+			for (int i = 0; i < rows.length; i++)
+			{
+				int captureY = VERTICAL_SEPARATOR*i + VERTICAL_SEPARATOR/2;
+				
+				for (int j = 0; j < rows[i].length; j++)
+				{
+					final int HORIZONTAL_SEPARATOR = img.getWidth()/rows[i].length;
+					int captureX = HORIZONTAL_SEPARATOR*j + HORIZONTAL_SEPARATOR/2;
+					
+					try
+					{
+						if (img.getSubimage(captureX, captureY, 1, 1) != null)
+						{
+							java.awt.Color c = new java.awt.Color(img.getRGB(captureX, captureY));
+							if (!c.equals(java.awt.Color.BLACK))
+							{
+								colors.add(c);
+							}
+						}
+					}
+					catch (RasterFormatException rfe)
+					{
+						// catch, but ignore
+					}
+				}
+			}
+		}
+		else
+		{
+			System.out.println("ERROR: Invalid album image");
+		}
+		return colors.toArray(new java.awt.Color[]{});
+	}
+	
 	private Direction getDirectionFromStr(String str)
 	{
 		if (str != null)
@@ -410,11 +501,26 @@ public class SpotifyPlayer
 		if (current != null && !currentTrack.getId().equals(current.getItem().getId()))
 		{
 			currentTrack = current.getItem();
+			currentAlbum = currentTrack.getAlbum();
 			currentTrackAnalysis = getTrackAnalysis(currentTrack.getId());
 			progress = current.getProgress_ms();
 			effect.reset();
 			updateTrackInfoText();
 			updateTrackProgressText();
+			
+			if (usingDefaultPalette)
+			{
+				try
+				{
+					java.awt.Color[] newpalette = getAlbumImagePalette();
+					setPalette(convertPalette(newpalette));
+					panel.setPalette(newpalette);
+				}
+				catch (StatusCodeException e) 
+				{
+					e.printStackTrace();
+				}
+			}
 		}
 		
 		float progressDiff = Math.abs(current.getProgress_ms() - progress);

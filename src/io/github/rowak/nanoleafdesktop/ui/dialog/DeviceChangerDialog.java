@@ -167,15 +167,14 @@ public class DeviceChangerDialog extends JDialog
 					if (device != null)
 					{
 						parent.setDevices(new Aurora[]{device});
-						PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
-						manager.setProperty("lastSession",
-								device.getHostName() + " " +
-								device.getPort() + " v1 " +
-								device.getAccessToken());
+						writeLastSession(device);
+						{
+							
+						}
+						this.cancel();
+						info.dispose();
+						dialog.dispose();
 					}
-					this.cancel();
-					info.dispose();
-					dialog.dispose();
 				}
 				catch (Exception e)
 				{
@@ -185,6 +184,15 @@ public class DeviceChangerDialog extends JDialog
 			}
 		}, 1000, 1000);
 		return device;
+	}
+	
+	private void writeLastSession(Aurora device)
+	{
+		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+		manager.setProperty("lastSession",
+				device.getHostName() + " " +
+				device.getPort() + " v1 " +
+				device.getAccessToken());
 	}
 	
 	private void connectToGroup(DeviceGroup group)
@@ -404,7 +412,8 @@ public class DeviceChangerDialog extends JDialog
 													if (aurora != null)
 													{
 														info.dispose();
-														DeviceChangerDialog.this.parent.setDevices(new Aurora[]{device});
+														DeviceChangerDialog.this.parent.setDevices(new Aurora[]{aurora});
+														writeLastSession(aurora);
 														thisDialog.dispose();
 														DeviceChangerDialog.this.dispose();
 													}

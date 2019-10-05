@@ -105,6 +105,11 @@ public class SpotifyPanel extends JPanel
 		}
 	}
 	
+	public void setPalette(Color[] palette)
+	{
+		this.palette = palette;
+	}
+	
 	public void setTrackInfoText(String text)
 	{
 		lblTrackInfo.setText(text);
@@ -509,6 +514,7 @@ public class SpotifyPanel extends JPanel
 						{
 							try
 							{
+								player.setUsingDefaultPalette(false);
 								player.setPalette(convertPalette(
 										palettePicker.getPalette()));
 							}
