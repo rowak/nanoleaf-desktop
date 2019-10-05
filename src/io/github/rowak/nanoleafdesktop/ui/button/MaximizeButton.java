@@ -12,7 +12,8 @@ public class MaximizeButton extends JLabel
 {
 	public MaximizeButton(final JFrame frame)
 	{
-		setText("\u20de");
+		setText((char)0x25A1 + "");
+		//setText("\u20de");
 		setForeground(Color.WHITE);
 		setFont(new Font("Tahoma", Font.BOLD, 25));
 		addMouseListener(new MouseAdapter()

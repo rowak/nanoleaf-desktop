@@ -14,7 +14,8 @@ public class HideButton extends JLabel
 {
 	public HideButton(final JFrame frame)
 	{
-		setText("–");
+		setText((char)0x2013 + "");
+		//setText("ï¿½");
 		setForeground(Color.WHITE);
 		setFont(new Font("Tahoma", Font.BOLD, 30));
 		addMouseListener(new MouseAdapter()
