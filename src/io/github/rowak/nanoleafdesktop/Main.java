@@ -13,6 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,8 @@ import io.github.rowak.nanoleafapi.StatusCodeException;
 import io.github.rowak.nanoleafapi.StatusCodeException.UnauthorizedException;
 import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
 import io.github.rowak.nanoleafdesktop.models.DeviceInfo;
+import io.github.rowak.nanoleafdesktop.shortcuts.Action;
+import io.github.rowak.nanoleafdesktop.shortcuts.ActionType;
 import io.github.rowak.nanoleafdesktop.tools.BasicEffects;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.tools.UIConstants;
@@ -80,7 +83,7 @@ import javax.swing.JButton;
 
 public class Main extends JFrame
 {
-	public static final Version VERSION = new Version("v0.8.5", true);
+	public static final Version VERSION = new Version("v0.8.6", true);
 	public static final String VERSION_HOST =
 			"https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
 	public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
@@ -90,6 +93,8 @@ public class Main extends JFrame
 	
 	private final int DEFAULT_WINDOW_WIDTH = 1050;
 	private final int DEFAULT_WINDOW_HEIGHT = 850;
+	
+	boolean uiEnabled;
 	
 	private Aurora[] devices;
 	
@@ -108,7 +113,7 @@ public class Main extends JFrame
 	private EffectsPanel regEffectsPanel;
 	private EffectsPanel rhythEffectsPanel;
 	
-	public Main()
+	public Main(String[] actions)
 	{
 		migrateOldProperties();
 		
@@ -116,20 +121,29 @@ public class Main extends JFrame
 		String lastSession = manager.getProperty("lastSession");
 		
 		// Use the device from the last session
-		if (lastSession != null)
+		if (lastSession != null && (actions == null || actions.length > 0))
 		{
+			uiEnabled = true;
 			setupOldAurora(lastSession);
 		}
 		
-		initUI();
-		
-		// Search for a a new device
-		if (lastSession == null)
+		if (actions != null && actions.length > 0)
 		{
-			setupNewAurora();
+			new ActionHandler(actions);
 		}
-		
-		checkForUpdate();
+		else
+		{
+			uiEnabled = true;
+			initUI();
+			
+			// Search for a a new device
+			if (lastSession == null)
+			{
+				setupNewAurora();
+			}
+			
+			checkForUpdate();
+		}
 	}
 	
 	public static String getPropertiesFilePath()
@@ -434,15 +448,21 @@ public class Main extends JFrame
 			if (group != null)
 			{
 				connectToGroup(group);
-				EventQueue.invokeLater(() ->
+				if (uiEnabled)
 				{
-					lblTitle.setText("Connected to " + groupName);
-					loadAuroraData();
-				});
+					EventQueue.invokeLater(() ->
+					{
+						lblTitle.setText("Connected to " + groupName);
+						loadAuroraData();
+					});
+				}
 			}
 			else
 			{
-				resetDataFile();
+				if (uiEnabled)
+				{
+					resetDataFile();
+				}
 			}
 		}
 		else
@@ -454,20 +474,29 @@ public class Main extends JFrame
 				devices[0] = new Aurora(data[0],
 						Integer.parseInt(data[1]),
 						data[2], data[3]);
-				EventQueue.invokeLater(() ->
+				if (uiEnabled)
 				{
-					loadDeviceName();
-				});
+					EventQueue.invokeLater(() ->
+					{
+						loadDeviceName();
+					});
+				}
 			}
 			catch (StatusCodeException | HttpRequestException schre)
 			{
-				new TextDialog(Main.this, "Failed to connect to the device. " +
-						"Please try again.").setVisible(true);
+				if (uiEnabled)
+				{
+					new TextDialog(Main.this, "Failed to connect to the device. " +
+							"Please try again.").setVisible(true);
+				}
 			}
 			catch (Exception e)
 			{
 				e.printStackTrace();
-				resetDataFile();
+				if (uiEnabled)
+				{
+					resetDataFile();
+				}
 			}
 		}
 	}
@@ -894,13 +923,14 @@ public class Main extends JFrame
 	
 	public static void main(String[] args)
 	{
+		String[] actions = getActionArgs(args);
 		EventQueue.invokeLater(new Runnable()
 		{
 			public void run()
 			{
 				try
 				{
-					Main frame = new Main();
+					Main frame = new Main(actions);
 					frame.setVisible(true);
 				}
 				catch (Exception e)
@@ -909,5 +939,111 @@ public class Main extends JFrame
 				}
 			}
 		});
+	}
+	
+	private class ActionHandler
+	{
+		public ActionHandler(String[] actions)
+		{
+			init();
+			for (String action : actions)
+			{
+				Action actionObj = parseAction(action);
+				if (actionObj != null)
+				{
+					try
+					{
+						actionObj.execute(devices, new Effect[0]);
+					}
+					catch (Exception e)
+					{
+						e.printStackTrace();
+						System.out.println("error - failed to execute action");
+						System.exit(4);
+					}
+				}
+				else
+				{
+					System.out.println("error - invalid action");
+					System.exit(2);
+				}
+			}
+			System.exit(0);
+		}
+		
+		private void init()
+		{
+			PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
+			String lastSession = manager.getProperty("lastSession");
+			
+			if (lastSession != null)
+			{
+				setupOldAurora(lastSession);
+			}
+			else
+			{
+				System.out.println("error - device not set up");
+				System.exit(1);
+			}
+		}
+		
+		private Action parseAction(String action)
+		{
+			action = action.replace("{", "").replace("}", "");
+			String[] actionData = action.split(",");
+			ActionType type = null;
+			for (ActionType at : ActionType.values())
+			{
+				if (at.toString().toUpperCase().equals(actionData[0].toUpperCase()))
+				{
+					type = at;
+					break;
+				}
+			}
+			if (type == ActionType.NEXT_EFFECT || type == ActionType.PREVIOUS_EFFECT)
+			{
+				System.out.println("error - action unsupported in this mode");
+				System.exit(3);
+			}
+			Object[] args = new Object[1];
+			if (actionData.length > 1)
+			{
+				if (type != null && type != ActionType.SET_EFFECT)
+				{
+					args = new Object[]{Integer.parseInt(actionData[1])};
+				}
+				else
+				{
+					args = new Object[]{actionData[1]};
+				}
+			}
+			return type != null ? new Action(type, args) : null;
+		}
+	}
+	
+	private static String[] getActionArgs(String[] args)
+	{
+		List<String> arglist = new ArrayList<String>();
+		String arg = "";
+		for (int i = 0; i < args.length; i++)
+		{
+			if (args[i].equals("-a") || args[i].equals("-action"))
+			{
+				while (++i < args.length && !arg.contains("}"))
+				{
+					arg += args[i];
+					if (!args[i].contains(",") && i+1 < args.length &&
+							!args[i+1].equals("-a") &&
+							!args[i+1].equals("-action"))
+					{
+						arg += " ";
+					}
+				}
+				arglist.add(arg);
+				arg = "";
+				i--;
+			}
+		}
+		return arglist.isEmpty() ? null : arglist.toArray(new String[]{});
 	}
 }
