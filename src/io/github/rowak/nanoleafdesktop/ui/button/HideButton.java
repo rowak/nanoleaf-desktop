@@ -25,37 +25,45 @@ public class HideButton extends JLabel
             {
             	if (e.getButton() == MouseEvent.BUTTON1)
             	{
-            		final int TIME = 200;
-            	    final int MILLIS_PER_FRAME = 33;
-            	    final float DELTA = MILLIS_PER_FRAME / (float)TIME;
-            		frame.setOpacity(1f);
-                    final Timer timer = new Timer();
-                    TimerTask timerTask = new TimerTask()
-                    {
-                        float opacity = 1f;
-
-                        @Override
-                        public void run()
-                        {
-                            opacity += -DELTA;
-                            if (opacity < 0)
-                            {
-                                frame.setState(JFrame.ICONIFIED);
-                                frame.setOpacity(1f);
-                                timer.cancel();
-                            }
-                            else if (opacity > 1)
-                            {
-                                frame.setOpacity(1f);
-                                timer.cancel();
-                            }
-                            else
-                            {
-                                frame.setOpacity(opacity);
-                            }
-                        }
-                    };
-                    timer.scheduleAtFixedRate(timerTask, MILLIS_PER_FRAME, MILLIS_PER_FRAME);
+            		final String os = System.getProperty("os.name").toLowerCase();
+            		if (os.equals("linux"))
+            		{
+            			frame.setState(JFrame.ICONIFIED);
+            		}
+            		else
+            		{
+	            		final int TIME = 200;
+	            	    final int MILLIS_PER_FRAME = 33;
+	            	    final float DELTA = MILLIS_PER_FRAME / (float)TIME;
+	            		frame.setOpacity(1f);
+	                    final Timer timer = new Timer();
+	                    TimerTask timerTask = new TimerTask()
+	                    {
+	                        float opacity = 1f;
+	
+	                        @Override
+	                        public void run()
+	                        {
+	                            opacity += -DELTA;
+	                            if (opacity < 0)
+	                            {
+	                                frame.setState(JFrame.ICONIFIED);
+	                                frame.setOpacity(1f);
+	                                timer.cancel();
+	                            }
+	                            else if (opacity > 1)
+	                            {
+	                                frame.setOpacity(1f);
+	                                timer.cancel();
+	                            }
+	                            else
+	                            {
+	                                frame.setOpacity(opacity);
+	                            }
+	                        }
+	                    };
+	                    timer.scheduleAtFixedRate(timerTask, MILLIS_PER_FRAME, MILLIS_PER_FRAME);
+            		}
             	}
             }
             
