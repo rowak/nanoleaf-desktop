@@ -549,31 +549,25 @@ public class SpotifyPanel extends JPanel
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 		
 		String lastSensitivity = manager.getProperty("spotifySensitivity");
-		if (lastSensitivity != null)
+		try
 		{
-			try
-			{
-				sensitivity = Integer.parseInt(lastSensitivity);
-				sensitivitySlider.setValue(sensitivity);
-			}
-			catch (NumberFormatException nfe)
-			{
-				sensitivity = DEFAULT_SENSITIVITY;
-			}
+			sensitivity = Integer.parseInt(lastSensitivity);
 		}
+		catch (NumberFormatException | NullPointerException e)
+		{
+			sensitivity = DEFAULT_SENSITIVITY;
+		}
+		sensitivitySlider.setValue(sensitivity);
 		String lastAudioOffset = manager.getProperty("spotifyAudioOffset");
-		if (lastAudioOffset != null)
+		try
 		{
-			try
-			{
-				audioOffset = Integer.parseInt(lastAudioOffset);
-				audioOffsetSlider.setValue(audioOffset);
-			}
-			catch (NumberFormatException nfe)
-			{
-				audioOffset = DEFAULT_AUDIO_OFFSET;
-			}
+			audioOffset = Integer.parseInt(lastAudioOffset);
 		}
+		catch (NumberFormatException | NullPointerException e)
+		{
+			audioOffset = DEFAULT_AUDIO_OFFSET;
+		}
+		audioOffsetSlider.setValue(audioOffset);
 	}
 	
 	private void setProperty(String key, Object value)
