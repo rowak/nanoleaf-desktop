@@ -1,7 +1,11 @@
 package io.github.rowak.nanoleafdesktop.tools;
 
+import io.github.rowak.nanoleafdesktop.ui.dialog.UpdateOptionDialog;
 import org.json.JSONObject;
 import org.junit.Test;
+
+import javax.swing.*;
+import java.awt.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -9,15 +13,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class UpdateManagerShould {
 
     @Test
-    public void foo() {
+    public void create_UpdateDialog_when_newer_version_is_available() {
         TestableUpdateManager testableUpdateManager = new TestableUpdateManager(
                 "https://api.github.com/repos/rowak/nanoleaf-desktop/releases",
                 "https://github.com/rowak/nanoleaf-desktop");
         Version current = createRelease("v0.1");
+        JFrame parent = new JFrame();
 
-        boolean actual = testableUpdateManager.updateAvailable(current);
+        UpdateOptionDialog updateOptionDialog = testableUpdateManager.checkForUpdate(parent, current);
 
-        assertThat(actual).isTrue();
+        //TODO figure out how to access title, button texts
+        assertThat(updateOptionDialog).isNotNull();
+        assertThat(updateOptionDialog.isVisible()).isTrue();
     }
 
     private Version createRelease(String version) {
@@ -26,20 +33,22 @@ public class UpdateManagerShould {
     }
 
     @Test
-    public void foo2() {
+    public void show_no_dialog_if_already_latest() {
         TestableUpdateManager testableUpdateManager = new TestableUpdateManager(
                 "https://api.github.com/repos/rowak/nanoleaf-desktop/releases",
                 "https://github.com/rowak/nanoleaf-desktop");
         Version current = createRelease("v0.9.0");
+        JFrame parent = new JFrame();
 
-        boolean actual = testableUpdateManager.updateAvailable(current);
+        UpdateOptionDialog updateOptionDialog = testableUpdateManager.checkForUpdate(parent, current);
 
-        assertThat(actual).isFalse();
+        //TODO maybe a TextDialog with appropriate message?
+        assertThat(updateOptionDialog).isNull();
     }
 
     private class TestableUpdateManager extends UpdateManager {
         public TestableUpdateManager(String host, String repo) {
-            super(host, repo);
+            super();
         }
 
         @Override
@@ -53,6 +62,11 @@ public class UpdateManagerShould {
                     "]";
 
             return body;
+        }
+
+        @Override
+        protected void render(Component parent, UpdateOptionDialog updateDialog) {
+            // do nothing as we do not want to render the window
         }
     }
 }

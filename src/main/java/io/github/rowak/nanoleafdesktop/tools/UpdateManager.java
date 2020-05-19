@@ -1,100 +1,58 @@
 package io.github.rowak.nanoleafdesktop.tools;
 
 import com.github.kevinsawicki.http.HttpRequest;
-import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
+import io.github.rowak.nanoleafdesktop.ui.dialog.UpdateOptionDialog;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
-public class UpdateManager
-{
-	private String host, repo;
+public class UpdateManager {
+    //TODO should move to property file and be read from there
+    private String host = "https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
+    private String repo = "https://github.com/rowak/nanoleaf-desktop/releases";
 
-	public UpdateManager(String host, String repo) {
-		this.host = host;
-		this.repo = repo + "/releases";
-	}
+    public UpdateOptionDialog checkForUpdate(Component parent, Version version) {
+        UpdateOptionDialog updateDialog = null;
+        Version latest = getLatestVersionFromHost();
 
-	public boolean updateAvailable(Version current) {
-		Version latest = getLatestVersionFromHost();
-		return latest.compareTo(current) > 0;
-	}
+        if (newVersionIsAvailable(version, latest)) {
+            updateDialog = createUpdateDialog(parent);
+        }
 
-	private Version getLatestVersionFromHost() {
-		String responseFrom = getResponseFrom(host);
+        return updateDialog;
+    }
 
-		JSONArray parsedResponse = new JSONArray(responseFrom);
-		JSONObject versionAsJson = parsedResponse.getJSONObject(0);
-		return new Version(versionAsJson);
-	}
+    private Version getLatestVersionFromHost() {
+        String responseFrom = getResponseFrom(host);
 
-	protected JSONObject parseVersion(JSONArray json) {
-		return json.getJSONObject(0);
-	}
+        JSONArray parsedResponse = new JSONArray(responseFrom);
+        JSONObject versionAsJson = parsedResponse.getJSONObject(0);
 
-	protected String getResponseFrom(String host) {
-		return HttpRequest.get(host).body();
-	}
+        return new Version(versionAsJson);
+    }
 
-	public void showUpdateMessage(Component parent) {
-		new OptionDialog(parent,
-						 "An update is available! Would you like to download it now?",
-						 "Yes", "No",
-						 new ActionListener() {
-							 @Override
-							 public void actionPerformed(ActionEvent e)
-					{
-						if (Desktop.isDesktopSupported() &&
-								Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
-						{
-							JButton btn = (JButton)e.getSource();
-							OptionDialog dialog = (OptionDialog)btn.getFocusCycleRootAncestor();
-							dialog.dispose();
-							try
-							{
-								Desktop.getDesktop().browse(new URI(repo));
-							}
-							catch (IOException e1)
-							{
-								TextDialog error = new TextDialog(parent,
-										"Failed to automatically redirect. Go to " +
-										repo + " to download the update.");
-								error.setVisible(true);
-							}
-							catch (URISyntaxException e1)
-							{
-								TextDialog error = new TextDialog(parent,
-										"An internal error occurred. " +
-										"The update cannot be completed.");
-								error.setVisible(true);
-							}
-						}
-						else
-						{
-							TextDialog error = new TextDialog(parent,
-									"Failed to automatically redirect. Go to " +
-									repo + " to download the update.");
-							error.setVisible(true);
-						}
-					}
-				},
-				new ActionListener()
-				{
-					@Override
-					public void actionPerformed(ActionEvent e)
-					{
-						JButton btn = (JButton)e.getSource();
-						OptionDialog dialog = (OptionDialog)btn.getFocusCycleRootAncestor();
-						dialog.dispose();
-					}
-				}).setVisible(true);
-	}
+    //TODO just glue code; will be removed after refactoring; HttpRequest should be injected; for easy testing
+    protected String getResponseFrom(String host) {
+        return HttpRequest.get(host).body();
+    }
+
+    private boolean newVersionIsAvailable(Version version, Version latest) {
+        return latest.compareTo(version) > 0;
+    }
+
+    private UpdateOptionDialog createUpdateDialog(Component parent) {
+        UpdateOptionDialog updateDialog;
+        updateDialog = new UpdateOptionDialog(parent, repo);
+        updateDialog.setVisible(true);
+
+        render(parent, updateDialog);
+        return updateDialog;
+    }
+
+    //TODO too tight coupling to parent; will apply observer or visitor pattern; don't know right now which
+    //just glue code; will be removed after refactoring
+    protected void render(Component parent, UpdateOptionDialog updateDialog) {
+        updateDialog.finalizeDialog(parent);
+    }
 }

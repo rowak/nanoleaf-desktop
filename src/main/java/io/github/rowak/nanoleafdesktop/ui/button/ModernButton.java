@@ -1,10 +1,7 @@
 package io.github.rowak.nanoleafdesktop.ui.button;
 
-import java.awt.Color;
-import java.awt.Font;
-
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
+import javax.swing.*;
+import java.awt.*;
 
 public class ModernButton extends JButton
 {
@@ -25,7 +22,7 @@ public class ModernButton extends JButton
 		setIcon(unpressedIcon);
 		setPressedIcon(pressedIcon);
 	}
-	
+
 	private void init()
 	{
 		setFont(new Font("Tahoma", Font.PLAIN, 20));
