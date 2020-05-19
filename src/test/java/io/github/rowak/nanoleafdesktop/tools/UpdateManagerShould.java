@@ -25,6 +25,18 @@ public class UpdateManagerShould {
         return new Version(releaseWithMinorVersionNumber);
     }
 
+    @Test
+    public void foo2() {
+        TestableUpdateManager testableUpdateManager = new TestableUpdateManager(
+                "https://api.github.com/repos/rowak/nanoleaf-desktop/releases",
+                "https://github.com/rowak/nanoleaf-desktop");
+        Version current = createRelease("v0.9.0");
+
+        boolean actual = testableUpdateManager.updateAvailable(current);
+
+        assertThat(actual).isFalse();
+    }
+
     private class TestableUpdateManager extends UpdateManager {
         public TestableUpdateManager(String host, String repo) {
             super(host, repo);
