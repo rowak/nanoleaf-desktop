@@ -1,24 +1,17 @@
 package io.github.rowak.nanoleafdesktop.ui.dialog;
 
-import java.awt.Component;
-import java.awt.Desktop;
-
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.tools.Version;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 
-import java.awt.Font;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.awt.Color;
 
 public class AboutDialog extends BasicDialog
 {
@@ -35,28 +28,26 @@ public class AboutDialog extends BasicDialog
 		lblGithubUrl.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		lblGithubUrl.setForeground(Color.WHITE);
 		getContentPane().add(lblGithubUrl, "cell 0 1,alignx center");
-		
+
 		String versionText = "Version " + version.getName();
 		versionText += !version.getPreRelease() ? " (Pre-release)" : "";
 		JLabel lblVersion = new JLabel(versionText);
 		lblVersion.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		lblVersion.setForeground(Color.WHITE);
 		getContentPane().add(lblVersion, "cell 0 1,alignx center");
-		
-		URL iconPath = Main.class.getResource("resources/images/icon_small.png");
+
+		URL iconPath = Main.class.getResource("/images/icon_small.png");
 		JButton btnDonate = new ModernButton("Donate");
 		btnDonate.setIcon(new ImageIcon(iconPath));
 		btnDonate.setFocusPainted(false);
-		btnDonate.addActionListener(new ActionListener()
-		{
+		btnDonate.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				openDonationWebpage();
 			}
 		});
 		getContentPane().add(btnDonate, "cell 0 1,alignx center");
-		
+
 		JLabel spacer = new JLabel(" ");
 		contentPanel.add(spacer, "cell 0 3");
 		

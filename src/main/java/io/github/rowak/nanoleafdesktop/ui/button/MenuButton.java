@@ -1,25 +1,16 @@
 package io.github.rowak.nanoleafdesktop.ui.button;
 
-import java.awt.SystemTray;
+import io.github.rowak.nanoleafdesktop.Main;
+import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
+import io.github.rowak.nanoleafdesktop.ui.dialog.*;
+import io.github.rowak.nanoleafdesktop.ui.menu.ModernMenuItem;
+import io.github.rowak.nanoleafdesktop.ui.menu.ModernPopupMenu;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
-
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-
-import io.github.rowak.nanoleafdesktop.Main;
-import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
-import io.github.rowak.nanoleafdesktop.ui.dialog.AboutDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.DeviceChangerDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.GroupCreatorDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.GroupDeleterDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
-import io.github.rowak.nanoleafdesktop.ui.menu.ModernMenuItem;
-import io.github.rowak.nanoleafdesktop.ui.menu.ModernPopupMenu;
 
 public class MenuButton extends ModernButton
 {
@@ -98,11 +89,11 @@ public class MenuButton extends ModernButton
 			menu.add(itemHideToTray);
 		}
 		menu.add(itemAbout);
-		
+
 		URL menuIconUnpressedPath =
-				Main.class.getResource("resources/images/menu_button_icon_unpressed.png");
+				Main.class.getResource("/images/menu_button_icon_unpressed.png");
 		URL menuIconPressedPath =
-				Main.class.getResource("resources/images/menu_button_icon_pressed.png");
+				Main.class.getResource("/images/menu_button_icon_pressed.png");
 		setIcon(new ImageIcon(menuIconUnpressedPath));
 		setPressedIcon(new ImageIcon(menuIconPressedPath));
 		setBorder(null);
