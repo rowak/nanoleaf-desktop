@@ -14,10 +14,8 @@ public class VersionShould {
         Version newerVersion = createPreRelease("v0.9.0");
 
         int isNewer = newerVersion.compareTo(currentVersion);
-        boolean greater = newerVersion.greater(currentVersion);
 
         assertThat(isNewer).isGreaterThan(0);
-        assertThat(greater).isTrue();
     }
 
     private Version createPreRelease(String version) {
@@ -31,10 +29,8 @@ public class VersionShould {
         Version preReleaseVersion = createPreRelease("v0.9.0");
 
         int isNewer = preReleaseVersion.compareTo(releaseVersion);
-        boolean greater = preReleaseVersion.greater(releaseVersion);
 
         assertThat(isNewer).isGreaterThan(0);
-        assertThat(greater).isTrue();
     }
 
     private Version createRelease(String version) {
@@ -48,9 +44,7 @@ public class VersionShould {
         Version newerVersion = createPreRelease("v0.8.6");
 
         int isNewer = newerVersion.compareTo(currentVersion);
-        boolean greater = newerVersion.greater(currentVersion);
 
         assertThat(isNewer).isGreaterThan(0);
-        assertThat(greater).isTrue();
     }
 }

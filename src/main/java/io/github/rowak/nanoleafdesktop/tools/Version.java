@@ -13,13 +13,11 @@ public class Version implements Comparable<Version> {
     String name;
 
     public Version(String name, boolean preRelease) {
-        parseVersion(name);
         this.name = name;
         this.preRelease = preRelease;
     }
 
     public Version(JSONObject json) {
-        parseVersion(json.getString("name"));
         name = json.getString("name");
         preRelease = json.getBoolean("prerelease");
     }
@@ -32,24 +30,9 @@ public class Version implements Comparable<Version> {
         return this.preRelease;
     }
 
-    private void parseVersion(String rawVersion) {
-        rawVersion = rawVersion.replace("v", "");
-        String[] semVerArr = rawVersion.split("\\.");
-        String semVerStr = "";
-        for (int i = 0; i < semVerArr.length; i++) {
-            semVerStr += semVerArr[i];
-        }
-        semVer = Integer.parseInt(semVerStr);
-    }
-
-    public boolean greater(Version other) {
-        return this.semVer > other.semVer ||
-                (this.semVer == other.semVer && this.preRelease && !other.preRelease);
-    }
-
     @Override
     public int compareTo(Version otherVersion) {
-        return Comparator.comparingInt((Version p) -> p.semVer)
+        return Comparator.comparing((Version p) -> p.name)
                          .thenComparing(p -> p.preRelease).compare(this, otherVersion);
 
     }

@@ -29,7 +29,7 @@ public class UpdateManager
 		JSONArray parsedResponse = new JSONArray(responseFrom);
 		JSONObject versionAsJson = parseVersion(parsedResponse);
 		Version latest = new Version(versionAsJson);
-		return latest.greater(current);
+		return latest.compareTo(current) > 0;
 	}
 
 	protected JSONObject parseVersion(JSONArray json) {
