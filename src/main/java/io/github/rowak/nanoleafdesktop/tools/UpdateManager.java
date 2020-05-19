@@ -17,19 +17,23 @@ import java.net.URISyntaxException;
 public class UpdateManager
 {
 	private String host, repo;
-	
-	public UpdateManager(String host, String repo)
-	{
+
+	public UpdateManager(String host, String repo) {
 		this.host = host;
 		this.repo = repo + "/releases";
 	}
 
 	public boolean updateAvailable(Version current) {
-		String responseFrom = getResponseFrom(host);
-		JSONArray parsedResponse = new JSONArray(responseFrom);
-		JSONObject versionAsJson = parseVersion(parsedResponse);
-		Version latest = new Version(versionAsJson);
+		Version latest = getLatestVersionFromHost();
 		return latest.compareTo(current) > 0;
+	}
+
+	private Version getLatestVersionFromHost() {
+		String responseFrom = getResponseFrom(host);
+
+		JSONArray parsedResponse = new JSONArray(responseFrom);
+		JSONObject versionAsJson = parsedResponse.getJSONObject(0);
+		return new Version(versionAsJson);
 	}
 
 	protected JSONObject parseVersion(JSONArray json) {
