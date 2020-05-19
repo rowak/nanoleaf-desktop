@@ -6,5 +6,5 @@ import javax.swing.event.ChangeListener;
 public interface ComponentChangeListener extends ChangeListener
 {
 	@Override
-	public void stateChanged(ChangeEvent e);
+	void stateChanged(ChangeEvent e);
 }

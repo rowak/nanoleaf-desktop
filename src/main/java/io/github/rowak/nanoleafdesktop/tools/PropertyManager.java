@@ -71,17 +71,21 @@ public class PropertyManager
 		
 		try
 		{
-			String properties = "";
+			String properties;
 			reader = new BufferedReader(new FileReader(file));
 			String line;
+			StringBuilder propertiesBuilder = new StringBuilder();
+
 			while ((line = reader.readLine()) != null)
 			{
 				String xKey = line.split("" + (char)28)[0];
 				if (!key.equals(xKey))
 				{
-					properties += line + "\n";
+					propertiesBuilder.append(line).append("\n");
 				}
 			}
+
+			properties = propertiesBuilder.toString();
 			properties += (key + (char)28 + value) + "\n";
 			
 			writer = new BufferedWriter(new FileWriter(file));
@@ -95,7 +99,9 @@ public class PropertyManager
 		{
 			try
 			{
+				assert reader != null;
 				reader.close();
+				assert writer != null;
 				writer.flush();
 				writer.close();
 			}
