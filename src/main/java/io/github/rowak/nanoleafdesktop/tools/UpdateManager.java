@@ -1,21 +1,18 @@
 package io.github.rowak.nanoleafdesktop.tools;
 
-import java.awt.Component;
-import java.awt.Desktop;
+import com.github.kevinsawicki.http.HttpRequest;
+import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
+import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-
-import javax.swing.JButton;
-
-import org.json.JSONArray;
-
-import com.github.kevinsawicki.http.HttpRequest;
-
-import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 
 public class UpdateManager
 {
@@ -26,23 +23,30 @@ public class UpdateManager
 		this.host = host;
 		this.repo = repo + "/releases";
 	}
-	
-	public boolean updateAvailable(Version current)
-	{
-		JSONArray json = new JSONArray(HttpRequest.get(host).body());
-		Version latest = new Version(json.getJSONObject(0));
+
+	public boolean updateAvailable(Version current) {
+		String responseFrom = getResponseFrom(host);
+		JSONArray parsedResponse = new JSONArray(responseFrom);
+		JSONObject versionAsJson = parseVersion(parsedResponse);
+		Version latest = new Version(versionAsJson);
 		return latest.greater(current);
 	}
-	
-	public void showUpdateMessage(Component parent)
-	{
+
+	protected JSONObject parseVersion(JSONArray json) {
+		return json.getJSONObject(0);
+	}
+
+	protected String getResponseFrom(String host) {
+		return HttpRequest.get(host).body();
+	}
+
+	public void showUpdateMessage(Component parent) {
 		new OptionDialog(parent,
-				"An update is available! Would you like to download it now?",
-				"Yes", "No",
-				new ActionListener()
-				{
-					@Override
-					public void actionPerformed(ActionEvent e)
+						 "An update is available! Would you like to download it now?",
+						 "Yes", "No",
+						 new ActionListener() {
+							 @Override
+							 public void actionPerformed(ActionEvent e)
 					{
 						if (Desktop.isDesktopSupported() &&
 								Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
