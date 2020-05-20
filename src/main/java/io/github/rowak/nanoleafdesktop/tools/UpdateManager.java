@@ -1,6 +1,7 @@
 package io.github.rowak.nanoleafdesktop.tools;
 
 import com.github.kevinsawicki.http.HttpRequest;
+import io.github.rowak.nanoleafdesktop.IListenToMessages;
 import io.github.rowak.nanoleafdesktop.ui.dialog.UpdateOptionDialog;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -12,7 +13,7 @@ public class UpdateManager {
     private String host = "https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
     private String repo = "https://github.com/rowak/nanoleaf-desktop/releases";
 
-    public UpdateOptionDialog checkForUpdate(Component parent, Version version) {
+    public UpdateOptionDialog checkForUpdate(IListenToMessages parent, Version version) {
         UpdateOptionDialog updateDialog = null;
         Version latest = getLatestVersionFromHost();
 
@@ -41,12 +42,12 @@ public class UpdateManager {
         return latest.compareTo(version) > 0;
     }
 
-    private UpdateOptionDialog createUpdateDialog(Component parent) {
+    private UpdateOptionDialog createUpdateDialog(IListenToMessages parent) {
         UpdateOptionDialog updateDialog;
         updateDialog = new UpdateOptionDialog(parent, repo);
         updateDialog.setVisible(true);
 
-        render(parent, updateDialog);
+        parent.render(updateDialog);
         return updateDialog;
     }
 

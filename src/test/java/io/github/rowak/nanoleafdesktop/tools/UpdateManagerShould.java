@@ -1,10 +1,10 @@
 package io.github.rowak.nanoleafdesktop.tools;
 
+import io.github.rowak.nanoleafdesktop.IListenToMessages;
 import io.github.rowak.nanoleafdesktop.ui.dialog.UpdateOptionDialog;
 import org.json.JSONObject;
 import org.junit.Test;
 
-import javax.swing.*;
 import java.awt.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,7 +18,7 @@ public class UpdateManagerShould {
                 "https://api.github.com/repos/rowak/nanoleaf-desktop/releases",
                 "https://github.com/rowak/nanoleaf-desktop");
         Version current = createRelease("v0.1");
-        JFrame parent = new JFrame();
+        ParentDummy parent = new ParentDummy();
 
         UpdateOptionDialog updateOptionDialog = testableUpdateManager.checkForUpdate(parent, current);
 
@@ -38,7 +38,7 @@ public class UpdateManagerShould {
                 "https://api.github.com/repos/rowak/nanoleaf-desktop/releases",
                 "https://github.com/rowak/nanoleaf-desktop");
         Version current = createRelease("v0.9.0");
-        JFrame parent = new JFrame();
+        IListenToMessages parent = new ParentDummy();
 
         UpdateOptionDialog updateOptionDialog = testableUpdateManager.checkForUpdate(parent, current);
 
@@ -67,6 +67,18 @@ public class UpdateManagerShould {
         @Override
         protected void render(Component parent, UpdateOptionDialog updateDialog) {
             // do nothing as we do not want to render the window
+        }
+    }
+
+    private class ParentDummy implements IListenToMessages {
+        @Override
+        public void render(UpdateOptionDialog updateDialog) {
+
+        }
+
+        @Override
+        public void createDialog(String message, boolean hasError) {
+
         }
     }
 }

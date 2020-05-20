@@ -14,10 +14,7 @@ import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
 import io.github.rowak.nanoleafdesktop.ui.button.HideButton;
 import io.github.rowak.nanoleafdesktop.ui.button.MaximizeButton;
 import io.github.rowak.nanoleafdesktop.ui.button.MenuButton;
-import io.github.rowak.nanoleafdesktop.ui.dialog.DeviceChangerDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.SingleEntryDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
+import io.github.rowak.nanoleafdesktop.ui.dialog.*;
 import io.github.rowak.nanoleafdesktop.ui.listener.AuroraNullListener;
 import io.github.rowak.nanoleafdesktop.ui.listener.ComponentResizer;
 import io.github.rowak.nanoleafdesktop.ui.listener.WindowDragListener;
@@ -46,7 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Main extends JFrame {
+public class Main extends JFrame implements IListenToMessages {
     //TODO get this from POM (ideally also go to SNAPSHOT naming e.g. <version>0.1.0-SNAPSHOT</version> in POM; then prerelease flag will be obsolete
     public static final Version VERSION = new Version("v0.8.6", true);
     public static final String OLD_PROPERTIES_FILEPATH =
@@ -172,6 +169,17 @@ public class Main extends JFrame {
                  */
             }
         }).start();
+    }
+
+    @Override
+    public void render(UpdateOptionDialog updateDialog) {
+        updateDialog.finalizeDialog(this);
+    }
+
+    @Override
+    public void createDialog(String message, boolean hasError) {
+        TextDialog error = new TextDialog(this, message);
+        error.setVisible(true);
     }
 
     private int getUserWindowWidth() {

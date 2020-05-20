@@ -1,18 +1,20 @@
 package io.github.rowak.nanoleafdesktop.ui.dialog;
 
+import io.github.rowak.nanoleafdesktop.IListenToMessages;
+
 import javax.swing.*;
 import java.awt.*;
 
 public class UpdateOptionDialog extends BasicDialog {
 
-    private final Component parent;
+    private final IListenToMessages parent;
     private final String title = "An update is available! Would you like to download it now?";
     private final String confirmationButtonText = "Yes";
     private final String cancellationButtonText = "No";
     private final ConfirmationActionListener confirmationActionListener;
     private final CancellationActionListener cancellationActionListener = new CancellationActionListener();
 
-    public UpdateOptionDialog(Component parent, String repo) {
+    public UpdateOptionDialog(IListenToMessages parent, String repo) {
         this.parent = parent;
         confirmationActionListener = new ConfirmationActionListener(this.parent, repo);
 
