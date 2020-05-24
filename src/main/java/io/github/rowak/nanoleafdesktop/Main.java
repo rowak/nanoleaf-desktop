@@ -14,10 +14,7 @@ import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
 import io.github.rowak.nanoleafdesktop.ui.button.HideButton;
 import io.github.rowak.nanoleafdesktop.ui.button.MaximizeButton;
 import io.github.rowak.nanoleafdesktop.ui.button.MenuButton;
-import io.github.rowak.nanoleafdesktop.ui.dialog.DeviceChangerDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.SingleEntryDialog;
-import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
+import io.github.rowak.nanoleafdesktop.ui.dialog.*;
 import io.github.rowak.nanoleafdesktop.ui.listener.AuroraNullListener;
 import io.github.rowak.nanoleafdesktop.ui.listener.ComponentResizer;
 import io.github.rowak.nanoleafdesktop.ui.listener.WindowDragListener;
@@ -46,11 +43,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Main extends JFrame {
+public class Main extends JFrame implements IListenToMessages {
+    //TODO get this from POM (ideally also go to SNAPSHOT naming e.g. <version>0.1.0-SNAPSHOT</version> in POM; then prerelease flag will be obsolete
     public static final Version VERSION = new Version("v0.8.6", true);
-    public static final String VERSION_HOST =
-            "https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
-    public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
     public static final String OLD_PROPERTIES_FILEPATH =
             System.getProperty("user.home") + "/properties.txt";
     public static final String PROPERTIES_FILEPATH = getPropertiesFilePath();
@@ -76,6 +71,10 @@ public class Main extends JFrame {
     private EffectsPanel basicEffectsPanel;
     private EffectsPanel regEffectsPanel;
     private EffectsPanel rhythEffectsPanel;
+
+    //TODO this is one step for de-coupling stuff
+    //TODO maybe turn this into a runnable
+    private final UpdateManager manager = new UpdateManager();
 
     public Main(String[] actions) {
         migrateOldProperties();
@@ -159,21 +158,28 @@ public class Main extends JFrame {
     }
 
     private void checkForUpdate() {
-        new Thread(() ->
-                   {
-                       try {
-                           UpdateManager manager = new UpdateManager(VERSION_HOST, GIT_REPO);
-                           if (manager.updateAvailable(VERSION)) {
-                               manager.showUpdateMessage(this);
-                           }
-                       } catch (HttpRequestException hre) {
-                           /*
-                            * If the update server cannot be reached, ignore it (don't notify the user).
-                            * The user will be notified about an update the next time they
-                            * connect to the network and open the application.
-                            */
-                       }
-                   }).start();
+        new Thread(() -> {
+            try {
+                manager.checkForUpdate(this, VERSION);
+            } catch (HttpRequestException hre) {
+                /*
+                 * If the update server cannot be reached, ignore it (don't notify the user).
+                 * The user will be notified about an update the next time they
+                 * connect to the network and open the application.
+                 */
+            }
+        }).start();
+    }
+
+    @Override
+    public void render(UpdateOptionDialog updateDialog) {
+        updateDialog.finalizeDialog(this);
+    }
+
+    @Override
+    public void createDialog(String message, boolean hasError) {
+        TextDialog error = new TextDialog(this, message);
+        error.setVisible(true);
     }
 
     private int getUserWindowWidth() {
