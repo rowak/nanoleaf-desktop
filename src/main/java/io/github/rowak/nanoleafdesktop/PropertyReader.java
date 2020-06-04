@@ -17,6 +17,7 @@ public class PropertyReader implements Serializable {
         }
 
         File dirFile = new File(dir);
+
         if (!dirFile.exists()) {
             dirFile.mkdir();
         }
