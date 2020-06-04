@@ -29,7 +29,7 @@ public class PropertyReaderShould {
     public void determine_property_file_path_for_windows() {
         userHome = System.getenv("APPDATA");
 
-        String propertyFilePathForWindows = new TestablePropertyReaderForWindows().getPropertiesFilePath();
+        String propertyFilePathForWindows = new TestablePropertyReaderForWindows().getPropertyFilePath();
 
         //TODO should be preferred
         //assertThat(propertyFilePathForWindows).isEqualTo(System.getProperty("user.home") + File.separator + "Nanoleaf for Desktop" + File.separator + "preferences.txt");
@@ -41,7 +41,7 @@ public class PropertyReaderShould {
         userHome = System.getProperty("user.home");
         String macAppLibraryPath = "Library" + File.separator + "Application Support";
 
-        String propertyFilePathForMac = new TestablePropertyReaderForMac().getPropertiesFilePath();
+        String propertyFilePathForMac = new TestablePropertyReaderForMac().getPropertyFilePath();
 
         assertThat(propertyFilePathForMac).isEqualTo(userHome + File.separator + macAppLibraryPath + File.separator + applicationName + File.separator + propertyFileName);
     }
@@ -51,7 +51,7 @@ public class PropertyReaderShould {
         userHome = System.getProperty("user.home");
         String hiddenFilePrefix = ".";
 
-        String propertyFilePathForNix = new TestablePropertyReaderForLinux().getPropertiesFilePath();
+        String propertyFilePathForNix = new TestablePropertyReaderForLinux().getPropertyFilePath();
 
         assertThat(propertyFilePathForNix).isEqualTo(userHome + File.separator + hiddenFilePrefix + applicationName + File.separator + propertyFileName);
     }
@@ -60,7 +60,7 @@ public class PropertyReaderShould {
     public void create_folder_for_preference_file() throws IOException {
         assertThat(tempFolder).isEmptyDirectory();
 
-        String propertyFilePath = new TestablePropertyReader().getPropertiesFilePath();
+        String propertyFilePath = new TestablePropertyReader().getPropertyFilePath();
 
         File propertyFile = new File(propertyFilePath);
         File propertyFileParentFolder = propertyFile.getParentFile();

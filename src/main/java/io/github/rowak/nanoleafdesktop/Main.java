@@ -36,7 +36,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,9 +45,8 @@ import java.util.Map;
 public class Main extends JFrame implements IListenToMessages {
     //TODO get this from POM (ideally also go to SNAPSHOT naming e.g. <version>0.1.0-SNAPSHOT</version> in POM; then prerelease flag will be obsolete
     public static final Version VERSION = new Version("v0.8.6", true);
-    public static final String OLD_PROPERTIES_FILEPATH =
-            System.getProperty("user.home") + "/properties.txt";
-    public static final String PROPERTIES_FILEPATH = new PropertyReader().getPropertiesFilePath();
+    private static final PropertyReader propertyReader = new PropertyReader();
+    public static final String PROPERTIES_FILEPATH = propertyReader.getPropertyFilePath();
 
     private final int DEFAULT_WINDOW_WIDTH = 1050;
     private final int DEFAULT_WINDOW_HEIGHT = 850;
@@ -77,7 +75,7 @@ public class Main extends JFrame implements IListenToMessages {
     private final UpdateManager manager = new UpdateManager();
 
     public Main(String[] actions) {
-        migrateOldProperties();
+        propertyReader.migrateOldProperties();
 
         PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
         String lastSession = manager.getProperty("lastSession");
@@ -100,40 +98,6 @@ public class Main extends JFrame implements IListenToMessages {
             }
 
             checkForUpdate();
-        }
-    }
-
-    private void migrateOldProperties() {
-        File oldProperties = new File(OLD_PROPERTIES_FILEPATH);
-        if (oldProperties.exists()) {
-            BufferedReader reader = null;
-            BufferedWriter writer = null;
-            try {
-                reader = new BufferedReader(new FileReader(OLD_PROPERTIES_FILEPATH));
-                writer = new BufferedWriter(new FileWriter(new PropertyReader().getPropertiesFilePath()));
-                String data = "";
-                String line = "";
-                while ((line = reader.readLine()) != null) {
-                    data += line + "\n";
-                }
-                writer.write(data);
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            } finally {
-                try {
-                    if (reader != null) {
-                        reader.close();
-                    }
-                    if (writer != null) {
-                        writer.close();
-                    }
-                    oldProperties.renameTo(new File(
-                            System.getProperty("user.home") +
-                                    "/propertiesOLD.txt"));
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
-                }
-            }
         }
     }
 

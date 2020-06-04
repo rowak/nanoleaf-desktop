@@ -1,10 +1,20 @@
 package io.github.rowak.nanoleafdesktop;
 
-import java.io.File;
-import java.io.Serializable;
+import java.io.*;
 
 public class PropertyReader implements Serializable {
-    public String getPropertiesFilePath() {
+
+    private final String propertyFilePath;
+
+    public PropertyReader() {
+        propertyFilePath = getPath();
+    }
+
+    public String getPropertyFilePath() {
+        return propertyFilePath;
+    }
+
+    private String getPath() {
         String applicationName = "Nanoleaf for Desktop";
         String propertyFileName = "preferences.txt";
 
@@ -40,6 +50,44 @@ public class PropertyReader implements Serializable {
 
         if (!dirFile.exists()) {
             dirFile.mkdir();
+        }
+    }
+
+    public void migrateOldProperties() {
+        String oldPropertiesFilepath = System.getProperty("user.home") + "/properties.txt";
+        File oldProperties = new File(oldPropertiesFilepath);
+
+        if (!oldProperties.exists()) {
+            return;
+        }
+
+        BufferedReader reader = null;
+        BufferedWriter writer = null;
+        try {
+            reader = new BufferedReader(new FileReader(oldPropertiesFilepath));
+            writer = new BufferedWriter(new FileWriter(propertyFilePath));
+            String data = "";
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                data += line + "\n";
+            }
+            writer.write(data);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+                if (writer != null) {
+                    writer.close();
+                }
+                oldProperties.renameTo(new File(
+                        System.getProperty("user.home") +
+                                "/propertiesOLD.txt"));
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
         }
     }
 }
