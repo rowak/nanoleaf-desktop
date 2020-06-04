@@ -179,8 +179,8 @@ public class Main extends JFrame implements IListenToMessages {
     @Override
     public void createDialog(IDeliverMessages message) {
         String messageText = message.getMessage();
-        TextDialog error = new TextDialog(this, messageText);
-        error.setVisible(true);
+        TextDialog textDialog = new TextDialog(this, messageText);
+        textDialog.setVisible(true);
     }
 
     private int getUserWindowWidth() {
