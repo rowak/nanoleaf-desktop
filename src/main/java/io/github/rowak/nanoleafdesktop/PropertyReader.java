@@ -9,11 +9,11 @@ public class PropertyReader implements Serializable {
         String propertyFileName = "preferences.txt";
 
         String prefix = getOSDependentPrefix();
-        String dir = prefix + applicationName;
+        String propertyFileDirectory = prefix + applicationName;
 
-        create(dir);
+        create(propertyFileDirectory);
 
-        return dir + File.separator + propertyFileName;
+        return propertyFileDirectory + File.separator + propertyFileName;
     }
 
     protected String getOSDependentPrefix() {
@@ -31,15 +31,15 @@ public class PropertyReader implements Serializable {
         return prefix;
     }
 
+    private String getOS() {
+        return System.getProperty("os.name").toLowerCase();
+    }
+
     private void create(String dir) {
         File dirFile = new File(dir);
 
         if (!dirFile.exists()) {
             dirFile.mkdir();
         }
-    }
-
-    protected String getOS() {
-        return System.getProperty("os.name").toLowerCase();
     }
 }
