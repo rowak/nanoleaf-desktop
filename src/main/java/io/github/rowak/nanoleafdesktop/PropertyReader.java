@@ -3,30 +3,40 @@ package io.github.rowak.nanoleafdesktop;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public class PropertyReader implements Serializable {
     private static final Logger LOGGER = LogManager.getLogger(PropertyReader.class.getName());
 
-    private final String propertyFilePath;
+    private final String propertyFilePathAsString;
+    private Path propertyFilePath;
 
     public PropertyReader() {
-        propertyFilePath = getPath();
+        propertyFilePathAsString = createPropertyFilePath();
 
         try {
-            Files.createFile(Paths.get(propertyFilePath));
+            propertyFilePath = Files.createFile(Paths.get(this.propertyFilePathAsString));
         } catch (IOException e) {
-            LOGGER.atError().log("Could not create file {}", e);
+            LOGGER.atError().log("Could not create file", e);
         }
     }
 
-    public String getPropertyFilePath() {
+    public String getPropertyFilePathAsString() {
+        return propertyFilePathAsString;
+    }
+
+    public Path getPropertyFilePath() {
         return propertyFilePath;
     }
 
-    private String getPath() {
+    private String createPropertyFilePath() {
         String applicationName = "Nanoleaf for Desktop";
         String propertyFileName = "preferences.txt";
 
@@ -66,40 +76,37 @@ public class PropertyReader implements Serializable {
     }
 
     public void migrateOldProperties() {
-        String oldPropertiesFilepath = System.getProperty("user.home") + "/properties.txt";
+        String oldPropertiesFilepath = getOldPropertiesFilepath();
         File oldProperties = new File(oldPropertiesFilepath);
 
         if (!oldProperties.exists()) {
             return;
         }
 
-        BufferedReader reader = null;
-        BufferedWriter writer = null;
+        //TODO - please verify that this is the desired output
+        copyOldPropertyFileToNewPath(oldProperties);
+        backUpOldPropertyFile(oldProperties);
+    }
+
+    private void copyOldPropertyFileToNewPath(File oldProperties) {
         try {
-            reader = new BufferedReader(new FileReader(oldPropertiesFilepath));
-            writer = new BufferedWriter(new FileWriter(propertyFilePath));
-            String data = "";
-            String line = "";
-            while ((line = reader.readLine()) != null) {
-                data += line + "\n";
-            }
-            writer.write(data);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-        } finally {
-            try {
-                if (reader != null) {
-                    reader.close();
-                }
-                if (writer != null) {
-                    writer.close();
-                }
-                oldProperties.renameTo(new File(
-                        System.getProperty("user.home") +
-                                "/propertiesOLD.txt"));
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
+            Files.copy(oldProperties.toPath(), propertyFilePath, REPLACE_EXISTING);
+        } catch (IOException e) {
+            LOGGER.atError().log("Could not copy property file", e);
         }
+    }
+
+    private void backUpOldPropertyFile(File oldProperties) {
+        Path backupOldPathToNewDirectory = Path.of(propertyFilePath.getParent() + File.separator + "properties-OLD.txt");
+        try {
+            Files.move(oldProperties.toPath(), backupOldPathToNewDirectory);
+        } catch (IOException e) {
+            LOGGER.atError().log("Could not move old property file", e);
+        }
+    }
+
+    //TODO glue code to be able to test - has to be removed
+    protected String getOldPropertiesFilepath() {
+        return System.getProperty("user.home") + "/properties.txt";
     }
 }

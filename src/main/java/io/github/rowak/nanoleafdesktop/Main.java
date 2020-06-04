@@ -46,7 +46,7 @@ public class Main extends JFrame implements IListenToMessages {
     //TODO get this from POM (ideally also go to SNAPSHOT naming e.g. <version>0.1.0-SNAPSHOT</version> in POM; then prerelease flag will be obsolete
     public static final Version VERSION = new Version("v0.8.6", true);
     private static final PropertyReader propertyReader = new PropertyReader();
-    public static final String PROPERTIES_FILEPATH = propertyReader.getPropertyFilePath();
+    public static final String PROPERTIES_FILEPATH = propertyReader.getPropertyFilePathAsString();
 
     private final int DEFAULT_WINDOW_WIDTH = 1050;
     private final int DEFAULT_WINDOW_HEIGHT = 850;
