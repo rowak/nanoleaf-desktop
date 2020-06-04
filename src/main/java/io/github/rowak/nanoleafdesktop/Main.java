@@ -177,8 +177,9 @@ public class Main extends JFrame implements IListenToMessages {
     }
 
     @Override
-    public void createDialog(String message, boolean hasError) {
-        TextDialog error = new TextDialog(this, message);
+    public void createDialog(IDeliverMessages message) {
+        String messageText = message.getMessage();
+        TextDialog error = new TextDialog(this, messageText);
         error.setVisible(true);
     }
 

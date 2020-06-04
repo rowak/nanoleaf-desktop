@@ -13,8 +13,7 @@ import java.net.URISyntaxException;
 public class ConfirmationActionListener implements ActionListener {
     private final IListenToMessages parent;
     private final String repo;
-    private boolean hasError = false;
-    private String message;
+    private IDeliverMessages message = null;
 
     public ConfirmationActionListener(IListenToMessages parent, String repo) {
         this.parent = parent;
@@ -31,22 +30,19 @@ public class ConfirmationActionListener implements ActionListener {
             } catch (IOException e1) {
                 //TODO this has to be decoupled; again visitor or observer pattern shoudl do the trick
                 //TODO simply have an error message, which will be passed to a global listener (text dialog)
-                hasError = true;
-                message = "Failed to automatically redirect. Go to " +
-                        repo + " to download the update.";
-
-                parent.createDialog(message, hasError);
+                message = new ErrorMessage("Failed to automatically redirect. Go to " +
+                                                   repo + " to download the update.");
             } catch (URISyntaxException e1) {
-                hasError = true;
-                message = "An internal error occurred. The update cannot be completed.";
-                parent.createDialog(message, hasError);
+                message = new ErrorMessage("An internal error occurred. The update cannot be completed.");
             }
         } else {
-            hasError = true;
-            message = "Failed to automatically redirect. Go to " +
-                    repo + " to download the update.";
+            message = new ErrorMessage("Failed to automatically redirect. Go to " +
+                                               repo + " to download the update.");
 
-            parent.createDialog(message, hasError);
+        }
+
+        if (hasError()) {
+            parent.createDialog(message);
         }
     }
 
@@ -67,11 +63,7 @@ public class ConfirmationActionListener implements ActionListener {
         return Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE);
     }
 
-    public String getMessage() {
-        return message;
-    }
-
-    public boolean hasError() {
-        return hasError;
+    private boolean hasError() {
+        return message != null;
     }
 }

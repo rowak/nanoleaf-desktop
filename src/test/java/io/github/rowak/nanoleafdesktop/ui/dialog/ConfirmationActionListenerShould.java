@@ -13,18 +13,13 @@ public class ConfirmationActionListenerShould {
 
     @Test
     public void notify_about_error_when_host_not_reachable() {
-        String expectedMessage = "Failed to automatically redirect. Go to myRepo to download the update.";
         ParentSpy parent = new ParentSpy();
         TestableConfirmationActionListener confirmationActionListener = createConfirmationActionListenerForCase(
                 "IOException", parent);
 
         confirmationActionListener.actionPerformed(null);
 
-        assertThat(confirmationActionListener).extracting(ConfirmationActionListener::getMessage)
-                                              .isEqualTo(expectedMessage);
-        assertThat(confirmationActionListener).extracting(ConfirmationActionListener::hasError).isEqualTo(true);
-        assertThat(parent.dialogCreated).isTrue();
-
+        assertThat(parent.dialogCreated).extracting(IDeliverMessages::getMessage).isEqualTo("Failed to automatically redirect. Go to myRepo to download the update.");
     }
 
     private TestableConfirmationActionListener createConfirmationActionListenerForCase(
@@ -37,31 +32,24 @@ public class ConfirmationActionListenerShould {
 
     @Test
     public void notify_about_error_when_host_is_malformed() {
-        String expectedMessage = "An internal error occurred. The update cannot be completed.";
         ParentSpy parent = new ParentSpy();
         TestableConfirmationActionListener confirmationActionListener = createConfirmationActionListenerForCase(
                 "URISyntaxException", parent);
 
         confirmationActionListener.actionPerformed(null);
 
-        assertThat(confirmationActionListener).extracting(ConfirmationActionListener::getMessage)
-                                              .isEqualTo(expectedMessage);
-        assertThat(confirmationActionListener).extracting(ConfirmationActionListener::hasError).isEqualTo(true);
-        assertThat(parent.dialogCreated).isTrue();
+        assertThat(parent.dialogCreated).extracting(IDeliverMessages::getMessage).isEqualTo("An internal error occurred. The update cannot be completed.");
     }
 
     @Test
     public void notify_about_error_when_desktop_is_not_supported() {
-        String expectedMessage = "Failed to automatically redirect. Go to myRepo to download the update.";
         ParentSpy parent = new ParentSpy();
         TestableConfirmationActionListener confirmationActionListener = createConfirmationActionListenerForCase(
                 "desktopNotSupported", parent);
 
         confirmationActionListener.actionPerformed(null);
 
-        assertThat(confirmationActionListener).extracting(ConfirmationActionListener::getMessage).isEqualTo(expectedMessage);
-        assertThat(confirmationActionListener).extracting(ConfirmationActionListener::hasError).isEqualTo(true);
-        assertThat(parent.dialogCreated).isTrue();
+        assertThat(parent.dialogCreated).extracting(IDeliverMessages::getMessage).isEqualTo("Failed to automatically redirect. Go to myRepo to download the update.");
     }
 
     private class TestableConfirmationActionListener extends ConfirmationActionListener {
@@ -106,7 +94,7 @@ public class ConfirmationActionListenerShould {
     }
 
     private class ParentSpy implements IListenToMessages {
-        public boolean dialogCreated;
+        public IDeliverMessages dialogCreated;
 
         @Override
         public void render(UpdateOptionDialog updateDialog) {
@@ -114,8 +102,8 @@ public class ConfirmationActionListenerShould {
         }
 
         @Override
-        public void createDialog(String message, boolean hasError) {
-            dialogCreated = hasError;
+        public void createDialog(IDeliverMessages message) {
+            dialogCreated = message;
         }
     }
 }

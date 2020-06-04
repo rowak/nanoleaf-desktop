@@ -1,6 +1,7 @@
 package io.github.rowak.nanoleafdesktop.tools;
 
 import io.github.rowak.nanoleafdesktop.IListenToMessages;
+import io.github.rowak.nanoleafdesktop.ui.dialog.IDeliverMessages;
 import io.github.rowak.nanoleafdesktop.ui.dialog.UpdateOptionDialog;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -71,14 +72,14 @@ public class UpdateManagerShould {
     }
 
     private class ParentDummy implements IListenToMessages {
+
         @Override
         public void render(UpdateOptionDialog updateDialog) {
 
         }
 
         @Override
-        public void createDialog(String message, boolean hasError) {
-
+        public void createDialog(IDeliverMessages message) {
         }
     }
 }
