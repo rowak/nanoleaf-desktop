@@ -48,7 +48,7 @@ public class Main extends JFrame implements IListenToMessages {
     public static final Version VERSION = new Version("v0.8.6", true);
     public static final String OLD_PROPERTIES_FILEPATH =
             System.getProperty("user.home") + "/properties.txt";
-    public static final String PROPERTIES_FILEPATH = getPropertiesFilePath();
+    public static final String PROPERTIES_FILEPATH = new PropertyReader().getPropertiesFilePath();
 
     private final int DEFAULT_WINDOW_WIDTH = 1050;
     private final int DEFAULT_WINDOW_HEIGHT = 850;
@@ -103,26 +103,6 @@ public class Main extends JFrame implements IListenToMessages {
         }
     }
 
-    public static String getPropertiesFilePath() {
-        String dir = "";
-        final String os = System.getProperty("os.name").toLowerCase();
-        if (os.contains("win")) {
-            dir = System.getenv("APPDATA") + "/Nanoleaf for Desktop";
-        } else if (os.contains("mac")) {
-            dir = System.getProperty("user.home") +
-                    "/Library/Application Support/Nanoleaf for Desktop";
-        } else if (os.contains("nux")) {
-            dir = System.getProperty("user.home") + "/.Nanoleaf for Desktop";
-        }
-
-        File dirFile = new File(dir);
-        if (!dirFile.exists()) {
-            dirFile.mkdir();
-        }
-
-        return dir + "/preferences.txt";
-    }
-
     private void migrateOldProperties() {
         File oldProperties = new File(OLD_PROPERTIES_FILEPATH);
         if (oldProperties.exists()) {
@@ -130,7 +110,7 @@ public class Main extends JFrame implements IListenToMessages {
             BufferedWriter writer = null;
             try {
                 reader = new BufferedReader(new FileReader(OLD_PROPERTIES_FILEPATH));
-                writer = new BufferedWriter(new FileWriter(getPropertiesFilePath()));
+                writer = new BufferedWriter(new FileWriter(new PropertyReader().getPropertiesFilePath()));
                 String data = "";
                 String line = "";
                 while ((line = reader.readLine()) != null) {
