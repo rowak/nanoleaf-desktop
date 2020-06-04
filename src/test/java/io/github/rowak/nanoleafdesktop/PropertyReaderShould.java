@@ -80,7 +80,6 @@ public class PropertyReaderShould {
 
     @Test
     public void copy_content_of_existing_old_property_file() throws IOException {
-
         String content = "bla";
         File oldFile = createOldPropertyFileWith(content);
         TestablePropertyReader propertyReader = createTestablePropertyReaderFor(oldFile);
