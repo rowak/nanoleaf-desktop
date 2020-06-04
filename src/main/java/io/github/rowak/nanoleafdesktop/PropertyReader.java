@@ -5,27 +5,40 @@ import java.io.Serializable;
 
 public class PropertyReader implements Serializable {
     public String getPropertiesFilePath() {
+        String userHome = "";
+        String infix = "";
+        String applicationName = "Nanoleaf for Desktop";
+        String propertyFileName = "preferences.txt";
+
         String dir = "";
-        final String os = getOs();
+        final String os = getOS();
+
         if (os.contains("win")) {
-            dir = System.getenv("APPDATA") + "/Nanoleaf for Desktop";
+            userHome = System.getenv("APPDATA") + File.separator;
         } else if (os.contains("mac")) {
-            dir = System.getProperty("user.home") +
-                    "/Library/Application Support/Nanoleaf for Desktop";
+            userHome = System.getProperty("user.home") + File.separator;
+            infix = "Library" + File.separator + "Application Support" + File.separator;
         } else if (os.contains("nux")) {
-            dir = System.getProperty("user.home") + "/.Nanoleaf for Desktop";
+            userHome = System.getProperty("user.home") + File.separator;
+            infix = ".";
         }
 
+        dir = userHome + infix + applicationName;
+
+        create(dir);
+
+        return dir + File.separator + propertyFileName;
+    }
+
+    protected void create(String dir) {
         File dirFile = new File(dir);
 
         if (!dirFile.exists()) {
             dirFile.mkdir();
         }
-
-        return dir + "/preferences.txt";
     }
 
-    protected String getOs() {
+    protected String getOS() {
         return System.getProperty("os.name").toLowerCase();
     }
 }
