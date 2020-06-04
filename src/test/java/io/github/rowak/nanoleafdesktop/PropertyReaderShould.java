@@ -64,8 +64,19 @@ public class PropertyReaderShould {
 
         File propertyFile = new File(propertyFilePath);
         File propertyFileParentFolder = propertyFile.getParentFile();
-        assertThat(propertyFile).doesNotExist();
+
         assertThat(propertyFileParentFolder).exists();
+    }
+
+    @Test
+    public void create_property_file() throws IOException {
+        assertThat(tempFolder).isEmptyDirectory();
+
+        String propertyFilePath = new TestablePropertyReader().getPropertyFilePath();
+
+        File propertyFile = new File(propertyFilePath);
+
+        assertThat(propertyFile).exists();
     }
 
     private class TestablePropertyReaderForWindows extends PropertyReader {

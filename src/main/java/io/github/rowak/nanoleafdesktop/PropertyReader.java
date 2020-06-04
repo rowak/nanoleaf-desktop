@@ -1,13 +1,25 @@
 package io.github.rowak.nanoleafdesktop;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class PropertyReader implements Serializable {
+    private static final Logger LOGGER = LogManager.getLogger(PropertyReader.class.getName());
 
     private final String propertyFilePath;
 
     public PropertyReader() {
         propertyFilePath = getPath();
+
+        try {
+            Files.createFile(Paths.get(propertyFilePath));
+        } catch (IOException e) {
+            LOGGER.atError().log("Could not create file {}", e);
+        }
     }
 
     public String getPropertyFilePath() {
