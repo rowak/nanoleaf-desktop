@@ -24,6 +24,13 @@ public class PropertyReaderShould {
         assertThat(propertyFilePathForMac).isEqualTo(System.getProperty("user.home") + File.separator + "Library" + File.separator + "Application Support" + File.separator + "Nanoleaf for Desktop" + File.separator + "preferences.txt");
     }
 
+    @Test
+    public void determine_propert_file_path_for_linux() {
+        String propertyFilePathForNix = new TestablePropertyReaderForLinux().getPropertiesFilePath();
+
+        assertThat(propertyFilePathForNix).isEqualTo(System.getProperty("user.home") + File.separator + ".Nanoleaf for Desktop" + File.separator + "preferences.txt");
+    }
+
     private class TestablePropertyReaderForWindows extends PropertyReader {
 
         @Override
@@ -39,4 +46,10 @@ public class PropertyReaderShould {
         }
     }
 
+    private class TestablePropertyReaderForLinux extends PropertyReader {
+        @Override
+        protected String getOs() {
+            return "nux";
+        }
+    }
 }
