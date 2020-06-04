@@ -47,7 +47,7 @@ public class PropertyReaderShould {
     }
 
     @Test
-    public void determine_propert_file_path_for_linux() {
+    public void determine_property_file_path_for_linux() {
         userHome = System.getProperty("user.home");
         String hiddenFilePrefix = ".";
 
