@@ -74,29 +74,29 @@ public class SpotifyAuthenticator
 	public URI getAuthCodeASync() throws IOException
 	{
 		asyncCallbackServer = new AuthCallbackServer();
-		new Timer().scheduleAtFixedRate(new TimerTask()
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask()
 		{
 			@Override
 			public void run() {
-				System.out.println(asyncCallbackServer);
-				if (!asyncCallbackServer.getAccessToken().equals("error"))
+				String authCode = asyncCallbackServer.getAccessToken();
+				if (authCode != null && !authCode.equals("error"))
 				{
-					String authCode = asyncCallbackServer.getAccessToken();
 					AuthorizationCodeRequest authCodeRequest = spotifyApi.authorizationCode(authCode).build();
-					AuthorizationCodeCredentials credentials = null;
 					try
 					{
-						credentials = authCodeRequest.execute();
+						AuthorizationCodeCredentials credentials = authCodeRequest.execute();
+						spotifyApi.setAccessToken(credentials.getAccessToken());
+						spotifyApi.setRefreshToken(credentials.getRefreshToken());
+						writeAccessToken(credentials.getAccessToken(), credentials.getRefreshToken());
+						startRefreshTokenTimer();
 					}
 					catch (Exception e) {
 						e.printStackTrace();
 					}
-					spotifyApi.setAccessToken(credentials.getAccessToken());
-					spotifyApi.setRefreshToken(credentials.getRefreshToken());
-					writeAccessToken(credentials.getAccessToken(), credentials.getRefreshToken());
-					startRefreshTokenTimer();
+					stopServer(asyncCallbackServer);
+					timer.cancel();
 				}
-				stopServer(asyncCallbackServer);
 			}
 		}, 1000, 1000);
 		return authCodeUriRequest.execute();

@@ -191,8 +191,11 @@ public class HttpServer extends NanoHTTPD {
 					Response response = newFixedLengthResponse(
 							Response.Status.REDIRECT, MIME_HTML, "");
 					URI authURI = null;
+					System.out.println(0);
 					try {
+						System.out.println(1);
 						spotifyAuthenticator = new SpotifyAuthenticator(true);
+						System.out.println(2);
 						authURI = spotifyAuthenticator.getAuthCodeASync();
 					}
 					catch (Exception e) {
@@ -218,7 +221,7 @@ public class HttpServer extends NanoHTTPD {
 	
 	private boolean isSpotifyAuthenticated() {
 		return spotifyAuthenticator != null &&
-				spotifyAuthenticator.getSpotifyApi() != null;
+				spotifyAuthenticator.getSpotifyApi().getAccessToken() != null;
 	}
 	
 	private boolean isSpotifyEnabled() {
