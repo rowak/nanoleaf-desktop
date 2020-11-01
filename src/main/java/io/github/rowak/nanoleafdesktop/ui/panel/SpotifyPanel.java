@@ -27,6 +27,7 @@ import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyFireworksEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyStreakingNotesEffect;
+import io.github.rowak.nanoleafdesktop.tools.PanelLocations;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
@@ -85,12 +86,12 @@ public class SpotifyPanel extends JPanel
 	private List<JComboBox<String>> cmbxOptions;
 	private JLabel lblAudioOffset;
 	private JSlider audioOffsetSlider;
-	private PanelCanvas canvas;
+	private PanelLocations panelLocations;
 	
-	public SpotifyPanel(Aurora[] auroras, PanelCanvas canvas)
+	public SpotifyPanel(Aurora[] auroras, PanelLocations panelLocations)
 	{
 		this.auroras = auroras;
-		this.canvas = canvas;
+		this.panelLocations = panelLocations;
 		userOptionArgs = new HashMap<String, Object>();
 		initUI();
 		loadUserSettings();
@@ -103,6 +104,11 @@ public class SpotifyPanel extends JPanel
 		{
 			player.setAuroras(auroras);
 		}
+	}
+	
+	public void setPanelLocations(PanelLocations panelLocations)
+	{
+		this.panelLocations = panelLocations;
 	}
 	
 	public void setPalette(Color[] palette)
@@ -343,11 +349,12 @@ public class SpotifyPanel extends JPanel
 	{
 		try
 		{
-			authenticator = new SpotifyAuthenticator();
+			authenticator = new SpotifyAuthenticator(false);
 			player = new SpotifyPlayer(authenticator.getSpotifyApi(),
-					getSelectedEffect(), convertPalette(palette), auroras, this, canvas);
+					getSelectedEffect(), convertPalette(palette), auroras, this, panelLocations);
 			player.setSensitivity(sensitivity);
 			player.setAudioOffset(audioOffset);
+			player.start();
 		}
 		catch (Exception e)
 		{
@@ -447,14 +454,14 @@ public class SpotifyPanel extends JPanel
 					case SOUNDBAR:
 						return new SpotifySoundBarEffect(
 								convertPalette(palette), Direction.RIGHT,
-								auroras, canvas);
+								auroras, panelLocations);
 					case FIREWORKS:
 						return new SpotifyFireworksEffect(
 								convertPalette(palette), auroras);
 					case STREAKING_NOTES:
 						return new SpotifyStreakingNotesEffect(
 								convertPalette(palette),
-								auroras, canvas);
+								auroras, panelLocations);
 				}
 			}
 			catch (StatusCodeException sce)

@@ -5,10 +5,14 @@ import io.github.rowak.nanoleafapi.Aurora;
 import io.github.rowak.nanoleafapi.Effect;
 import io.github.rowak.nanoleafapi.StatusCodeException;
 import io.github.rowak.nanoleafapi.StatusCodeException.UnauthorizedException;
+import io.github.rowak.nanoleafdesktop.server.HttpServer;
 import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
 import io.github.rowak.nanoleafdesktop.models.DeviceInfo;
 import io.github.rowak.nanoleafdesktop.shortcuts.Action;
 import io.github.rowak.nanoleafdesktop.shortcuts.ActionType;
+import io.github.rowak.nanoleafdesktop.spotify.SpotifyAuthenticator;
+import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
+import io.github.rowak.nanoleafdesktop.spotify.SpotifyPlayer;
 import io.github.rowak.nanoleafdesktop.tools.*;
 import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
 import io.github.rowak.nanoleafdesktop.ui.button.HideButton;
@@ -61,9 +65,12 @@ public class Main extends JFrame {
     boolean uiEnabled;
 
     private Aurora[] devices;
+    private PanelLocations panelLocations;
 
     private SystemTray systemTray;
     private TrayIcon trayIcon;
+    
+    private HttpServer server; //http server for headless
 
     private JPanel contentPane;
     private PanelCanvas canvas;
@@ -77,21 +84,25 @@ public class Main extends JFrame {
     private EffectsPanel regEffectsPanel;
     private EffectsPanel rhythEffectsPanel;
 
-    public Main(String[] actions) {
-        migrateOldProperties();
+    public Main(String[] actions, boolean startHttpServer) {
+        init(actions, startHttpServer);
+    }
+    
+    public void init(String[] actions, boolean startHttpServer) {
+    	migrateOldProperties();
 
         PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
         String lastSession = manager.getProperty("lastSession");
 
         // Use the device from the last session
-        if (lastSession != null && (actions == null || actions.length > 0)) {
+        if (lastSession != null && (actions == null || actions.length > 0) && !startHttpServer) {
             uiEnabled = true;
             setupOldAurora(lastSession);
         }
 
         if (actions != null && actions.length > 0) {
             new ActionHandler(actions);
-        } else {
+        } else if (!startHttpServer) {
             uiEnabled = true;
             initUI();
 
@@ -101,6 +112,16 @@ public class Main extends JFrame {
             }
 
             checkForUpdate();
+        }
+        
+        if (startHttpServer) {
+        	try {
+        		initWithoutUI();
+        		server = new HttpServer(devices);
+        	} catch (IOException e) {
+        		e.printStackTrace();
+        		System.out.println("ERROR: Failed to start server.");
+        	}
         }
     }
 
@@ -227,7 +248,14 @@ public class Main extends JFrame {
                                    }
                                    loadAuroraData();
                                    loadDeviceName();
+                                   try {
+                                	   panelLocations = new PanelLocations(devices);
+                                   } catch (StatusCodeException e) {
+                                	   e.printStackTrace();
+                                   }
                                    canvas.setAuroras(devices);
+                                   canvas.setPanelLocations(panelLocations);
+                                   canvas.reinitialize();
                                    canvas.repaint();
                                    infoPanel.setAuroras(devices);
                                    regEffectsPanel.setAuroras(devices);
@@ -235,6 +263,7 @@ public class Main extends JFrame {
                                    discoveryPanel.setAuroras(devices);
                                    ambilightPanel.setAuroras(devices);
                                    spotifyPanel.setAuroras(devices);
+                                   spotifyPanel.setPanelLocations(panelLocations);
                                    shortcutsPanel.setAuroras(devices);
                                });
     }
@@ -317,6 +346,7 @@ public class Main extends JFrame {
         try {
             loadEffects();
             loadStateComponents();
+//            loadPanelData();
         } catch (StatusCodeException sce) {
             sce.printStackTrace();
         }
@@ -334,7 +364,9 @@ public class Main extends JFrame {
             }
 
             if (group != null) {
+            	System.out.println("Connecting to group \"" + groupName + "\"...");
                 connectToGroup(group);
+                System.out.println("Connected.");
                 if (uiEnabled) {
                     EventQueue.invokeLater(() ->
                                            {
@@ -350,16 +382,19 @@ public class Main extends JFrame {
         } else {
             String[] data = lastSession.split(" ");
             try {
+            	System.out.println("Connecting to device at " + data[0] + "...");
                 devices = new Aurora[1];
                 devices[0] = new Aurora(data[0],
                                         Integer.parseInt(data[1]),
                                         data[2], data[3]);
+                System.out.println("Connected.");
                 if (uiEnabled) {
                     EventQueue.invokeLater(() ->
                                            {
                                                loadDeviceName();
                                            });
                 }
+                panelLocations = new PanelLocations(devices);
             } catch (StatusCodeException | HttpRequestException schre) {
                 if (uiEnabled) {
                     new TextDialog(Main.this, "Failed to connect to the device. " +
@@ -522,6 +557,23 @@ public class Main extends JFrame {
         }
         return new ArrayList<DeviceGroup>();
     }
+    
+    private void initWithoutUI() {
+        PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
+        String lastSession = manager.getProperty("lastSession");
+
+        if (lastSession != null) {
+            setupOldAurora(lastSession);
+        } else {
+            System.out.println("error - device not set up");
+            System.exit(1);
+        }
+        try {
+     	   panelLocations = new PanelLocations(devices);
+        } catch (StatusCodeException e) {
+     	   e.printStackTrace();
+        }
+    }
 
     private void initUI() {
         initWindow();
@@ -584,7 +636,7 @@ public class Main extends JFrame {
     }
 
     private void initPanelCanvas() {
-        canvas = new PanelCanvas(devices);
+        canvas = new PanelCanvas(devices, panelLocations);
         canvas.setLayout(new GridBagLayout());
         canvas.setBorder(new TitledBorder(new LineBorder(Color.GRAY),
                                           "Preview", TitledBorder.LEFT, TitledBorder.TOP, null, Color.WHITE));
@@ -636,7 +688,7 @@ public class Main extends JFrame {
         ambilightPanel = new AmbilightPanel(canvas);
         editor_1.addTab("Ambient Lighting", null, ambilightPanel, null);
 
-        spotifyPanel = new SpotifyPanel(devices, canvas);
+        spotifyPanel = new SpotifyPanel(devices, panelLocations);
         editor_1.addTab("Spotify Visualizer", null, spotifyPanel, null);
 
         shortcutsPanel = new KeyShortcutsPanel(devices);
@@ -742,10 +794,11 @@ public class Main extends JFrame {
 
     public static void main(String[] args) {
         String[] actions = getActionArgs(args);
+        boolean startServer = hasArg("--http-server", "-s", false, args);
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 try {
-                    Main frame = new Main(actions);
+                    Main frame = new Main(actions, startServer);
                     frame.setVisible(true);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -756,7 +809,7 @@ public class Main extends JFrame {
 
     private class ActionHandler {
         public ActionHandler(String[] actions) {
-            init();
+            initWithoutUI();
             for (String action : actions) {
                 Action actionObj = parseAction(action);
                 if (actionObj != null) {
@@ -773,18 +826,6 @@ public class Main extends JFrame {
                 }
             }
             System.exit(0);
-        }
-
-        private void init() {
-            PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
-            String lastSession = manager.getProperty("lastSession");
-
-            if (lastSession != null) {
-                setupOldAurora(lastSession);
-            } else {
-                System.out.println("error - device not set up");
-                System.exit(1);
-            }
         }
 
         private Action parseAction(String action) {
@@ -833,4 +874,14 @@ public class Main extends JFrame {
         }
         return arglist.isEmpty() ? null : arglist.toArray(new String[]{});
     }
+    
+    private static boolean hasArg(String arg, String shortArg,
+			boolean defaultArg, String[] args) {
+		for (String a : args) {
+			if ((arg != null && a.equals(arg)) || a.equals(shortArg)) {
+				return true;
+			}
+		}
+		return defaultArg;
+	}
 }

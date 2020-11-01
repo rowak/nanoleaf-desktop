@@ -20,6 +20,7 @@ import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
 
 import io.github.rowak.nanoleafapi.Aurora;
 import io.github.rowak.nanoleafapi.StatusCodeException;
+import io.github.rowak.nanoleafdesktop.tools.PanelLocations;
 import io.github.rowak.nanoleafdesktop.ui.dialog.LoadingSpinner;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafapi.tools.StaticAnimDataParser;
@@ -30,11 +31,12 @@ import io.github.rowak.nanoleafapi.Frame;
 public class PanelCanvas extends JPanel
 {
 	private boolean initialized;
-	private int[] rotation, tempRotation;
+	private int[] /*rotation,*/ tempRotation;
 	private float scaleFactor = 1f;
 	private Point[] panelOffset;
 	private Aurora[] devices;
-	private Panel[][] panels;
+//	private Panel[][] panels;
+	private PanelLocations panelLocations;
 	private DeviceType deviceType;
 	private PanelActionListener pdl;
 	private CustomEffectDisplay customEffectDisplay;
@@ -42,9 +44,10 @@ public class PanelCanvas extends JPanel
 	private Graphics buffG;
 	private BufferedImage buff;
 	
-	public PanelCanvas(Aurora[] devices)
+	public PanelCanvas(Aurora[] devices, PanelLocations panelLocations)
 	{
 		this.devices = devices;
+		this.panelLocations = panelLocations;
 		if (devices != null && devices.length == 1)
 		{
 			initCanvas();
@@ -60,43 +63,52 @@ public class PanelCanvas extends JPanel
 	public void initCanvas()
 	{
 		if (!initialized && this.isValid() &&
-				devices != null && panels == null)
+				panelLocations != null)
 		{
 			try
 			{
-				panels = new Panel[devices.length][];
-				for (int i = 0; i < devices.length; i++)
-				{
-					panels[i] = devices[i].panelLayout().getPanelsRotated();
-				}
-				panelOffset = new Point[devices.length];
-				for (int i = 0; i < panelOffset.length; i++)
-				{
-					panelOffset[i] = new Point();
-				}
-				rotation = new int[devices.length];
-				for (int i = 0; i < rotation.length; i++)
-				{
-					rotation[i] = 360 - devices[i].panelLayout().getGlobalOrientation();
-				}
+//				panels = new Panel[devices.length][];
+//				panelLocations = new PanelLocations(devices);
+//				for (int i = 0; i < devices.length; i++)
+//				{
+//					panels[i] = devices[i].panelLayout().getPanelsRotated();
+//				}
+//				panelOffset = new Point[devices.length];
+//				for (int i = 0; i < panelOffset.length; i++)
+//				{
+//					panelOffset[i] = new Point();
+//				}
+//				rotation = new int[devices.length];
+//				for (int i = 0; i < rotation.length; i++)
+//				{
+//					rotation[i] = 360 - devices[i].panelLayout().getGlobalOrientation();
+//				}
 				tempRotation = new int[devices.length];
 				setDeviceType();
 			}
 			catch (NullPointerException npe)
 			{
-				panels = new Panel[0][];
+//				panels = new Panel[0][];
+				npe.printStackTrace();
 			}
 			catch (HttpRequestException hre)
 			{
 				new TextDialog(this, "Could not connect to the device. " +
 						"Please relaunch the application.").setVisible(true);
 			}
-			catch (StatusCodeException sce)
+//			catch (StatusCodeException sce)
+//			{
+//				new TextDialog(this, "An error occurred while getting data from the device. " +
+//						"Please relaunch the application.").setVisible(true);
+//			}
+			
+			panelOffset = new Point[devices.length];
+			for (int i = 0; i < panelOffset.length; i++)
 			{
-				new TextDialog(this, "An error occurred while getting data from the device. " +
-						"Please relaunch the application.").setVisible(true);
+				panelOffset[i] = new Point();
 			}
 			
+			Panel[][] panels = panelLocations.getPanels();
 			for (int i = 0; i < panels.length; i++)
 			{
 				for (Panel p : panels[i])
@@ -118,7 +130,7 @@ public class PanelCanvas extends JPanel
 			}
 			
 			pdl = new PanelActionListener(
-					this, panels, devices);
+					this, panelLocations.getPanels(), devices);
 			addMouseListener(pdl);
 			addMouseMotionListener(pdl);
 			addMouseWheelListener(pdl);
@@ -130,7 +142,6 @@ public class PanelCanvas extends JPanel
 	public void reinitialize()
 	{
 		initialized = false;
-		panels = null;
 		initCanvas();
 	}
 	
@@ -174,6 +185,11 @@ public class PanelCanvas extends JPanel
 		}
 	}
 	
+	public void setPanelLocations(PanelLocations panelLocations)
+	{
+		this.panelLocations = panelLocations;
+	}
+	
 	public Point[] getPanelOffset()
 	{
 		return panelOffset;
@@ -191,17 +207,18 @@ public class PanelCanvas extends JPanel
 	
 	public Panel[] getPanels(int deviceIndex)
 	{
-		return panels[deviceIndex];
+		return panelLocations.getPanels()[deviceIndex];
 	}
 	
 	public void setPanels(Panel[][] panels)
 	{
-		this.panels = panels;
+		panelLocations.setPanels(panels);
 	}
 	
 	public Panel[] getGroupPanels()
 	{
 		List<Panel> groupPanels = new ArrayList<Panel>();
+		Panel[][] panels = panelLocations.getPanels();
 		for (int i = 0; i < panels.length; i++)
 		{
 			for (Panel p : panels[i])
@@ -217,14 +234,14 @@ public class PanelCanvas extends JPanel
 	
 	public int getRotation(int deviceIndex)
 	{
-		return rotation[deviceIndex];
+		return panelLocations.getRotation(deviceIndex);
 	}
 	
 	public void setRotation(int degrees, int deviceIndex)
 	{
 		try
 		{
-			degrees += rotation[deviceIndex];
+			degrees += panelLocations.getRotation(deviceIndex);
 			if (degrees < 0)
 			{
 				degrees = 360 - Math.abs(degrees);
@@ -235,7 +252,9 @@ public class PanelCanvas extends JPanel
 			}
 			devices[deviceIndex].panelLayout()
 				.setGlobalOrientation(360-degrees);
-			rotation[deviceIndex] = degrees;
+//			rotation[deviceIndex] = degrees;
+			panelLocations.setRotation(degrees, deviceIndex);
+			
 			tempRotation[deviceIndex] = 0;
 			reloadPanels(deviceIndex);
 		}
@@ -267,6 +286,7 @@ public class PanelCanvas extends JPanel
 	
 	private void reloadPanels(int deviceIndex)
 	{
+		Panel[][] panels = panelLocations.getPanels();
 		try
 		{
 			panels[deviceIndex] = devices[deviceIndex]
@@ -391,6 +411,7 @@ public class PanelCanvas extends JPanel
 	public Color getColor()
 	{
 		boolean same = true;
+		Panel[][] panels = panelLocations.getPanels();
 		Color first = new Color(panels[0][0].getRed(),
 				panels[0][0].getGreen(), panels[0][0].getBlue());
 		for (int i = 0; i < panels.length; i++)
@@ -421,16 +442,20 @@ public class PanelCanvas extends JPanel
 			customEffectDisplay.stop();
 		}
 		
-		if (panels != null)
+		if (panelLocations != null && panelLocations.getPanels() != null)
 		{
-			for (int i = 0; i < panels.length; i++)
+			Panel[][] panels = panelLocations.getPanels();
+			if (panels != null)
 			{
-				if (panels[i] != null)
+				for (int i = 0; i < panels.length; i++)
 				{
-					for (Panel p : panels[i])
+					if (panels[i] != null)
 					{
-						p.setRGBW(color.getRed(), color.getGreen(),
-								color.getBlue(), 0);
+						for (Panel p : panels[i])
+						{
+							p.setRGBW(color.getRed(), color.getGreen(),
+									color.getBlue(), 0);
+						}
 					}
 				}
 			}
@@ -451,6 +476,7 @@ public class PanelCanvas extends JPanel
 		{
 			customEffectDisplay.stop();
 		}
+		Panel[][] panels = panelLocations.getPanels();
 		for (int i = 0; i < panels.length; i++)
 		{
 			for (Panel p : panels[i])
@@ -469,6 +495,7 @@ public class PanelCanvas extends JPanel
 	public void setStaticEffect(Effect ef)
 	{
 		StaticAnimDataParser sadp = new StaticAnimDataParser(ef);
+		Panel[][] panels = panelLocations.getPanels();
 		for (int i = 0; i < panels.length; i++)
 		{
 			for (Panel p : panels[i])
@@ -510,95 +537,95 @@ public class PanelCanvas extends JPanel
 		}
 	}
 	
-	public Panel getCenterPanel(int deviceIndex)
-	{
-		return getPanelClosestToPoint(getCentroid(deviceIndex), deviceIndex);
-	}
-	
-	public Point getCentroid(int deviceIndex)
-	{
-		int centroidX = 0, centroidY = 0;
-		int numXPoints = 0, numYPoints = 0;
-		List<Integer> xpoints = new ArrayList<Integer>();
-		List<Integer> ypoints = new ArrayList<Integer>();
-		
-		for (Panel p : panels[0])
-		{
-			int x = p.getX();
-			int y = p.getY();
-			if (!xpoints.contains(x))
-			{
-				centroidX += x;
-				xpoints.add(x);
-				numXPoints++;
-			}
-			if (!ypoints.contains(y))
-			{
-				centroidY += y;
-				ypoints.add(y);
-				numYPoints++;
-			}
-		}
-		centroidX /= numXPoints;
-		centroidY /= numYPoints;
-		return new Point(centroidX, centroidY);
-	}
-	
-	public Point getCentroidFromPanels(int deviceIndex, Panel[] panels)
-	{
-		int centroidX = 0, centroidY = 0;
-		int numXPoints = 0, numYPoints = 0;
-		List<Integer> xpoints = new ArrayList<Integer>();
-		List<Integer> ypoints = new ArrayList<Integer>();
-		
-		for (Panel p : panels)
-		{
-			int x = p.getX();
-			int y = p.getY();
-			if (!xpoints.contains(x))
-			{
-				centroidX += x;
-				xpoints.add(x);
-				numXPoints++;
-			}
-			if (!ypoints.contains(y))
-			{
-				centroidY += y;
-				ypoints.add(y);
-				numYPoints++;
-			}
-		}
-		centroidX /= numXPoints;
-		centroidY /= numYPoints;
-		return new Point(centroidX, centroidY);
-	}
-	
-	private Panel getPanelClosestToPoint(Point point, int deviceIndex)
-	{
-		Panel closest = panels[deviceIndex][0];
-		double closestAmount = distanceToPanel(point, panels[deviceIndex][0]);
-		for (Panel p : panels[deviceIndex])
-		{
-			double d = distanceToPanel(point, p);
-			if (d < closestAmount)
-			{
-				closest = p;
-				closestAmount = d;
-			}
-		}
-		return closest;
-	}
-	
-	private double distanceToPanel(Point point, Panel panel)
-	{
-		int panelx = panel.getX();
-		int panely = panel.getY();
-		return point.distance(panelx, panely);
-	}
+//	public Panel getCenterPanel(int deviceIndex)
+//	{
+//		return getPanelClosestToPoint(getCentroid(deviceIndex), deviceIndex);
+//	}
+//	
+//	public Point getCentroid(int deviceIndex)
+//	{
+//		int centroidX = 0, centroidY = 0;
+//		int numXPoints = 0, numYPoints = 0;
+//		List<Integer> xpoints = new ArrayList<Integer>();
+//		List<Integer> ypoints = new ArrayList<Integer>();
+//		
+//		for (Panel p : panels[0])
+//		{
+//			int x = p.getX();
+//			int y = p.getY();
+//			if (!xpoints.contains(x))
+//			{
+//				centroidX += x;
+//				xpoints.add(x);
+//				numXPoints++;
+//			}
+//			if (!ypoints.contains(y))
+//			{
+//				centroidY += y;
+//				ypoints.add(y);
+//				numYPoints++;
+//			}
+//		}
+//		centroidX /= numXPoints;
+//		centroidY /= numYPoints;
+//		return new Point(centroidX, centroidY);
+//	}
+//	
+//	public Point getCentroidFromPanels(int deviceIndex, Panel[] panels)
+//	{
+//		int centroidX = 0, centroidY = 0;
+//		int numXPoints = 0, numYPoints = 0;
+//		List<Integer> xpoints = new ArrayList<Integer>();
+//		List<Integer> ypoints = new ArrayList<Integer>();
+//		
+//		for (Panel p : panels)
+//		{
+//			int x = p.getX();
+//			int y = p.getY();
+//			if (!xpoints.contains(x))
+//			{
+//				centroidX += x;
+//				xpoints.add(x);
+//				numXPoints++;
+//			}
+//			if (!ypoints.contains(y))
+//			{
+//				centroidY += y;
+//				ypoints.add(y);
+//				numYPoints++;
+//			}
+//		}
+//		centroidX /= numXPoints;
+//		centroidY /= numYPoints;
+//		return new Point(centroidX, centroidY);
+//	}
+//	
+//	private Panel getPanelClosestToPoint(Point point, int deviceIndex)
+//	{
+//		Panel closest = panels[deviceIndex][0];
+//		double closestAmount = distanceToPanel(point, panels[deviceIndex][0]);
+//		for (Panel p : panels[deviceIndex])
+//		{
+//			double d = distanceToPanel(point, p);
+//			if (d < closestAmount)
+//			{
+//				closest = p;
+//				closestAmount = d;
+//			}
+//		}
+//		return closest;
+//	}
+//	
+//	private double distanceToPanel(Point point, Panel panel)
+//	{
+//		int panelx = panel.getX();
+//		int panely = panel.getY();
+//		return point.distance(panelx, panely);
+//	}
 	
 	private void getDefaultPanelPositions(Panel[] locations, int deviceIndex)
 	{
-		Panel firstPanel = getCenterPanel(deviceIndex);
+		Panel firstPanel = panelLocations.getCenterPanel(deviceIndex);
 		int offX = (getWidth()/2) - firstPanel.getX();
 		int offY = (getHeight()/2) - firstPanel.getY();
 		for (int i = 0; i < locations.length; i++)
@@ -616,11 +643,11 @@ public class PanelCanvas extends JPanel
 		try
 		{
 			AffineTransform scaled = new AffineTransform();
-			Point centroid = getCentroid(deviceIndex);
+			Point centroid = panelLocations.getCentroid(deviceIndex);
 			scaled.translate(centroid.getX(), centroid.getY());
 			scaled.scale(scaleFactor, scaleFactor);
 			scaled.translate(-centroid.getX(), -centroid.getY());
-			Point tempCentroid = getCentroidFromPanels(deviceIndex,
+			Point tempCentroid = panelLocations.getCentroidFromPanels(deviceIndex,
 					pdl.getTempPanels()[deviceIndex]);
 			scaled.rotate(Math.toRadians(tempRotation[deviceIndex]),
 					tempCentroid.x, tempCentroid.y);
@@ -639,11 +666,11 @@ public class PanelCanvas extends JPanel
 		try
 		{
 			AffineTransform scaled = new AffineTransform();
-			Point centroid = getCentroid(deviceIndex);
+			Point centroid = panelLocations.getCentroid(deviceIndex);
 			scaled.translate(centroid.getX(), centroid.getY());
 			scaled.scale(scaleFactor, scaleFactor);
 			scaled.translate(-centroid.getX(), -centroid.getY());
-			Point tempCentroid = getCentroidFromPanels(deviceIndex,
+			Point tempCentroid = panelLocations.getCentroidFromPanels(deviceIndex,
 					pdl.getTempPanels()[deviceIndex]);
 			scaled.rotate(Math.toRadians(tempRotation[deviceIndex]),
 					tempCentroid.x, tempCentroid.y);
@@ -670,16 +697,16 @@ public class PanelCanvas extends JPanel
 		buffG.setColor(new Color(0, 0, 0, 187));
 		buffG.fillRect(0, 0, getWidth(), getHeight());
 		
-		if (initialized)
+		if (initialized && panelLocations != null && panelLocations.getPanels() != null)
 		{
 			for (int d = 0; d < devices.length; d++)
 			{
 				try
 				{
 					// Draw the panels
-					for (int i = 0; i < panels[d].length; i++)
+					for (int i = 0; i < panelLocations.getPanels()[d].length; i++)
 					{
-						Panel panel = panels[d][i];
+						Panel panel = panelLocations.getPanels()[d][i];
 						int x = panel.getX() + panelOffset[d].x;
 						int y = panel.getY() + panelOffset[d].y;
 						int o = panel.getOrientation();
@@ -690,11 +717,11 @@ public class PanelCanvas extends JPanel
 							Polygon tri = new Polygon();
 							if (o == 0 || Math.abs(o) % 120 == 0)
 							{
-								tri = new UprightPanel(x, y, rotation[d]);
+								tri = new UprightPanel(x, y, panelLocations.getRotation(d));
 							}
 							else
 							{
-								tri = new InvertedPanel(x, y, rotation[d]);
+								tri = new InvertedPanel(x, y, panelLocations.getRotation(d));
 							}
 							buffG.setColor(new Color(panel.getRed(),
 									panel.getGreen(), panel.getBlue()));
@@ -707,7 +734,7 @@ public class PanelCanvas extends JPanel
 						else if (deviceType == DeviceType.CANVAS)
 						{
 							// Create the CANVAS panel outline shape
-							SquarePanel sq = new SquarePanel(x, y, rotation[d]);
+							SquarePanel sq = new SquarePanel(x, y, panelLocations.getRotation(d));
 							buffG.setColor(new Color(panel.getRed(),
 									panel.getGreen(), panel.getBlue()));
 							fillTransformedPanel(sq, d, g2d);

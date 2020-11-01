@@ -26,6 +26,8 @@ public class SpotifyAuthenticator
 	private final URI REDIRECT_URI = SpotifyHttpManager.makeUri("http://localhost:7142");
 	private final String SCOPES = "user-read-playback-state";
 	
+	private AuthCallbackServer asyncCallbackServer;
+	
 	private final SpotifyApi spotifyApi = new SpotifyApi.Builder()
 			.setClientId(CLIENT_ID)
 			.setClientSecret(CLIENT_SECRET)
@@ -38,7 +40,7 @@ public class SpotifyAuthenticator
 			.show_dialog(true)
 			.build();
 	
-	public SpotifyAuthenticator()
+	public SpotifyAuthenticator(boolean headless)
 			throws SpotifyWebApiException, IOException, InterruptedException
 	{
 		String savedAccessToken = getSavedAccessToken();
@@ -53,7 +55,7 @@ public class SpotifyAuthenticator
 			spotifyApi.setRefreshToken(credentials.getRefreshToken());
 			startRefreshTokenTimer();
 		}
-		else
+		else if (!headless)
 		{
 			String authCode = getAuthCode();
 			AuthorizationCodeRequest authCodeRequest = spotifyApi.authorizationCode(authCode).build();
@@ -67,6 +69,37 @@ public class SpotifyAuthenticator
 	public SpotifyApi getSpotifyApi()
 	{
 		return spotifyApi;
+	}
+	
+	public URI getAuthCodeASync() throws IOException
+	{
+		asyncCallbackServer = new AuthCallbackServer();
+		new Timer().scheduleAtFixedRate(new TimerTask()
+		{
+			@Override
+			public void run() {
+				System.out.println(asyncCallbackServer);
+				if (!asyncCallbackServer.getAccessToken().equals("error"))
+				{
+					String authCode = asyncCallbackServer.getAccessToken();
+					AuthorizationCodeRequest authCodeRequest = spotifyApi.authorizationCode(authCode).build();
+					AuthorizationCodeCredentials credentials = null;
+					try
+					{
+						credentials = authCodeRequest.execute();
+					}
+					catch (Exception e) {
+						e.printStackTrace();
+					}
+					spotifyApi.setAccessToken(credentials.getAccessToken());
+					spotifyApi.setRefreshToken(credentials.getRefreshToken());
+					writeAccessToken(credentials.getAccessToken(), credentials.getRefreshToken());
+					startRefreshTokenTimer();
+				}
+				stopServer(asyncCallbackServer);
+			}
+		}, 1000, 1000);
+		return authCodeUriRequest.execute();
 	}
 	
 	private String getAuthCode()

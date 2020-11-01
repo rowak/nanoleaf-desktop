@@ -50,6 +50,7 @@ import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyStreakingNotesEffect;
 import io.github.rowak.nanoleafdesktop.tools.CanvasExtStreaming;
+import io.github.rowak.nanoleafdesktop.tools.PanelLocations;
 import io.github.rowak.nanoleafdesktop.tools.PanelTableSort;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.panel.SpotifyPanel;
@@ -63,7 +64,7 @@ public class SpotifyPlayer
 	private String previousEffect;
 	private Timer effectTimer, spotifyActionTimer;
 	private SpotifyApi spotifyApi;
-	private Track currentTrack;
+	private Track lastTrack, currentTrack;
 	private AlbumSimplified currentAlbum;
 	private AudioAnalysis currentTrackAnalysis;
 	private Aurora[] auroras;
@@ -71,11 +72,11 @@ public class SpotifyPlayer
 	private Color[] palette;
 	private Color[] defaultPalette;
 	private SpotifyPanel panel;
-	private PanelCanvas canvas;
+	private PanelLocations panelLocations;
 	
 	public SpotifyPlayer(SpotifyApi spotifyApi, SpotifyEffectType defaultEffect,
 			Color[] defaultPalette, Aurora[] auroras, SpotifyPanel panel,
-			PanelCanvas canvas) throws UnauthorizedException,
+			PanelLocations panelLocations) throws UnauthorizedException,
 			HttpRequestException, StatusCodeException
 	{
 		this.spotifyApi = spotifyApi;
@@ -84,12 +85,12 @@ public class SpotifyPlayer
 		usingDefaultPalette = true;
 		this.auroras = auroras;
 		this.panel = panel;
-		this.canvas = canvas;
+		this.panelLocations = panelLocations;
 		setEffect(defaultEffect);
 		if (auroras != null)
 		{
 			enableExternalStreaming();
-			start();
+//			start();
 		}
 	}
 	
@@ -97,6 +98,14 @@ public class SpotifyPlayer
 	{
 		if (!running)
 		{
+			try
+			{
+				enableExternalStreaming();
+			}
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
 			running = true;
 			saveCurrentEffect();
 			init();
@@ -191,6 +200,16 @@ public class SpotifyPlayer
 		return effect;
 	}
 	
+	public boolean isPlaying()
+	{
+		return playing;
+	}
+	
+	public boolean isRunning()
+	{
+		return running;
+	}
+	
 	public void setEffect(SpotifyEffectType effectType) throws StatusCodeException
 	{
 		switch (effectType)
@@ -207,13 +226,13 @@ public class SpotifyPlayer
 				}
 				String directionStr = (String)getUserOptionArgs().get("direction");
 				Direction direction = getDirectionFromStr(directionStr);
-				effect = new SpotifySoundBarEffect(palette, direction, auroras, canvas);
+				effect = new SpotifySoundBarEffect(palette, direction, auroras, panelLocations);
 				break;
 			case FIREWORKS:
 				effect = new SpotifyFireworksEffect(palette, auroras);
 				break;
 			case STREAKING_NOTES:
-				effect = new SpotifyStreakingNotesEffect(palette, auroras, canvas);
+				effect = new SpotifyStreakingNotesEffect(palette, auroras, panelLocations);
 				break;
 		}
 	}
@@ -272,8 +291,11 @@ public class SpotifyPlayer
 		catch (StatusCodeException | NullPointerException e)
 		{
 			e.printStackTrace();
-			new TextDialog(panel.getFocusCycleRootAncestor(),
-					"The previous effect could not be loaded.").setVisible(true);
+			if (panel != null)
+			{
+				new TextDialog(panel.getFocusCycleRootAncestor(),
+						"The previous effect could not be loaded.").setVisible(true);
+			}
 		}
 	}
 	
@@ -404,23 +426,29 @@ public class SpotifyPlayer
 	
 	private void updateTrackProgressText()
 	{
-		Date d = new Date((int)((progress+audioOffset)/1000f) * 1000L);
-		SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
-		df.setTimeZone(TimeZone.getTimeZone("GMT"));
-		panel.setTrackProgressText(df.format(d));
+		if (panel != null)
+		{
+			Date d = new Date((int)((progress+audioOffset)/1000f) * 1000L);
+			SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
+			df.setTimeZone(TimeZone.getTimeZone("GMT"));
+			panel.setTrackProgressText(df.format(d));
+		}
 	}
 	
 	private void updateTrackInfoText()
 	{
-		if (playing)
+		if (panel != null)
 		{
-			String title = currentTrack.getName();
-			String artists = getArtists();
-			panel.setTrackInfoText(title + " | " + artists);
-		}
-		else
-		{
-			panel.setTrackInfoText("No song playing");
+			if (playing)
+			{
+				String title = currentTrack.getName();
+				String artists = getArtists();
+				panel.setTrackInfoText(title + " | " + artists);
+			}
+			else
+			{
+				panel.setTrackInfoText("No song playing");
+			}
 		}
 	}
 	
@@ -524,6 +552,7 @@ public class SpotifyPlayer
 		}
 		if (current != null && !currentTrack.getId().equals(current.getItem().getId()))
 		{
+			lastTrack = currentTrack;
 			currentTrack = current.getItem();
 			currentAlbum = currentTrack.getAlbum();
 			currentTrackAnalysis = getTrackAnalysis(currentTrack.getId());
@@ -531,6 +560,10 @@ public class SpotifyPlayer
 			effect.reset();
 			updateTrackInfoText();
 			updateTrackProgressText();
+			if (lastTrack != currentTrack)
+			{
+				System.out.println("Now playing: " + currentTrack.getName());
+			}
 			
 //			if (usingDefaultPalette)
 //			{

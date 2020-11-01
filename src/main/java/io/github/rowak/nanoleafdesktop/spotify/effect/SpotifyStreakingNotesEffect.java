@@ -14,6 +14,7 @@ import io.github.rowak.nanoleafapi.StatusCodeException;
 import io.github.rowak.nanoleafdesktop.spotify.SpecificAudioAnalysis;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
 import io.github.rowak.nanoleafdesktop.tools.CanvasExtStreaming;
+import io.github.rowak.nanoleafdesktop.tools.PanelLocations;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 
 public class SpotifyStreakingNotesEffect extends SpotifyEffect
@@ -21,13 +22,13 @@ public class SpotifyStreakingNotesEffect extends SpotifyEffect
 	private List<Panel> edges;
 	private List<Float> times;
 	private Random random;
-	private PanelCanvas canvas;
+	private PanelLocations panelLocations;
 	
-	public SpotifyStreakingNotesEffect(Color[] palette, Aurora[] auroras, PanelCanvas canvas)
+	public SpotifyStreakingNotesEffect(Color[] palette, Aurora[] auroras, PanelLocations panelLocations)
 	{
 		super(SpotifyEffectType.STREAKING_NOTES, palette, auroras);
 		requiresExtControl = true;
-		this.canvas = canvas;
+		this.panelLocations = panelLocations;
 		init();
 	}
 
@@ -36,7 +37,7 @@ public class SpotifyStreakingNotesEffect extends SpotifyEffect
 	{
 		random = new Random();
 		times = new ArrayList<Float>();
-		panels[0] = canvas.getGroupPanels();
+		panels[0] = panelLocations.getGroupPanels();
 		getEdgePanels();
 	}
 	

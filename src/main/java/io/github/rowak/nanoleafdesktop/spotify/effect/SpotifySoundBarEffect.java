@@ -16,6 +16,7 @@ import io.github.rowak.nanoleafdesktop.spotify.SpecificAudioAnalysis;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
 import io.github.rowak.nanoleafdesktop.spotify.UserOption;
 import io.github.rowak.nanoleafdesktop.tools.CanvasExtStreaming;
+import io.github.rowak.nanoleafdesktop.tools.PanelLocations;
 import io.github.rowak.nanoleafdesktop.tools.PanelTableSort;
 import io.github.rowak.nanoleafdesktop.tools.SpotifyEffectUtils;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
@@ -28,17 +29,17 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 	private Direction direction;
 	private List<Float> times;
 	private List<Float> sections;
-	private PanelCanvas canvas;
+	private PanelLocations panelLocations;
 	
 	public SpotifySoundBarEffect(Color[] palette, Direction direction,
-			Aurora[] auroras, PanelCanvas canvas) throws StatusCodeException
+			Aurora[] auroras, PanelLocations panelLocations) throws StatusCodeException
 	{
 		super(SpotifyEffectType.SOUNDBAR, palette, auroras);
 		userOptions.add(new UserOption("Direction",
 				new String[]{"Right", "Up", "Down", "Left"}));
 		requiresExtControl = true;
 		this.direction = direction;
-		this.canvas = canvas;
+		this.panelLocations = panelLocations;
 		init();
 	}
 	
@@ -144,7 +145,8 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 	
 	private void initPanelTable() throws StatusCodeException
 	{
-		Panel[] combinedPanels = canvas.getGroupPanels();
+		System.out.println(panelLocations);
+		Panel[] combinedPanels = panelLocations.getGroupPanels();
 		panelTable = null;
 		if (direction == Direction.RIGHT || direction == Direction.LEFT || direction == null)
 		{
