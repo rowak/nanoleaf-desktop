@@ -90,6 +90,7 @@ public class SpotifyAuthenticator
 						spotifyApi.setRefreshToken(credentials.getRefreshToken());
 						writeAccessToken(credentials.getAccessToken(), credentials.getRefreshToken());
 						startRefreshTokenTimer();
+						System.out.println("Successfully authenticated with Spotify.");
 					}
 					catch (Exception e) {
 						e.printStackTrace();

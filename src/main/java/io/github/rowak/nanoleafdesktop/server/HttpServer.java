@@ -47,27 +47,30 @@ public class HttpServer extends NanoHTTPD {
 	/*
 	 * endpoints:
 	 *   - /spotify
+	 *     - GET => {"state": {"authenticated": {"value": true/false},
+	 *     			"enabled": {"value": true/false}, "effect": {"value": VALUE}}}
 	 *     - /authenticate
-	 *       - POST authenticate with spotify (redirect to login page)
+	 *       - ANY authenticate with spotify (redirect to login page)
 	 *     - /state
-	 *       - GET
+	 *       - GET => {"authenticated": {"value": true/false},
+	 *       		  "enabled": {"value": true/false}, "effect": {"value": VALUE}}
 	 *       - /authenticated
-	 *         - GET
+	 *         - GET => {"value": true/false}
 	 *       - /enabled
-	 *         - GET
-	 *         - PUT
+	 *         - GET => {"value": true/false} 200(OK)
+	 *         - PUT {"value": true/false} => 200(OK),400(BADREQUEST)
 	 *       - /effect
-	 *         - GET
-	 *         - PUT
+	 *         - GET => {"value": "PULSE_BEATS"/"SOUNDBAR"/"FIREWORKS"/"STREAKING NOTES"} 200(OK)
+	 *         - PUT {"value": "PULSE_BEATS"/"SOUNDBAR"/"FIREWORKS"/"STREAKING NOTES"} => 200(OK),400(BADREQUEST)
 	 *       - /palette
-	 *         - GET
-	 *         - PUT
+	 *         - GET (not implemented)
+	 *         - PUT (not implemented)
 	 *       - /sensitivity
-	 *         - GET
-	 *         - PUT
+	 *         - GET (not implemented)
+	 *         - PUT (not implemented)
 	 *       - /audio_offset
-	 *         - GET
-	 *         - PUT
+	 *         - GET (not implemented)
+	 *         - PUT (not implemented)
 	 */
 	public HttpServer(Aurora[] devices) throws IOException {
 		super(DEFAULT_PORT);
@@ -191,11 +194,8 @@ public class HttpServer extends NanoHTTPD {
 					Response response = newFixedLengthResponse(
 							Response.Status.REDIRECT, MIME_HTML, "");
 					URI authURI = null;
-					System.out.println(0);
 					try {
-						System.out.println(1);
 						spotifyAuthenticator = new SpotifyAuthenticator(true);
-						System.out.println(2);
 						authURI = spotifyAuthenticator.getAuthCodeASync();
 					}
 					catch (Exception e) {
@@ -213,7 +213,7 @@ public class HttpServer extends NanoHTTPD {
 	private String getSpotifyStateJson() {
 		StringBuilder sb = new StringBuilder("{");
 		sb.append("\"authenticated\":{\"value\":" + isSpotifyAuthenticated() + "},");
-		sb.append("\"enabled\":{\"value\":" + isSpotifyEnabled() + "}");
+		sb.append("\"enabled\":{\"value\":" + isSpotifyEnabled() + "},");
 		sb.append("\"effect\":{\"value\":" + getSpotifyEffect() + "}");
 		sb.append("}");
 		return sb.toString();
