@@ -90,12 +90,12 @@ public class SpotifyStreakingNotesEffect extends SpotifyEffect
 		List<Panel> path = new ArrayList<Panel>();
 		Panel start = edges.get(random.nextInt(edges.size()));
 		path.add(start);
-		Panel[] neighbors = start.getNeighbors(panels[0]);
+		Panel[] neighbors = getNeighbors(start, panels[0]);
 		Panel p = neighbors[random.nextInt(neighbors.length)];
 		path.add(p);
 		while (!isEdgePanel(p))
 		{
-			neighbors = p.getNeighbors(panels[0]);
+			neighbors = getNeighbors(p, panels[0]);
 			int i = random.nextInt(neighbors.length);
 			if (!path.contains(neighbors[i]))
 			{
@@ -106,9 +106,32 @@ public class SpotifyStreakingNotesEffect extends SpotifyEffect
 		return path;
 	}
 	
+	private static Panel[] getNeighbors(Panel p, Panel[] panels)
+	{
+		// Distance constant represents the vertical/horizontal/diagonal distance
+		// that all neighboring panels are within
+		final int DISTANCE_CONST = 86;
+		List<Panel> neighbors = new ArrayList<Panel>();
+		int p1x = p.getX();
+		int p1y = p.getY();
+		for (Panel p2 : panels)
+		{
+			int p2x = p2.getX();
+			int p2y = p2.getY();
+			System.out.println(Math.floor(Math.sqrt(Math.pow((p1x - p2x), 2) +
+					Math.pow((p1y - p2y), 2))));
+			if (Math.abs(Math.floor(Math.sqrt(Math.pow((p1x - p2x), 2) +
+					Math.pow((p1y - p2y), 2))) - DISTANCE_CONST) < 2)
+			{
+				neighbors.add(p2);
+			}
+		}
+		return neighbors.toArray(new Panel[]{});
+	}
+	
 	private boolean isEdgePanel(Panel p)
 	{
-		return p.getNeighbors(panels[0]).length < 2;
+		return getNeighbors(p, panels[0]).length < 2;
 	}
 	
 	// An "edge" panel is defined as a panel with less than two neighbors
@@ -125,6 +148,7 @@ public class SpotifyStreakingNotesEffect extends SpotifyEffect
 				}
 			}
 		}
+		System.out.println(edges.size());
 	}
 	
 	private void setPanel(Panel panel, Color color, int transitionTime)

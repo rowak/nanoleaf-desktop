@@ -77,25 +77,25 @@ public class Main extends JFrame {
     private EffectsPanel regEffectsPanel;
     private EffectsPanel rhythEffectsPanel;
 
-    public Main(String[] actions) {
+    public Main(Action action) {
         migrateOldProperties();
 
         PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
         String lastSession = manager.getProperty("lastSession");
 
         // Use the device from the last session
-        if (lastSession != null && (actions == null || actions.length > 0)) {
+        if (lastSession != null && action == null) {
             uiEnabled = true;
             setupOldAurora(lastSession);
         }
 
-        if (actions != null && actions.length > 0) {
-            new ActionHandler(actions);
+        if (action != null) {
+            new ActionHandler(action);
         } else {
             uiEnabled = true;
             initUI();
 
-            // Search for a a new device
+            // Search for a new device
             if (lastSession == null) {
                 setupNewAurora();
             }
@@ -741,36 +741,62 @@ public class Main extends JFrame {
     }
 
     public static void main(String[] args) {
-        String[] actions = getActionArgs(args);
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    Main frame = new Main(actions);
-                    frame.setVisible(true);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        Action action = getAction(args);
+        boolean help = hasArg("--help", null, false, args);
+        if (!help) {
+	        EventQueue.invokeLater(new Runnable() {
+	            public void run() {
+	                try {
+	                    Main frame = new Main(action);
+	                    frame.setVisible(true);
+	                } catch (Exception e) {
+	                    e.printStackTrace();
+	                }
+	            }
+	        });
+        }
+        else {
+        	showHelp();
+        }
+    }
+    
+    private static void showHelp() {
+    	System.out.println("Nanoleaf for Desktop (NFD) -- GUI and CLI interface for Nanoleaf Aurora and Canvas\n" +
+    					   "usage: nfd [action [mode [value]]]\n\n" +
+    					   "Actions:\n" +
+    					   "  on           turns on the device(s)\n" +
+    					   "  off          turns off the device(s)\n" +
+    					   "  toggle       toggles the device(s) on or off\n" +
+    					   "  brightness   changes the master brightness (up/down/set)\n" +
+    					   "  temp         changes the color temperature (up/down/set)\n" +
+    					   "  effect       sets the effect by name (set)\n" +
+    					   "  hue          sets the hue HSB component for the current color (set)\n" +
+    					   "  saturation   sets the saturation HSB component for the current color (set)\n" +
+    					   "  red          sets the red RGB component for the current color (set)\n" +
+    					   "  green        sets the green RGB component for the current color (set)\n" +
+    					   "  blue         sets the blue RGB component for the current color (set)\n" +
+    					   "  rgb          displays a static RGB color (set)\n" +
+    					   "  hsb          displays a static HSB color (set)\n\n" +
+    					   "Modes:\n" +
+    					   "  up      increases by a value\n" +
+    					   "  down    decreases by a value\n" +
+    					   "  set     sets to a specific value or name");
     }
 
     private class ActionHandler {
-        public ActionHandler(String[] actions) {
+        public ActionHandler(Action action) {
             init();
-            for (String action : actions) {
-                Action actionObj = parseAction(action);
-                if (actionObj != null) {
-                    try {
-                        actionObj.execute(devices, new Effect[0]);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        System.out.println("error - failed to execute action");
-                        System.exit(4);
-                    }
-                } else {
-                    System.out.println("error - invalid action");
-                    System.exit(2);
+            if (action != null) {
+                try {
+                    action.execute(devices, new Effect[0]);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("Error: failed to execute action");
+                    System.exit(4);
                 }
+            } else {
+                System.out.println("Error: invalid action");
+                System.exit(2);
             }
             System.exit(0);
         }
@@ -786,51 +812,43 @@ public class Main extends JFrame {
                 System.exit(1);
             }
         }
-
-        private Action parseAction(String action) {
-            action = action.replace("{", "").replace("}", "");
-            String[] actionData = action.split(",");
-            ActionType type = null;
-            for (ActionType at : ActionType.values()) {
-                if (at.toString().toUpperCase().equals(actionData[0].toUpperCase())) {
-                    type = at;
-                    break;
-                }
-            }
-            if (type == ActionType.NEXT_EFFECT || type == ActionType.PREVIOUS_EFFECT) {
-                System.out.println("error - action unsupported in this mode");
-                System.exit(3);
-            }
-            Object[] args = new Object[1];
-            if (actionData.length > 1) {
-                if (type != null && type != ActionType.SET_EFFECT) {
-                    args = new Object[]{Integer.parseInt(actionData[1])};
-                } else {
-                    args = new Object[]{actionData[1]};
-                }
-            }
-            return type != null ? new Action(type, args) : null;
-        }
     }
 
-    private static String[] getActionArgs(String[] args) {
-        List<String> arglist = new ArrayList<String>();
-        String arg = "";
+    private static Action getAction(String[] args) {
         for (int i = 0; i < args.length; i++) {
-            if (args[i].equals("-a") || args[i].equals("-action")) {
-                while (++i < args.length && !arg.contains("}")) {
-                    arg += args[i];
-                    if (!args[i].contains(",") && i + 1 < args.length &&
-                            !args[i + 1].equals("-a") &&
-                            !args[i + 1].equals("-action")) {
-                        arg += " ";
-                    }
-                }
-                arglist.add(arg);
-                arg = "";
-                i--;
-            }
+        	if (isAction(args[i])) {
+        		try {
+        			String mode = i+1 != args.length ? args[i+1] : null;
+        			String data = i+2 < args.length ? args[i+2] : null;
+        			Action action = new Action(args[i], mode, data);
+        			return action;
+        		} catch (IllegalArgumentException e) {
+        			
+        		}
+        	}
         }
-        return arglist.isEmpty() ? null : arglist.toArray(new String[]{});
+        return null;
+    }
+    
+    private static boolean hasArg(String arg, String shortArg,
+			boolean defaultArg, String[] args) {
+		for (String a : args)
+		{
+			if ((arg != null && a.equals(arg)) || a.equals(shortArg))
+			{
+				return true;
+			}
+		}
+		return defaultArg;
+	}
+    
+    private static boolean isAction(String str) {
+    	return str.equalsIgnoreCase("on") || str.equalsIgnoreCase("off") ||
+    			str.equalsIgnoreCase("toggle") || str.equalsIgnoreCase("brightness") ||
+    			str.equalsIgnoreCase("temp") || str.equalsIgnoreCase("effect") ||
+    			str.equalsIgnoreCase("hue") || str.equalsIgnoreCase("saturation") ||
+    			str.equalsIgnoreCase("red") || str.equalsIgnoreCase("green") ||
+    			str.equalsIgnoreCase("blue") || str.equalsIgnoreCase("rgb") ||
+    			str.equalsIgnoreCase("hsb");
     }
 }

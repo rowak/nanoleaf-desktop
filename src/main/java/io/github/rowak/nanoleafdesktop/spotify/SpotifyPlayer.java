@@ -607,7 +607,9 @@ public class SpotifyPlayer
 		req.header("Content-Type", "application/json");
 		req.header("Accept", "application/json");
 		req.header("Authorization", "Bearer " + spotifyApi.getAccessToken());
-		JSONObject json = new JSONObject(req.body());
+		String body = req.body();
+		System.out.println(req.code() + "  " + body.length());
+		JSONObject json = new JSONObject(body);
 		json.getJSONObject("meta").put("status_code", req.code());
 		AudioAnalysisMeta aamet = new AudioAnalysisMeta.JsonUtil().createModelObject(json.getJSONObject("meta").toString());
 		AudioAnalysisTrack aat = new AudioAnalysisTrack.JsonUtil().createModelObject(json.getJSONObject("track").toString());
