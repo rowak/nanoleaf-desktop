@@ -350,7 +350,7 @@ public class PanelCanvas extends JPanel {
 							}
 							Palette palette = currentEffect.getPalette();
 							int[] avgRgb = new int[3];
-							if (palette != null) {
+							if (palette != null && palette.getColors().size() > 0) {
 								int numColors = palette.getColors().size();
 								for (io.github.rowak.nanoleafapi.Color c : palette.getColors()) {
 									Color rgb = new Color(Color.HSBtoRGB(c.getHue()/360f,
