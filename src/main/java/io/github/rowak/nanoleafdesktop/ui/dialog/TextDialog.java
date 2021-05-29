@@ -5,10 +5,9 @@ import java.awt.Component;
 
 import javax.swing.JLabel;
 
-public class TextDialog extends BasicDialog
-{
-	public TextDialog(Component parent, String text)
-	{
+public class TextDialog extends BasicDialog {
+	
+	public TextDialog(Component parent, String text) {
 		super();
 		
 		JLabel lblText = new JLabel(addLineBreaks(text));
@@ -22,8 +21,7 @@ public class TextDialog extends BasicDialog
 		finalize(parent);
 	}
 	
-	private String addLineBreaks(String text)
-	{
+	private String addLineBreaks(String text) {
 		return "<html>" + text.replace("\n", "<br>") + "</html>";
 	}
 }

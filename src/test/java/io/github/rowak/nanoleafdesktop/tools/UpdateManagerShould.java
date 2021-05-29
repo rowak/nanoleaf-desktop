@@ -5,6 +5,8 @@ import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+
 
 public class UpdateManagerShould {
 
@@ -15,8 +17,14 @@ public class UpdateManagerShould {
                 "https://github.com/rowak/nanoleaf-desktop");
         Version current = createRelease("v0.1");
 
-        boolean actual = testableUpdateManager.updateAvailable(current);
-
+        boolean actual = false;
+        try {
+        	actual = testableUpdateManager.updateAvailable(current);
+        }
+        catch (IOException e) {
+        	e.printStackTrace();
+        }
+        	
         assertThat(actual).isTrue();
     }
 
@@ -32,9 +40,33 @@ public class UpdateManagerShould {
                 "https://github.com/rowak/nanoleaf-desktop");
         Version current = createRelease("v0.9.0");
 
-        boolean actual = testableUpdateManager.updateAvailable(current);
+        boolean actual = true;
+        try {
+        	actual = testableUpdateManager.updateAvailable(current);
+        }
+        catch (IOException e) {
+        	e.printStackTrace();
+        }
 
         assertThat(actual).isFalse();
+    }
+    
+    @Test
+    public void foo3() {
+    	TestableUpdateManager testableUpdateManager = new TestableUpdateManager(
+                "https://api.github.com/repos/rowak/nanoleaf-desktop/releases",
+                "https://github.com/rowak/nanoleaf-desktop");
+    	Version v = new Version("v0.9.0", true);
+    	
+    	boolean result = false;
+    	try {
+    		result = testableUpdateManager.updateAvailable(v);
+    	}
+    	catch (IOException e) {
+    		e.printStackTrace();
+    	}
+    	
+    	assertThat(result).isTrue();
     }
 
     private class TestableUpdateManager extends UpdateManager {

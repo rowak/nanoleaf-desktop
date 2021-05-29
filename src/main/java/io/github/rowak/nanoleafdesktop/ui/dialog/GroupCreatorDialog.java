@@ -25,7 +25,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import io.github.rowak.nanoleafapi.Aurora;
-import io.github.rowak.nanoleafapi.AuroraMetadata;
+import io.github.rowak.nanoleafapi.NanoleafDevice;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
 import io.github.rowak.nanoleafdesktop.models.DeviceInfo;
@@ -35,45 +35,33 @@ import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.label.SmallModernLabel;
 import io.github.rowak.nanoleafdesktop.ui.listener.WindowDragListener;
 import io.github.rowak.nanoleafdesktop.ui.scrollbar.ModernScrollBarUI;
-import io.github.rowak.nanoleafapi.tools.Setup;
+import io.github.rowak.nanoleafapi.util.NanoleafDeviceMeta;
+import io.github.rowak.nanoleafapi.util.NanoleafSetup;
 import net.miginfocom.swing.MigLayout;
 import javax.swing.JButton;
 
-public class GroupCreatorDialog extends JDialog
-{
-	private static List<AuroraMetadata> devices;
+public class GroupCreatorDialog extends JDialog {
+	
+	private static List<NanoleafDeviceMeta> devices;
 	private DefaultListModel<String> devicesModel;
 	private DefaultListModel<String> groupDevicesModel;
 	private JLabel lblTitle;
 	
-	public GroupCreatorDialog(Component parent)
-	{
+	public GroupCreatorDialog(Component parent) {
 		initUI(parent);
-		new Thread(() ->
-		{
+		new Thread(() -> {
 			getDevices();
 		}).start();
-//		devices = new ArrayList<AuroraMetadata>();
-//		devices.add(new AuroraMetadata("1.2.3.4", 16021, "123", "Aurora 1"));
-//		devices.add(new AuroraMetadata("5.6.7.8", 16021, "456", "Aurora 2"));
-//		devices.add(new AuroraMetadata("9.10.11.12", 16021, "789", "Aurora 3"));
-//		fillDevicesModel();
 	}
 	
-	private void getDevices()
-	{
-		if (!findMethod1())
-		{
-			findMethod2();
-		}
+	private void getDevices() {
+		findMethod1();
 		
-		for (AuroraMetadata metadata : devices)
-		{
+		for (NanoleafDeviceMeta metadata : devices) {
 			addDeviceToList(metadata);
 		}
 		
-		if (devices.isEmpty())
-		{
+		if (devices.isEmpty()) {
 			new TextDialog(this, "Couldn't locate any devices. " +
 					"Please try again or create an issue on GitHub.")
 					.setVisible(true);
@@ -81,39 +69,36 @@ public class GroupCreatorDialog extends JDialog
 		lblTitle.setText("Create a Group");
 	}
 	
-	private boolean findMethod1()
-	{
-		devices = new ArrayList<AuroraMetadata>();
-		try
-		{
-			devices = Setup.findAuroras(5000);
+	private boolean findMethod1() {
+		devices = new ArrayList<NanoleafDeviceMeta>();
+		try {
+			devices = NanoleafSetup.findNanoleafDevices(5000);
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			// do nothing
 		}
 		return !devices.isEmpty();
 	}
 	
-	private boolean findMethod2()
-	{
-		devices = new ArrayList<AuroraMetadata>();
-		try
-		{
-			List<InetSocketAddress> devicesOld = Setup.quickFindAuroras();
-			for (InetSocketAddress addr : devicesOld)
-			{
-				AuroraMetadata metadata = new AuroraMetadata(addr.getHostName(),
-						addr.getPort(), "", "");
-				devices.add(metadata);
-			}
-		}
-		catch (Exception e)
-		{
-			// do nothing
-		}
-		return !devices.isEmpty();
-	}
+//	private boolean findMethod2()
+//	{
+//		devices = new ArrayList<NanoleafDeviceMeta>();
+//		try
+//		{
+//			List<InetSocketAddress> devicesOld = NanoleafSetup.quickFindAuroras();
+//			for (InetSocketAddress addr : devicesOld)
+//			{
+//				AuroraMetadata metadata = new AuroraMetadata(addr.getHostName(),
+//						addr.getPort(), "", "");
+//				devices.add(metadata);
+//			}
+//		}
+//		catch (Exception e)
+//		{
+//			// do nothing
+//		}
+//		return !devices.isEmpty();
+//	}
 	
 //	private void fillDevicesModel()
 //	{
@@ -124,21 +109,17 @@ public class GroupCreatorDialog extends JDialog
 //		}
 //	}
 	
-	private void addDeviceToList(AuroraMetadata metadata)
-	{
+	private void addDeviceToList(NanoleafDeviceMeta metadata) {
 		Map<String, Object> savedDevices = getLocalDeviceData();
-		if (savedDevices.containsKey(metadata.getHostName()))
-		{
+		if (savedDevices.containsKey(metadata.getHostName())) {
 			String ip = metadata.getHostName();
 			String name = String.format("%s (%s)",
 					savedDevices.get(ip), ip);
 			devicesModel.addElement(name);
 		}
-		else
-		{
+		else {
 			String deviceName = metadata.getDeviceName();
-			if (deviceName.isEmpty())
-			{
+			if (deviceName.isEmpty()) {
 				deviceName = "Unknown device";
 			}
 			String name = String.format("%s (%s)",
@@ -147,37 +128,30 @@ public class GroupCreatorDialog extends JDialog
 		}
 	}
 	
-	private Map<String, Object> getLocalDeviceData()
-	{
+	private Map<String, Object> getLocalDeviceData() {
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 		String devicesStr = manager.getProperty("devices");
-		if (devicesStr != null)
-		{
+		if (devicesStr != null) {
 			JSONObject json = new JSONObject(devicesStr);
 			return json.toMap();
 		}
 		return new HashMap<String, Object>();
 	}
 	
-	private void getGroupName()
-	{
+	private void getGroupName() {
 		new SingleEntryDialog(GroupCreatorDialog.this,
-				"Group Name", "Ok", new ActionListener()
-				{
+				"Group Name", "Ok", new ActionListener() {
 					@Override
-					public void actionPerformed(ActionEvent e)
-					{
+					public void actionPerformed(ActionEvent e) {
 						JButton button = (JButton)e.getSource();
 						SingleEntryDialog thisDialog =
 								(SingleEntryDialog)button.getFocusCycleRootAncestor();
 						String name = thisDialog.getEntryField().getText();
-						if (name.equals("Group Name"))
-						{
+						if (name.equals("Group Name")) {
 							new TextDialog(thisDialog, "The group name can't be empty.")
 								.setVisible(true);
 						}
-						else
-						{
+						else {
 							thisDialog.dispose();
 							createGroup(name);
 						}
@@ -186,13 +160,10 @@ public class GroupCreatorDialog extends JDialog
 			.setVisible(true);
 	}
 	
-	private void createGroup(String name)
-	{
-		new Thread(() ->
-		{
-			Aurora[] connectedDevices = new Aurora[groupDevicesModel.size()];
-			for (int i = 0; i < groupDevicesModel.size(); i++)
-			{
+	private void createGroup(String name) {
+		new Thread(() -> {
+			NanoleafDevice[] connectedDevices = new NanoleafDevice[groupDevicesModel.size()];
+			for (int i = 0; i < groupDevicesModel.size(); i++) {
 				connectedDevices[i] = connectToDevice(
 						groupDevicesModel.getElementAt(i));
 			}
@@ -200,9 +171,8 @@ public class GroupCreatorDialog extends JDialog
 			PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 			List<DeviceGroup> deviceGroups = getDeviceGroups();
 			DeviceInfo[] info = new DeviceInfo[groupDevicesModel.size()];
-			for (int i = 0; i < info.length; i++)
-			{
-				info[i] = new DeviceInfo(connectedDevices[i].getHostName(),
+			for (int i = 0; i < info.length; i++) {
+				info[i] = new DeviceInfo(connectedDevices[i].getHostname(),
 						connectedDevices[i].getPort(), connectedDevices[i].getAccessToken());
 			}
 			deviceGroups.add(new DeviceGroup(name, info));
@@ -213,37 +183,31 @@ public class GroupCreatorDialog extends JDialog
 		}).start();
 	}
 	
-	private List<DeviceGroup> getDeviceGroups()
-	{
+	private List<DeviceGroup> getDeviceGroups() {
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 		String devicesStr = manager.getProperty("deviceGroups");
-		if (devicesStr != null)
-		{
+		if (devicesStr != null) {
 			List<DeviceGroup> groups = new ArrayList<DeviceGroup>();
 			JSONArray json = new JSONArray(devicesStr);
-			for (int i = 0; i < json.length(); i++)
-			{
+			for (int i = 0; i < json.length(); i++) {
 				groups.add(DeviceGroup.fromJSON(json.getJSONObject(i).toString()));
 			}
 		}
 		return new ArrayList<DeviceGroup>();
 	}
 	
-	private Aurora connectToDevice(String item)
-	{
-		AuroraMetadata metadata = getMetadataFromListItem(item);
+	private NanoleafDevice connectToDevice(String item) {
+		NanoleafDeviceMeta metadata = getMetadataFromListItem(item);
 		String hostName = metadata.getHostName();
 		int port = metadata.getPort();
 		String accessToken = "";
 		
 		String text = "On ";
 		Map<String, Object> localDevices = getLocalDeviceData();
-		if (localDevices.containsKey(hostName))
-		{
+		if (localDevices.containsKey(hostName)) {
 			text += localDevices.get(hostName);
 		}
-		else
-		{
+		else {
 			text += hostName;
 		}
 		
@@ -252,40 +216,32 @@ public class GroupCreatorDialog extends JDialog
 		TextDialog info = new TextDialog(GroupCreatorDialog.this, text);
 		info.setVisible(true);
 				
-		while (accessToken == "")
-		{
-			try
-			{
+		while (accessToken == "") {
+			try {
 				Thread.sleep(1000);
-				accessToken = Setup.createAccessToken(hostName, port, "v1");
+				accessToken = NanoleafSetup.createAccessToken(hostName, port);
 				System.out.println(accessToken);
 				info.dispose();
 			}
-			catch (Exception e)
-			{
+			catch (Exception e) {
 				// This will be called every second until an api key
 				// can be generated (403 forbidden)
 			}
 		}
-		try
-		{
-			return new Aurora(hostName, port, "v1", accessToken);
+		try {
+			return new Aurora(hostName, port, accessToken);
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			e.printStackTrace();
 		}
 		return null;
 	}
 	
-	private AuroraMetadata getMetadataFromListItem(String item)
-	{
-		AuroraMetadata data = null;
+	private NanoleafDeviceMeta getMetadataFromListItem(String item) {
+		NanoleafDeviceMeta data = null;
 		String ip = item.substring(item.indexOf("(")+1, item.indexOf(")"));
-		for (AuroraMetadata metadata : devices)
-		{
-			if (metadata.getHostName().equals(ip))
-			{
+		for (NanoleafDeviceMeta metadata : devices) {
+			if (metadata.getHostName().equals(ip)) {
 				data = metadata;
 				break;
 			}
@@ -293,8 +249,7 @@ public class GroupCreatorDialog extends JDialog
 		return data;
 	}
 
-	private void initUI(Component parent)
-	{
+	private void initUI(Component parent) {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setSize(500, 225);
 		setLocationRelativeTo(parent);
@@ -355,14 +310,11 @@ public class GroupCreatorDialog extends JDialog
 		groupScrollPane.setColumnHeaderView(lblGroupDevices);
 		
 		JButton btnAddSelected = new ModernButton("Add Selected");
-		btnAddSelected.addActionListener(new ActionListener()
-		{
+		btnAddSelected.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				if (!groupDevicesModel.contains(listAuroras.getSelectedValue()) &&
-						devicesModel.size() > 0)
-				{
+						devicesModel.size() > 0) {
 					groupDevicesModel.addElement(listAuroras.getSelectedValue());
 					devicesModel.removeElement(listAuroras.getSelectedValue());
 				}
@@ -371,17 +323,13 @@ public class GroupCreatorDialog extends JDialog
 		contentPane.add(btnAddSelected, "flowx,cell 0 2");
 		
 		JButton btnCreateGroup = new ModernButton("Create Group");
-		btnCreateGroup.addActionListener(new ActionListener()
-		{
+		btnCreateGroup.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				if (groupDevicesModel.size() > 1)
-				{
+			public void actionPerformed(ActionEvent e) {
+				if (groupDevicesModel.size() > 1) {
 					getGroupName();
 				}
-				else
-				{
+				else {
 					new TextDialog(GroupCreatorDialog.this,
 							"You must select at least two devices.")
 							.setVisible(true);

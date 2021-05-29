@@ -9,6 +9,7 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,8 +22,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 
-import io.github.rowak.nanoleafapi.Aurora;
-import io.github.rowak.nanoleafapi.StatusCodeException;
+import io.github.rowak.nanoleafapi.NanoleafException;
+import io.github.rowak.nanoleafapi.NanoleafGroup;
 import io.github.rowak.nanoleafdesktop.shortcuts.Action;
 import io.github.rowak.nanoleafdesktop.shortcuts.ActionType;
 import io.github.rowak.nanoleafdesktop.shortcuts.RunType;
@@ -37,9 +38,9 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.JComboBox;
 import javax.swing.JTextField;
 
-public class ShortcutCreatorDialog extends JDialog
-{
-	private Aurora[] devices;
+public class ShortcutCreatorDialog extends JDialog {
+	
+	private NanoleafGroup group;
 	private Component parent;
 	private Shortcut oldShortcut;
 	private JPanel contentPane;
@@ -59,24 +60,21 @@ public class ShortcutCreatorDialog extends JDialog
 	/**
 	 * @wbp.parser.constructor
 	 */
-	public ShortcutCreatorDialog(Component parent, Aurora[] devices)
-	{
+	public ShortcutCreatorDialog(Component parent, NanoleafGroup group) {
 		this.parent = parent;
-		this.devices = devices;
+		this.group = group;
 		initUI(parent);
 	}
 	
-	public ShortcutCreatorDialog(Component parent, Shortcut shortcut, Aurora[] devices)
-	{
+	public ShortcutCreatorDialog(Component parent, Shortcut shortcut, NanoleafGroup group) {
 		this.parent = parent;
 		oldShortcut = shortcut;
-		this.devices = devices;
+		this.group = group;
 		initUI(parent);
 		loadUIFromShortcut(shortcut);
 	}
 	
-	private void loadUIFromShortcut(Shortcut shortcut)
-	{
+	private void loadUIFromShortcut(Shortcut shortcut) {
 		String name = shortcut.getName();
 		txtName.setText(name);
 		
@@ -87,53 +85,44 @@ public class ShortcutCreatorDialog extends JDialog
 		
 		List<String> keysList = shortcut.getKeys();
 		StringBuilder keys = new StringBuilder();
-		for (int i = 0; i < keysList.size(); i++)
-		{
+		for (int i = 0; i < keysList.size(); i++) {
 			String key = keysList.get(i);
 			keys.append(key);
-			if (i < keysList.size()-1)
-			{
+			if (i < keysList.size()-1) {
 				keys.append(" + ");
 			}
 		}
 		txtKeys.setText(keys.toString());
 		
 		RunType runType = shortcut.getRunType();
-		if (runType == RunType.WHEN_PRESSED)
-		{
+		if (runType == RunType.WHEN_PRESSED) {
 			cmbxRunType.setSelectedIndex(0);
 		}
-		else if (runType == RunType.WHILE_HELD)
-		{
+		else if (runType == RunType.WHILE_HELD) {
 			cmbxRunType.setSelectedIndex(1);
 		}
-		else if (runType == RunType.WHEN_APP_RUN)
-		{
+		else if (runType == RunType.WHEN_APP_RUN) {
 			cmbxRunType.setSelectedIndex(2);
 			txtAppName.setText((String)shortcut.getAction().getArgs()[1]);
 		}
-		else if (runType == RunType.WHEN_APP_CLOSED)
-		{
+		else if (runType == RunType.WHEN_APP_CLOSED) {
 			cmbxRunType.setSelectedIndex(3);
 			txtAppName.setText((String)shortcut.getAction().getArgs()[1]);
 		}
 		
-		if (cmbxEffect != null)
-		{
+		if (cmbxEffect != null) {
 			String effect = (String)shortcut.getAction().getArgs()[0];
 			List<String> effects = Arrays.asList(getEffects());
 			int effectIndex = effects.indexOf(effect);
 			cmbxEffect.setSelectedIndex(effectIndex);
 		}
-		else if (txtNumberField != null)
-		{
+		else if (txtNumberField != null) {
 			int value = (int)shortcut.getAction().getArgs()[0];
 			txtNumberField.setText(value + "");
 		}
 	}
 	
-	private void initUI(Component parent)
-	{
+	private void initUI(Component parent) {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setSize(400, 225);
 		setUndecorated(true);
@@ -167,11 +156,9 @@ public class ShortcutCreatorDialog extends JDialog
 		
 		cmbxActionType = new ModernComboBox<String>(
 				new DefaultComboBoxModel<String>(getActionTypes()));
-		cmbxActionType.addActionListener(new ActionListener()
-		{
+		cmbxActionType.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				updateHiddenUI();
 			}
 		});
@@ -185,11 +172,9 @@ public class ShortcutCreatorDialog extends JDialog
 		String[] runTypes = getPlatformRunTypes();
 		cmbxRunType = new ModernComboBox<String>(
 				new DefaultComboBoxModel<String>(runTypes));
-		cmbxRunType.addActionListener(new ActionListener()
-		{
+		cmbxRunType.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				updateHiddenUI();
 				showRunTypeHelpMessage();
 			}
@@ -198,16 +183,12 @@ public class ShortcutCreatorDialog extends JDialog
 		
 		btnCreate = new ModernButton("Create");
 		btnCreate.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		btnCreate.addActionListener(new ActionListener()
-		{
+		btnCreate.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				Shortcut shortcut = createShortcut();
-				if (shortcut != null)
-				{
-					if (oldShortcut != null)
-					{
+				if (shortcut != null) {
+					if (oldShortcut != null) {
 						ShortcutManager.removeShortcut(shortcut.getName());
 					}
 					ShortcutManager.saveShortcut(shortcut);
@@ -236,38 +217,29 @@ public class ShortcutCreatorDialog extends JDialog
 		
 		txtKeys = new ModernTextField("Click here to set keys");
 		txtKeys.setEditable(false);
-		txtKeys.addFocusListener(new FocusAdapter()
-		{
+		txtKeys.addFocusListener(new FocusAdapter() {
 			@Override
-			public void focusGained(FocusEvent e)
-			{
+			public void focusGained(FocusEvent e) {
 				txtKeys.setText("Waiting for input...");
 			}
 		});
-		txtKeys.addKeyListener(new KeyAdapter()
-		{
+		txtKeys.addKeyListener(new KeyAdapter() {
 			@Override
-			public void keyPressed(KeyEvent e)
-			{
-				if (txtKeys.hasFocus())
-				{
+			public void keyPressed(KeyEvent e) {
+				if (txtKeys.hasFocus()) {
 					String key = KeyEvent.getKeyText(e.getKeyCode());
-					if (!txtKeys.getText().equals("Waiting for input..."))
-					{
+					if (!txtKeys.getText().equals("Waiting for input...")) {
 						List<String> keys = getSelectedKeys();
-						if (!keys.contains(key))
-						{
+						if (!keys.contains(key)) {
 							StringBuilder keysStr = new StringBuilder();
-							for (String k : keys)
-							{
+							for (String k : keys) {
 								keysStr.append(k + " + ");
 							}
 							keysStr.append(key);
 							txtKeys.setText(keysStr.toString());
 						}
 					}
-					else
-					{
+					else {
 						txtKeys.setText(key);
 					}
 				}
@@ -283,69 +255,56 @@ public class ShortcutCreatorDialog extends JDialog
 		resize();
 	}
 	
-	private Shortcut createShortcut()
-	{
+	private Shortcut createShortcut() {
 		String name = txtName.getText();
 		ActionType actionType = getSelectedActionType();
 		List<String> keys = getSelectedKeys();
 		RunType runType = getSelectedRunType();
 		
-		if (userInputValid())
-		{
+		if (userInputValid()) {
 			Object[] args = null;
-			if (cmbxEffect != null)
-			{
+			if (cmbxEffect != null) {
 				String effect = (String)cmbxEffect.getSelectedItem();
 				args = new Object[]{effect};
 			}
-			else if (txtNumberField != null)
-			{
+			else if (txtNumberField != null) {
 				int value = getNumberFieldValue();
 				args = new Object[]{value};
 			}
 			
 			if (runType == RunType.WHEN_APP_RUN ||
-						runType == RunType.WHEN_APP_CLOSED)
-			{
+						runType == RunType.WHEN_APP_CLOSED) {
 				args = new Object[]{args[0], txtAppName.getText()};
 			}
 			Action action = new Action(actionType, args);
 			return new Shortcut(name, keys, runType, action);
 		}
-		else
-		{
+		else {
 			String message = "You must fill out all fields to continue.";
 			new TextDialog(this, message).setVisible(true);
 			return null;
 		}
 	}
 	
-	private String enumValueToName(Enum enumValue)
-	{
+	private String enumValueToName(Enum enumValue) {
 		char[] type = enumValue.toString().toLowerCase().toCharArray();
 		type[0] = (type[0] + "").toUpperCase().charAt(0);
-		for (int j = 0; j < type.length; j++)
-		{
-			if (type[j] == '_')
-			{
+		for (int j = 0; j < type.length; j++) {
+			if (type[j] == '_') {
 				type[j+1] = (type[j+1] + "").toUpperCase().charAt(0);
 			}
 		}
 		return new String(type).replace("_", " ");
 	}
 	
-	private String[] getActionTypes()
-	{
+	private String[] getActionTypes() {
 		String[] types = new String[ActionType.values().length+1];
 		types[0] = "Select an event...";
-		for (int i = 0; i < ActionType.values().length; i++)
-		{
+		for (int i = 0; i < ActionType.values().length; i++) {
 			char[] type = ActionType.values()[i].toString().toLowerCase().toCharArray();
 			type[0] = (type[0] + "").toUpperCase().charAt(0);
-			for (int j = 0; j < type.length; j++)
-			{
-				if (type[j] == '_')
-				{
+			for (int j = 0; j < type.length; j++) {
+				if (type[j] == '_') {
 					type[j+1] = (type[j+1] + "").toUpperCase().charAt(0);
 				}
 			}
@@ -354,106 +313,79 @@ public class ShortcutCreatorDialog extends JDialog
 		return types;
 	}
 	
-	private ActionType getSelectedActionType()
-	{
+	private ActionType getSelectedActionType() {
 		int index = cmbxActionType.getSelectedIndex()-1;
 		ActionType type = index >= 0 ? ActionType.values()[index] : null;
 		return type;
 	}
 	
-	private RunType getSelectedRunType()
-	{
+	private RunType getSelectedRunType() {
 		int index = cmbxRunType.getSelectedIndex();
 		RunType type = index >= 0 ? RunType.values()[index] : null;
 		return type;
 	}
 	
-	private List<String> getSelectedKeys()
-	{
-		if (!txtKeys.getText().equals("Click here to set keys"))
-		{
+	private List<String> getSelectedKeys() {
+		if (!txtKeys.getText().equals("Click here to set keys")) {
 			return Arrays.asList(txtKeys.getText().split(" \\+ "));
 		}
 		return Arrays.asList(new String[]{});
 	}
 	
-	private String[] getEffects()
-	{
+	private String[] getEffects() {
 		List<String> effectsList = new ArrayList<String>();
-		try
-		{
-			for (Aurora device : devices)
-			{
-				for (String effect : device.effects().getEffectsList())
-				{
-					effectsList.add(effect);
-				}
-			}
+		try {
+			effectsList = group.getAllEffectsList();
 		}
-		catch (StatusCodeException sce)
-		{
-			sce.printStackTrace();
+		catch (NanoleafException | IOException e) {
+			e.printStackTrace();
 		}
 		String[] effects = new String[effectsList.size()];
-		for (int i = 0; i < effects.length; i++)
-		{
+		for (int i = 0; i < effects.length; i++) {
 			effects[i] = effectsList.get(i);
 		}
 		return effects;
 	}
 	
-	private int getNumberFieldValue()
-	{
+	private int getNumberFieldValue() {
 		String text = txtNumberField.getText();
-		try
-		{
+		try {
 			return Integer.parseInt(text);
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			// Message shown later
 			e.printStackTrace();
 		}
 		return -1;
 	}
 	
-	private boolean userInputValid()
-	{
+	private boolean userInputValid() {
 		if (!txtName.getText().isEmpty() &&
-				getSelectedActionType() != null)
-		{
+				getSelectedActionType() != null) {
 			RunType runType = getSelectedRunType();
 			if (runType == RunType.WHEN_PRESSED ||
-					runType == RunType.WHILE_HELD)
-			{
+					runType == RunType.WHILE_HELD) {
 				if (extraUI.contains(txtNumberField) &&
-						!txtNumberField.getText().isEmpty())
-				{
+						!txtNumberField.getText().isEmpty()) {
 					return getNumberFieldValue() != -1;
 				}
-				else if (extraUI.contains(txtAppName))
-				{
+				else if (extraUI.contains(txtAppName)) {
 					return !txtAppName.getText().isEmpty();
 				}
-				else
-				{
+				else {
 					return true;
 				}
 			}
 			else if (runType == RunType.WHEN_APP_RUN ||
-					runType == RunType.WHEN_APP_CLOSED)
-			{
+					runType == RunType.WHEN_APP_CLOSED) {
 				if (extraUI.contains(txtNumberField) &&
-						!txtNumberField.getText().isEmpty())
-				{
+						!txtNumberField.getText().isEmpty()) {
 					return getNumberFieldValue() != -1;
 				}
-				else if (extraUI.contains(txtAppName))
-				{
+				else if (extraUI.contains(txtAppName)) {
 					return !txtAppName.getText().isEmpty();
 				}
-				else
-				{
+				else {
 					return true;
 				}
 			}
@@ -461,13 +393,10 @@ public class ShortcutCreatorDialog extends JDialog
 		return false;
 	}
 	
-	private static ActionType nameToActionType(String name)
-	{
+	private static ActionType nameToActionType(String name) {
 		name = name.toUpperCase().replace(' ', '_');
-		for (ActionType type : ActionType.values())
-		{
-			if (name.equals(type.toString()))
-			{
+		for (ActionType type : ActionType.values()) {
+			if (name.equals(type.toString())) {
 				return type;
 			}
 		}
@@ -475,40 +404,32 @@ public class ShortcutCreatorDialog extends JDialog
 	}
 	
 	// Disable some run types on certain platforms
-	private String[] getPlatformRunTypes()
-	{
+	private String[] getPlatformRunTypes() {
 		final String os = System.getProperty("os.name").toLowerCase();
-		if (os.contains("win"))
-		{
+		if (os.contains("win")) {
 			return new String[]{"When key(s) pressed",
 					"While key(s) pressed", "When an application is run",
 					"When an application is closed"};
 		}
-		else
-		{
+		else {
 			return new String[]{"When key(s) pressed", "While key(s) pressed"};
 		}
 	}
 	
-	private void showRunTypeHelpMessage()
-	{
+	private void showRunTypeHelpMessage() {
 		if (getSelectedRunType() == RunType.WHEN_APP_RUN ||
-				getSelectedRunType() == RunType.WHEN_APP_CLOSED)
-		{
+				getSelectedRunType() == RunType.WHEN_APP_CLOSED) {
 			new TextDialog(parent, "Find the name of the application in task manager by " +
 					"right-clicking on the program and then clicking \"properties\".").setVisible(true);
 		}
 	}
 	
-	private void updateHiddenUI()
-	{
+	private void updateHiddenUI() {
 		String typeName = (String)cmbxActionType.getSelectedItem();
 		ActionType actionType = nameToActionType(typeName);
 		RunType runType = getSelectedRunType();
-		if (actionType == ActionType.SET_EFFECT)
-		{
-			if (extraUI.contains(txtNumberField))
-			{
+		if (actionType == ActionType.SET_EFFECT) {
+			if (extraUI.contains(txtNumberField)) {
 				removeExtraUI(lblNumberField);
 				removeExtraUI(txtNumberField);
 			}
@@ -525,35 +446,28 @@ public class ShortcutCreatorDialog extends JDialog
 				actionType == ActionType.SET_SATURATION ||
 				actionType == ActionType.SET_RED ||
 				actionType == ActionType.SET_GREEN ||
-				actionType == ActionType.SET_BLUE))
-		{
-			if (extraUI.contains(cmbxEffect))
-			{
+				actionType == ActionType.SET_BLUE)) {
+			if (extraUI.contains(cmbxEffect)) {
 				removeExtraUI(lblEffect);
 				removeExtraUI(cmbxEffect);
 			}
 			addExtraUI(lblNumberField, "");
 			addExtraUI(txtNumberField, "growx");
 		}
-		else
-		{
-			if (extraUI.contains(cmbxEffect))
-			{
+		else {
+			if (extraUI.contains(cmbxEffect)) {
 				removeExtraUI(lblEffect);
 				removeExtraUI(cmbxEffect);
 			}
-			if (extraUI.contains(txtNumberField))
-			{
+			if (extraUI.contains(txtNumberField)) {
 				removeExtraUI(lblNumberField);
 				removeExtraUI(txtNumberField);
 			}
 		}
 		
 		if (runType == RunType.WHEN_PRESSED ||
-				runType == RunType.WHILE_HELD)
-		{
-			if (extraUI.contains(txtAppName))
-			{
+				runType == RunType.WHILE_HELD) {
+			if (extraUI.contains(txtAppName)) {
 				removeExtraUI(lblAppName);
 				removeExtraUI(txtAppName);
 			}
@@ -561,20 +475,16 @@ public class ShortcutCreatorDialog extends JDialog
 			addExtraUI(txtKeys, "flowx, growx");
 		}
 		else if (runType == RunType.WHEN_APP_RUN ||
-				runType == RunType.WHEN_APP_CLOSED)
-		{
-			if (extraUI.contains(txtKeys))
-			{
+				runType == RunType.WHEN_APP_CLOSED) {
+			if (extraUI.contains(txtKeys)) {
 				removeExtraUI(lblKeys);
 				removeExtraUI(txtKeys);
 			}
 			addExtraUI(lblAppName, "");
 			addExtraUI(txtAppName, "growx");
 		}
-		else
-		{
-			if (extraUI.contains(txtKeys))
-			{
+		else {
+			if (extraUI.contains(txtKeys)) {
 				removeExtraUI(lblKeys);
 				removeExtraUI(txtKeys);
 			}
@@ -586,10 +496,8 @@ public class ShortcutCreatorDialog extends JDialog
 		}
 	}
 	
-	private void addExtraUI(Component component, String layoutArgs)
-	{
-		if (!extraUI.contains(component))
-		{
+	private void addExtraUI(Component component, String layoutArgs) {
+		if (!extraUI.contains(component)) {
 			contentPane.remove(btnCreate);
 			String layout = "cell ";
 			layout += component instanceof JLabel ? "0 " : "1 ";
@@ -602,8 +510,7 @@ public class ShortcutCreatorDialog extends JDialog
 		}
 	}
 	
-	private void removeExtraUI(Component component)
-	{
+	private void removeExtraUI(Component component) {
 		contentPane.remove(btnCreate);
 		contentPane.remove(component);
 		extraUI.remove(component);
@@ -611,14 +518,12 @@ public class ShortcutCreatorDialog extends JDialog
 		resize();
 	}
 	
-	private int getNextRow()
-	{
+	private int getNextRow() {
 		int numComponents = contentPane.getComponentCount();
 		return (numComponents+1)/2;
 	}
 	
-	private void resize()
-	{
+	private void resize() {
 		pack();
 		setLocationRelativeTo(parent);
 	}

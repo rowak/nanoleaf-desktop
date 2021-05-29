@@ -7,6 +7,7 @@ import java.awt.*;
 import java.net.URL;
 
 public class LoadingSpinner extends JLabel {
+	
 	private final URL FILE_PATH = Main.class.getResource("/images/loading_spinner.gif");
 
 	public LoadingSpinner(Color background) {

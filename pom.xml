@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>nanoleaf-desktop</groupId>
     <artifactId>nanoleaf-desktop</artifactId>
-    <version>0.8.7-SNAPSHOT</version>
+    <version>0.9.0</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -13,10 +13,17 @@
     </properties>
 
     <dependencies>
+    	<!--
         <dependency>
             <groupId>io.github.rowak</groupId>
             <artifactId>nanoleaf-aurora</artifactId>
             <version>1.5.0</version>
+        </dependency>
+        -->
+        <dependency>
+        	<groupId>io.github.rowak</groupId>
+        	<artifactId>nanoleaf-api</artifactId>
+        	<version>0.1.2</version>
         </dependency>
         <dependency>
             <groupId>se.michaelthelin.spotify</groupId>

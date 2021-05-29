@@ -30,32 +30,26 @@ import io.github.rowak.nanoleafdesktop.ui.listener.WindowDragListener;
 import io.github.rowak.nanoleafdesktop.ui.scrollbar.ModernScrollBarUI;
 import net.miginfocom.swing.MigLayout;
 
-public class GroupDeleterDialog extends JDialog
-{
+public class GroupDeleterDialog extends JDialog {
+	
 	private List<DeviceGroup> groups;
 	private DefaultListModel<String> groupsModel;
 	
-	public GroupDeleterDialog(Component parent)
-	{
+	public GroupDeleterDialog(Component parent) {
 		initUI(parent);
 		loadGroups();
 	}
 	
-	private void loadGroups()
-	{
+	private void loadGroups() {
 		groups = getDeviceGroups();
-		for (DeviceGroup group : groups)
-		{
+		for (DeviceGroup group : groups) {
 			groupsModel.addElement(group.getName());
 		}
 	}
 	
-	private void deleteGroup(String name)
-	{
-		for (DeviceGroup group : groups)
-		{
-			if (group.getName().equals(name))
-			{
+	private void deleteGroup(String name) {
+		for (DeviceGroup group : groups) {
+			if (group.getName().equals(name)) {
 				groups.remove(group);
 				groupsModel.removeElement(name);
 				PropertyManager manager =
@@ -67,16 +61,13 @@ public class GroupDeleterDialog extends JDialog
 		}
 	}
 	
-	private List<DeviceGroup> getDeviceGroups()
-	{
+	private List<DeviceGroup> getDeviceGroups() {
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 		String devicesStr = manager.getProperty("deviceGroups");
-		if (devicesStr != null)
-		{
+		if (devicesStr != null) {
 			List<DeviceGroup> groups = new ArrayList<DeviceGroup>();
 			JSONArray json = new JSONArray(devicesStr);
-			for (int i = 0; i < json.length(); i++)
-			{
+			for (int i = 0; i < json.length(); i++) {
 				groups.add(DeviceGroup.fromJSON(json.getJSONObject(i).toString()));
 			}
 			return groups;
@@ -84,8 +75,7 @@ public class GroupDeleterDialog extends JDialog
 		return new ArrayList<DeviceGroup>();
 	}
 	
-	private void initUI(Component parent)
-	{
+	private void initUI(Component parent) {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setSize(474, 225);
 		setLocationRelativeTo(parent);
@@ -124,11 +114,9 @@ public class GroupDeleterDialog extends JDialog
 		devicesScrollPane.setViewportView(listGroups);
 		
 		JButton btnCreateGroup = new ModernButton("Delete Group");
-		btnCreateGroup.addActionListener(new ActionListener()
-		{
+		btnCreateGroup.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				deleteGroup(listGroups.getSelectedValue());
 			}
 		});

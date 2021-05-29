@@ -23,25 +23,22 @@ import javax.swing.event.ChangeListener;
 import io.github.rowak.nanoleafdesktop.ui.scrollbar.ModernScrollBarUI;
 import net.miginfocom.swing.MigLayout;
 
-public class Palette extends JPanel
-{
+public class Palette extends JPanel {
+	
 	private int width, height;
 	private Color selectedColor;
 	private List<Color> palette;
 	private ColorEntry colorEntry;
 	private JScrollBar scrollBar;
 	
-	public Palette(int width, int height,
-			ColorEntry colorEntry)
-	{
+	public Palette(int width, int height, ColorEntry colorEntry) {
 		this.width = width;
 		this.height = height;
 		this.colorEntry = colorEntry;
 		initUI();
 	}
 	
-	private void initUI()
-	{
+	private void initUI() {
 		setLayout(new MigLayout("", "[]", "[]"));
 		add(Box.createRigidArea(new Dimension(width, height)), "cell 0 0,alignx left,aligny top");
 		setBackground(Color.DARK_GRAY);
@@ -57,11 +54,9 @@ public class Palette extends JPanel
 		scrollBar.setMinimum(0);
 		scrollBar.setValue(0);
 		scrollBar.setVisible(false);
-		scrollBar.addAdjustmentListener(new AdjustmentListener()
-		{
+		scrollBar.addAdjustmentListener(new AdjustmentListener() {
 			@Override
-			public void adjustmentValueChanged(AdjustmentEvent e)
-			{
+			public void adjustmentValueChanged(AdjustmentEvent e) {
 				repaint();
 			}
 		});
@@ -70,22 +65,18 @@ public class Palette extends JPanel
 		addMouseListener(new MouseHandler());
 	}
 	
-	public Color[] getPalette()
-	{
+	public Color[] getPalette() {
 		return palette.toArray(new Color[]{});
 	}
 	
-	public void setPalette(Color[] palette)
-	{
+	public void setPalette(Color[] palette) {
 		this.palette = new ArrayList<Color>();
-		for (Color c : palette)
-		{
+		for (Color c : palette) {
 			this.palette.add(c);
 		}
 	}
 	
-	private Color getCurrentColor()
-	{
+	private Color getCurrentColor() {
 		return colorEntry.getColor();
 	}
 	
@@ -100,14 +91,12 @@ public class Palette extends JPanel
 //	}
 	
 	@Override
-	public void paintComponent(Graphics g)
-	{
+	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		paintPalette(g);
 	}
 	
-	private void paintPalette(Graphics g)
-	{
+	private void paintPalette(Graphics g) {
 		Graphics2D g2d = (Graphics2D)g;
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				RenderingHints.VALUE_ANTIALIAS_ON);
@@ -115,8 +104,7 @@ public class Palette extends JPanel
 		int scrollFactor = scrollBar.getValue()*10;
 		final int OFFSET = 5;
 		int colorNum = 0;
-		for (Color color : palette)
-		{
+		for (Color color : palette) {
 			final int DIAMETER = 50;
 			final int SEPARATION = 10 + DIAMETER;
 			
@@ -126,12 +114,10 @@ public class Palette extends JPanel
 			g.setColor(color);
 			g.fillOval(x, y, DIAMETER, DIAMETER);
 			g.setColor(Color.GRAY);
-			if (color == selectedColor)
-			{
+			if (color == selectedColor) {
 				g2d.setStroke(new BasicStroke(5));
 			}
-			else
-			{
+			else {
 				g2d.setStroke(new BasicStroke(3));
 			}
 			g2d.drawOval(x, y, DIAMETER, DIAMETER);
@@ -149,66 +135,53 @@ public class Palette extends JPanel
 		g2d.setStroke(new BasicStroke(1));
 	}
 	
-	public void addChangeListener(ChangeListener listener)
-	{
+	public void addChangeListener(ChangeListener listener) {
 	    listenerList.add(ChangeListener.class, listener);
 	}
 
-	public void removeChangeListener(ChangeListener listener)
-	{
+	public void removeChangeListener(ChangeListener listener) {
 	    listenerList.remove(ChangeListener.class, listener);
 	}
 
-	public ChangeListener[] getChangeListeners()
-	{
+	public ChangeListener[] getChangeListeners() {
 	    return listenerList.getListeners(ChangeListener.class);
 	}
 
-	protected void fireChangeListeners()
-	{
+	protected void fireChangeListeners() {
 	    ChangeEvent event = new ChangeEvent(this);
-	    for (ChangeListener listener : getChangeListeners())
-	    {
+	    for (ChangeListener listener : getChangeListeners()) {
 	        listener.stateChanged(event);
 	    }
 	}
 	
-	private class MouseHandler extends MouseAdapter
-	{
-		private void updateScrollBar()
-		{
-			if (palette.size()*6 - 20 > 0)
-			{
+	private class MouseHandler extends MouseAdapter {
+		private void updateScrollBar() {
+			if (palette.size()*6 - 20 > 0) {
 				scrollBar.setVisible(true);
 				scrollBar.setMaximum(palette.size()*6 - 20);
 			}
-			else
-			{
+			else {
 				scrollBar.setVisible(false);
 			}
 		}
 		
 		@Override
-		public void mousePressed(MouseEvent e)
-		{
+		public void mousePressed(MouseEvent e) {
 			Point mouse = e.getPoint();
 			
 			int scrollFactor = scrollBar.getValue()*10;
 			final int OFFSET = 5;
 			final int DIAMETER = 50;
 			int colorNum = 0;
-			for (int i = 0; i < palette.size(); i++)
-			{
+			for (int i = 0; i < palette.size(); i++) {
 				Color color = palette.get(i);
 				final int SEPARATION = 10 + DIAMETER;
 				
 				int circX = colorNum*SEPARATION + OFFSET + DIAMETER/2 - scrollFactor;
 				int circY = OFFSET;
 				
-				if (mouse.distance(circX, circY) < DIAMETER/2+OFFSET)
-				{
-					if (e.getButton() == 3)
-					{
+				if (mouse.distance(circX, circY) < DIAMETER/2+OFFSET) {
+					if (e.getButton() == 3) {
 						palette.remove(color);
 						fireChangeListeners();
 						updateScrollBar();
@@ -221,8 +194,7 @@ public class Palette extends JPanel
 			// Add a new color to the palette if the user clicks the "+" button
 			int cX = colorNum*60 + OFFSET + DIAMETER/2 - scrollFactor;
 			int cY = OFFSET;
-			if (mouse.distance(cX, cY) < DIAMETER/2+OFFSET)
-			{
+			if (mouse.distance(cX, cY) < DIAMETER/2+OFFSET) {
 				palette.add(getCurrentColor());
 				fireChangeListeners();
 				updateScrollBar();

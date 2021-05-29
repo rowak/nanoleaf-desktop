@@ -8,6 +8,7 @@ import java.awt.*;
 import java.net.URL;
 
 public class ModernCheckBox extends JCheckBox {
+	
 	private final String CHECKBOX_UNCHECKED_ICON_PATH = "checkbox_unchecked_icon.png";
 	private final String CHECKBOX_CHECKED_ICON_PATH = "checkbox_checked_icon.png";
 

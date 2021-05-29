@@ -8,30 +8,26 @@ import java.util.Map;
 
 import fi.iki.elonen.NanoHTTPD;
 
-public class AuthCallbackServer extends NanoHTTPD
-{
+public class AuthCallbackServer extends NanoHTTPD {
+	
 	private final static int PORT = 7142;
 	private String accessToken;
 	
-	public AuthCallbackServer() throws IOException
-	{
+	public AuthCallbackServer() throws IOException {
 		super(PORT);
 		start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
 	}
 	
-	public String getAccessToken()
-	{
+	public String getAccessToken() {
 		return accessToken;
 	}
 	
 	@Override
-    public Response serve(IHTTPSession session)
-	{
+    public Response serve(IHTTPSession session) {
 		Map<String, String> parms = session.getParms();
 		String msg = "<html><center><body bgcolor=\"#1DB954\" text=\"#FFFFFF\">" +
 					 "<font size=6 face=\"Arial Black\">";
-		if (parms.get("code") != null)
-		{
+		if (parms.get("code") != null) {
 			Calendar expireCal = Calendar.getInstance();
 			expireCal.add(Calendar.HOUR, 1);
 			Date expireTime = expireCal.getTime();
@@ -51,8 +47,7 @@ public class AuthCallbackServer extends NanoHTTPD
 					"document.getElementById(\"countdown\").innerHTML = \"This session will expire in: " +
 					"*Expired*\"; } }, 1000);</script>";
 		}
-		else if (accessToken == null)
-		{
+		else if (accessToken == null) {
 			accessToken = "error";
 			msg += "Authentication failed.</h1>Please try again.</center>";
 		}

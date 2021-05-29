@@ -8,6 +8,7 @@ import java.util.Comparator;
  * A local version interface for the GitHub REST api.
  */
 public class Version implements Comparable<Version> {
+	
     int semVer;
     boolean preRelease;
     String name;
@@ -33,7 +34,8 @@ public class Version implements Comparable<Version> {
     @Override
     public int compareTo(Version otherVersion) {
         return Comparator.comparing((Version p) -> p.name)
-                         .thenComparing(p -> p.preRelease).compare(this, otherVersion);
+                         .thenComparing(p -> !p.preRelease)
+                         .compare(this, otherVersion);
 
     }
 }

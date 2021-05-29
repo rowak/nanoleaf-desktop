@@ -7,8 +7,8 @@ import org.json.JSONObject;
 import io.github.rowak.nanoleafapi.Color;
 import io.github.rowak.nanoleafapi.Effect;
 
-public class EffectMetadata
-{
+public class EffectMetadata {
+	
 	private String name;
 	private String description;
 	private String type;
@@ -19,8 +19,7 @@ public class EffectMetadata
 	private int downloads;
 	private Color[] palette;
 	
-	public EffectMetadata(JSONObject data)
-	{
+	public EffectMetadata(JSONObject data) {
 		this.name = data.getString("effect_name");
 		this.description = data.getString("effect_description");
 		this.type = data.getString("effect_type");
@@ -32,80 +31,65 @@ public class EffectMetadata
 		this.palette = jsonToPalette(data.getJSONArray("palette"));
 	}
 	
-	public Effect getEffect()
-	{
+	public Effect getEffect() {
 		return Discovery.downloadEffect(this.key);
 	}
 	
-	public String getName()
-	{
+	public String getName() {
 		return this.name;
 	}
 	
-	public String getDescription()
-	{
+	public String getDescription() {
 		return this.description;
 	}
 	
-	public String getType()
-	{
+	public String getType() {
 		return this.type;
 	}
 	
-	public String getUuid()
-	{
+	public String getUuid() {
 		return this.uuid;
 	}
 	
-	public String[] getTags()
-	{
+	public String[] getTags() {
 		return this.tags;
 	}
 	
-	public String getCreator()
-	{
+	public String getCreator() {
 		return this.creator;
 	}
 	
-	public String getKey()
-	{
+	public String getKey() {
 		return this.key;
 	}
 	
-	public int getDownloads()
-	{
+	public int getDownloads() {
 		return this.downloads;
 	}
 	
-	public Color[] getPalette()
-	{
+	public Color[] getPalette() {
 		return this.palette;
 	}
 	
 	@Override
-	public String toString()
-	{
+	public String toString() {
 		return this.name;
 	}
 	
-	private Color[] jsonToPalette(JSONArray arr)
-	{
+	private Color[] jsonToPalette(JSONArray arr) {
 		Color[] palette = new Color[arr.length()];
-		for (int i = 0; i < arr.length(); i++)
-		{
+		for (int i = 0; i < arr.length(); i++) {
 			JSONObject colors = arr.getJSONObject(i);
 			int hue = colors.getInt("hue");
 			int sat = colors.getInt("saturation");
 			int brightness = colors.getInt("brightness");
 			palette[i] = Color.fromHSB(hue,
 					sat, brightness);
-			try
-			{
-				double probability = colors.getDouble("probability");
+			try {
+				float probability = colors.getFloat("probability");
 				palette[i].setProbability(probability);
 			}
-			catch (JSONException je)
-			{
+			catch (JSONException je) {
 				palette[i].setProbability(-1);
 			}
 		}

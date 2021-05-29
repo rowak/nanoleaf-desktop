@@ -5,52 +5,49 @@ import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
 import io.github.rowak.nanoleafapi.Aurora;
-import io.github.rowak.nanoleafapi.StatusCodeException;
+import io.github.rowak.nanoleafapi.NanoleafException;
+import io.github.rowak.nanoleafapi.NanoleafGroup;
 import io.github.rowak.nanoleafdesktop.tools.BasicEffects;
 import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.SingleEntryDialog;
 import io.github.rowak.nanoleafdesktop.ui.panel.EffectsPanel;
 
-public class EffectOptionsMenu extends ModernPopupMenu
-{
+public class EffectOptionsMenu extends ModernPopupMenu {
+	
 	private boolean basicEffectsMode;
 	private String effect;
 	private EffectsPanel effectsPanel;
-	private Aurora[] devices;
+	private NanoleafGroup group;
 	private Component parent;
 	
 	public EffectOptionsMenu(EffectsPanel effectsPanel, String label,
-			Aurora[] devices, Component parent)
-	{
+			NanoleafGroup group, Component parent) {
 		this.effectsPanel = effectsPanel;
-		this.devices = devices;
+		this.group = group;
 		this.parent = parent;
 		effect = getEffect();
 		initUI();
 		
-		if (label.equals("Basic Effects"))
-		{
+		if (label.equals("Basic Effects")) {
 			basicEffectsMode = true;
 		}
 	}
 	
-	private void initUI()
-	{
+	private void initUI() {
 		//ModernMenuItem itemEdit = new ModernMenuItem("Edit");
 		ModernMenuItem itemRename = new ModernMenuItem("Rename");
-		itemRename.addActionListener((e) ->
-		{
+		itemRename.addActionListener((e) -> {
 			showRenameDialog();
 		});
 		ModernMenuItem itemDelete = new ModernMenuItem("Delete");
-		itemDelete.addActionListener((e) ->
-		{
+		itemDelete.addActionListener((e) -> {
 			showDeleteDialog();
 		});
 		
@@ -61,19 +58,16 @@ public class EffectOptionsMenu extends ModernPopupMenu
 		show(parent, menuLoc.x, menuLoc.y);
 	}
 	
-	private String getEffect()
-	{
+	private String getEffect() {
 		effectsPanel.getList().setSelectedIndex(getEffectIndex());
 		return effectsPanel.getList().getSelectedValue();
 	}
 	
-	private int getEffectIndex()
-	{
+	private int getEffectIndex() {
 		return effectsPanel.getList().locationToIndex(getEffectLocation());
 	}
 	
-	private Point getMenuLocation()
-	{
+	private Point getMenuLocation() {
 		Point menuPoint = MouseInfo.getPointerInfo().getLocation();
 		JScrollPane scrollPane = (JScrollPane)effectsPanel.getList().getParent().getParent();
 		SwingUtilities.convertPointFromScreen(menuPoint, scrollPane);
@@ -81,8 +75,7 @@ public class EffectOptionsMenu extends ModernPopupMenu
 		return new Point(menuPoint.x, menuPoint.y + listLocation);
 	}
 	
-	private Point getEffectLocation()
-	{
+	private Point getEffectLocation() {
 		Point menuPoint = getMenuLocation();
 		JScrollPane scrollPane = (JScrollPane)effectsPanel.getList().getParent().getParent();
 		int cellHeight = effectsPanel.getList().getCellBounds(0, 0).height;
@@ -93,40 +86,29 @@ public class EffectOptionsMenu extends ModernPopupMenu
 		return listPoint;
 	}
 	
-	private void renameEffectOnDevice(String newName)
-	{
-		try
-		{
-			for (Aurora device : devices)
-			{
-				device.effects().renameEffect(effect, newName);
-			}
+	private void renameEffectOnDevice(String newName) {
+		try {
+			group.renameEffect(effect, newName);
 		}
-		catch (StatusCodeException sce)
-		{
-			sce.printStackTrace();
+		catch (NanoleafException | IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
-	private void showRenameDialog()
-	{
+	private void showRenameDialog() {
 		SingleEntryDialog renameDialog = new SingleEntryDialog(
 				parent, effect, "Ok",
-				new ActionListener()
-				{
+				new ActionListener() {
 					@Override
-					public void actionPerformed(ActionEvent e)
-					{
+					public void actionPerformed(ActionEvent e) {
 						SingleEntryDialog dialog =
 								(SingleEntryDialog)((JButton)e.getSource())
 								.getTopLevelAncestor();
 						String newName = dialog.getEntryField().getText();
-						if (basicEffectsMode)
-						{
+						if (basicEffectsMode) {
 							BasicEffects.renameBasicEffect(effect, newName);
 						}
-						else
-						{
+						else {
 							renameEffectOnDevice(newName);
 						}
 						int i = effectsPanel.getModel().indexOf(effect);
@@ -137,41 +119,29 @@ public class EffectOptionsMenu extends ModernPopupMenu
 		renameDialog.setVisible(true);
 	}
 	
-	private void deleteEffectFromDevice()
-	{
-		try
-		{
-			for (Aurora device : devices)
-			{
-				device.effects().deleteEffect(effect);
-			}
+	private void deleteEffectFromDevice() {
+		try {
+			group.deleteEffect(effect);
 		}
-		catch (StatusCodeException sce)
-		{
-			sce.printStackTrace();
+		catch (NanoleafException | IOException e) {
+			e.printStackTrace();
 		}
 	}
 	
-	private void showDeleteDialog()
-	{
+	private void showDeleteDialog() {
 		String target = " from your device?";
-		if (basicEffectsMode)
-		{
+		if (basicEffectsMode) {
 			target = " from this computer?";
 		}
 		OptionDialog deleteDialog = new OptionDialog(parent,
 				"Are you sure you want to delete " + effect + target,
-				"Yes", "No", new ActionListener()
-				{
+				"Yes", "No", new ActionListener() {
 					@Override
-					public void actionPerformed(ActionEvent e)
-					{
-						if (basicEffectsMode)
-						{
+					public void actionPerformed(ActionEvent e) {
+						if (basicEffectsMode) {
 							BasicEffects.removeBasicEffect(effect);
 						}
-						else
-						{
+						else {
 							deleteEffectFromDevice();
 						}
 						effectsPanel.removeEffect(effect);
@@ -180,11 +150,9 @@ public class EffectOptionsMenu extends ModernPopupMenu
 						dialog.dispose();
 					}
 				},
-				new ActionListener()
-				{
+				new ActionListener() {
 					@Override
-					public void actionPerformed(ActionEvent e)
-					{
+					public void actionPerformed(ActionEvent e) {
 						OptionDialog dialog = (OptionDialog)((JButton)e.getSource())
 								.getTopLevelAncestor();
 						dialog.dispose();

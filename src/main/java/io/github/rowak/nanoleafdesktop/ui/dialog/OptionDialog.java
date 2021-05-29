@@ -5,18 +5,16 @@ import java.awt.Component;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
-import javax.swing.border.EmptyBorder;
 
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 
 import java.awt.Font;
 import java.awt.event.ActionListener;
 
-public class OptionDialog extends BasicDialog
-{
+public class OptionDialog extends BasicDialog {
+	
 	public OptionDialog(Component parent, String text, String choice1,
-			String choice2, ActionListener action1, ActionListener action2)
-	{
+			String choice2, ActionListener action1, ActionListener action2) {
 		JLabel lblText = new JLabel(text);
 		lblText.setFont(FONT);
 		lblText.setForeground(Color.WHITE);

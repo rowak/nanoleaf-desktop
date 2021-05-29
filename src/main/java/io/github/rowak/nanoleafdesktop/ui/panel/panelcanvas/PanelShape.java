@@ -3,21 +3,18 @@ package io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas;
 import java.awt.Point;
 import java.awt.Polygon;
 
-public class PanelShape extends Polygon
-{
+public class PanelShape extends Polygon {
+	
 	private int rotation;
 	
-	public PanelShape(int rotation)
-	{
+	public PanelShape(int rotation) {
 		this.rotation = rotation;
 	}
 	
-	protected void rotate()
-	{
+	protected void rotate() {
 		Point origin = getOrigin();
 		
-		for (int i = 0; i < npoints; i++)
-		{
+		for (int i = 0; i < npoints; i++) {
 			double radAngle = Math.toRadians(rotation);
 			
 			xpoints[i] -= origin.x;
@@ -31,11 +28,9 @@ public class PanelShape extends Polygon
 		}
 	}
 	
-	private Point getOrigin()
-	{
+	private Point getOrigin() {
 		int originX = 0, originY = 0;
-		for (int i = 0; i < npoints; i++)
-		{
+		for (int i = 0; i < npoints; i++) {
 			originX += xpoints[i];
 			originY += ypoints[i];
 		}

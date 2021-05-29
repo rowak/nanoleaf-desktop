@@ -5,223 +5,178 @@ import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.SwingUtilities;
 
 import io.github.rowak.nanoleafapi.Aurora;
+import io.github.rowak.nanoleafapi.Canvas;
+import io.github.rowak.nanoleafapi.NanoleafDevice;
+import io.github.rowak.nanoleafapi.NanoleafException;
 import io.github.rowak.nanoleafapi.Panel;
-import io.github.rowak.nanoleafapi.StatusCodeException;
+import io.github.rowak.nanoleafapi.Shapes;
 
-public class PanelActionListener extends MouseAdapter
-{
+public class PanelActionListener extends MouseAdapter {
 	private int lastXDiff;
-	private int deviceIndex;
-	private Panel[][] panels, tempPanels;
-	private Aurora[] devices;
+	private Map<NanoleafDevice, List<Panel>> panels, tempPanels;
+	private NanoleafDevice selectedDevice;
 	private Point mouseLast;
 	private PanelCanvas canvas;
 	
 	public PanelActionListener(PanelCanvas canvas,
-			Panel[][] panels, Aurora[] devices)
-	{
+			Map<NanoleafDevice, List<Panel>> panels) {
 		this.canvas = canvas;
 		this.panels = panels;
-		this.devices = devices;
 		tempPanels = clonePanels(panels);
 	}
 	
-	public Panel[][] getTempPanels()
-	{
+	public Map<NanoleafDevice, List<Panel>> getTempPanels() {
 		return tempPanels;
 	}
 	
-	public Panel[][] getPanels()
-	{
+	public Map<NanoleafDevice, List<Panel>> getPanels() {
 		return panels;
 	}
 	
-	private Panel[][] clonePanels(Panel[][] original)
-	{
-		Panel[][] temp = new Panel[original.length][];
-		for (int i = 0; i < original.length; i++)
-		{
-			temp[i] = new Panel[original[i].length];
-			for (int j = 0; j < original[i].length; j++)
-			{
-				Panel p = original[i][j];
-				temp[i][j] = new Panel(p.getId(),
-						p.getX(), p.getY(), p.getOrientation());
+	private Map<NanoleafDevice, List<Panel>> clonePanels(Map<NanoleafDevice, List<Panel>> original) {
+		Map<NanoleafDevice, List<Panel>> tempMap = new HashMap<NanoleafDevice, List<Panel>>();
+		for (NanoleafDevice device : original.keySet()) {
+			List<Panel> list = original.get(device); 
+			List<Panel> tempList = new ArrayList<Panel>();
+			for (Panel p : list) {
+				tempList.add(new Panel(p.getId(), p.getX(), p.getY(), p.getOrientation(), p.getShape()));
 			}
+			tempMap.put(device, tempList);
 		}
-		return temp;
+		return tempMap;
 	}
 	
-	private void movePanelsUsingMouse(Point mouse)
-	{
-		if (deviceIndex != -1)
-		{
+	private void movePanelsUsingMouse(Point mouse) {
+		if (selectedDevice != null) {
 			// ******* "Snappy" layouts DISABLED **********
 //			int xdiff = roundToNearest(mouse.x - mouseLast.x, 150f/2f);
 //			int ydiff = roundToNearest(mouse.y - mouseLast.y, 130f/2f);
 			int xdiff = mouse.x - mouseLast.x;
 			int ydiff = mouse.y - mouseLast.y;
 			
-			Point[] offset = canvas.getPanelOffset();
-			offset[deviceIndex].setLocation(xdiff, ydiff);
+			Map<NanoleafDevice, Point> offset = canvas.getPanelOffset();
+			offset.get(selectedDevice).setLocation(xdiff, ydiff);
 			
 			canvas.repaint();
 		}
 	}
 	
-	private void rotatePanelsUsingMouse(Point mouse)
-	{
-		if (deviceIndex != -1)
-		{
+	private void rotatePanelsUsingMouse(Point mouse) {
+		if (selectedDevice != null) {
 			int xdiff = roundToNearest((mouse.x - mouseLast.x)/3, 10);
-			int rotation = canvas.getTempRotation(deviceIndex) + xdiff - lastXDiff;
-			canvas.setTempRotation(rotation, deviceIndex);
+			int rotation = canvas.getTempRotation(selectedDevice) + xdiff - lastXDiff;
+			canvas.setTempRotation(rotation, selectedDevice);
 			lastXDiff = xdiff;
 			canvas.repaint();
 		}
 	}
 	
-	private void scalePanelsUsingMouse(int rotationdiff)
-	{
+	private void scalePanelsUsingMouse(int rotationdiff) {
 		float scaleFactor = canvas.getScaleFactor();
 		scaleFactor += rotationdiff * 0.05f;
-		if (scaleFactor > 0)
-		{
+		if (scaleFactor > 0) {
 			canvas.setScaleFactor(scaleFactor);
 			canvas.repaint();
 		}
 	}
 	
 	@Override
-	public void mousePressed(MouseEvent e)
-	{
-		if (mouseLast == null)
-		{
+	public void mousePressed(MouseEvent e) {
+		if (mouseLast == null) {
 			mouseLast = e.getPoint();
 			canvas.setCursor(new Cursor(Cursor.MOVE_CURSOR));
-			deviceIndex = getDeviceIndex(e.getPoint());
+			selectedDevice = getSelectedDevice(e.getPoint());
 		}
 	}
 	
 	@Override
-	public void mouseReleased(MouseEvent e)
-	{
-		if (lastXDiff != 0)
-		{
+	public void mouseReleased(MouseEvent e) {
+		if (lastXDiff != 0) {
 			canvas.setRotation(canvas.getTempRotation(
-					deviceIndex), deviceIndex);
+					selectedDevice), selectedDevice);
 		}
 		
 		mouseLast = null;
 		lastXDiff = 0;
 		tempPanels = clonePanels(panels);
-		if (deviceIndex != -1)
-		{
-			Point[] offset = canvas.getPanelOffset();
-			final int di = deviceIndex;
-			for (int i = 0; i < tempPanels[deviceIndex].length; i++)
-			{
-				tempPanels[di][i].setX(tempPanels[di][i].getX() + offset[di].x);
-				tempPanels[di][i].setY(tempPanels[di][i].getY() + offset[di].y);
+		if (selectedDevice != null) {
+			Map<NanoleafDevice, Point> offset = canvas.getPanelOffset();
+			List<Panel> localTempPanels = tempPanels.get(selectedDevice);
+			Point localOffset = offset.get(selectedDevice);
+			for (Panel p : localTempPanels) {
+				p.setX(p.getX() + localOffset.x);
+				p.setY(p.getY() + localOffset.y);
 			}
-			offset[deviceIndex] = new Point(0, 0);
-			deviceIndex = -1;
+			offset.put(selectedDevice, new Point(0, 0));
+			selectedDevice = null;
 		}
 			
 		panels = clonePanels(tempPanels);
 		canvas.setPanels(panels);
-		try
-		{
-			canvas.checkAuroraState();
-		}
-		catch (StatusCodeException sce)
-		{
-			sce.printStackTrace();
-		}
+		canvas.checkAuroraState(selectedDevice);
 		canvas.repaint();
 		canvas.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 	}
 	
 	@Override
-	public void mouseDragged(MouseEvent e)
-	{
-		if (mouseLast != null)
-		{
-			if (SwingUtilities.isLeftMouseButton(e))
-			{
+	public void mouseDragged(MouseEvent e) {
+		if (mouseLast != null) {
+			if (SwingUtilities.isLeftMouseButton(e)) {
 				movePanelsUsingMouse(e.getPoint());
 			}
-			else if (SwingUtilities.isRightMouseButton(e))
-			{
+			else if (SwingUtilities.isRightMouseButton(e)) {
 				rotatePanelsUsingMouse(e.getPoint());
 			}
 		}
 	}
 	
 	@Override
-	public void mouseWheelMoved(MouseWheelEvent e)
-	{
+	public void mouseWheelMoved(MouseWheelEvent e) {
 		scalePanelsUsingMouse(e.getWheelRotation());
 	}
 	
-	private int getDeviceIndex(Point mouse)
-	{
-		for (int i = 0; i < tempPanels.length; i++)
-		{
-			String deviceType = getDeviceType(devices[i]);
-			for (Panel p : tempPanels[i])
-			{
+	private NanoleafDevice getSelectedDevice(Point mouse) {
+		for (NanoleafDevice device : tempPanels.keySet()) {
+			for (Panel p : tempPanels.get(device)) {
 				PanelShape shape = null;
-				if (deviceType.equals("aurora"))
-				{
+				if (device instanceof Aurora) {
 					int o = p.getOrientation();
-					if (o == 0 || Math.abs(o) % 120 == 0)
-					{
+					if (o == 0 || Math.abs(o) % 120 == 0) {
 						shape = new UprightPanel(p.getX(),
-								p.getY(), canvas.getRotation(i));
+								p.getY(), canvas.getRotation(device));
 					}
-					else
-					{
+					else {
 						shape = new InvertedPanel(p.getX(),
-								p.getY(), canvas.getRotation(i));
+								p.getY(), canvas.getRotation(device));
 					}
 				}
-				else if (deviceType.equals("canvas"))
-				{
+				else if (device instanceof Canvas) {
 					shape = new SquarePanel(p.getX(),
-							p.getY(), canvas.getRotation(i));
+							p.getY(), canvas.getRotation(device));
+				}
+				else if (device instanceof Shapes) {
+					shape = new HexagonPanel(p.getX(),
+							p.getY(), canvas.getRotation(device));
 				}
 				
-				if (shape != null && shape.contains(mouse))
-				{
-					return i;
+				if (shape != null && shape.contains(mouse)) {
+					return device;
 				}
 			}
 		}
-		return -1;
+		return null;
 	}
 	
-	private String getDeviceType(Aurora device)
-	{
-		String name = device.getName().toLowerCase();
-		if (name.contains("light panels") ||
-				name.contains("aurora"))
-		{
-			return "aurora";
-		}
-		else if (name.contains("canvas"))
-		{
-			return "canvas";
-		}
-		return "";
-	}
-	
-	private int roundToNearest(int num, float factor)
-	{
+	private int roundToNearest(int num, float factor) {
 		return (int)(Math.ceil(num / (float)factor) * factor);
 	}
 }

@@ -6,11 +6,10 @@ import javax.swing.JButton;
 import javax.swing.plaf.basic.BasicArrowButton;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 
-public class ModernScrollBarUI extends BasicScrollBarUI
-{
+public class ModernScrollBarUI extends BasicScrollBarUI {
+	
 	@Override
-	protected JButton createIncreaseButton(int orientation)
-	{
+	protected JButton createIncreaseButton(int orientation) {
 		thumbColor = Color.GRAY;
 		thumbLightShadowColor = new Color(0, 0, 0, 0);
 		thumbDarkShadowColor = new Color(0, 0, 0, 0);
@@ -22,8 +21,7 @@ public class ModernScrollBarUI extends BasicScrollBarUI
 	}
 	
 	@Override
-	protected JButton createDecreaseButton(int orientation)
-	{
+	protected JButton createDecreaseButton(int orientation) {
 		thumbColor = Color.GRAY;
 		thumbLightShadowColor = new Color(0, 0, 0, 0);
 		thumbDarkShadowColor = new Color(0, 0, 0, 0);

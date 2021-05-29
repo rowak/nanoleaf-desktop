@@ -6,7 +6,9 @@ import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.rmi.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,12 +30,14 @@ import javax.swing.border.LineBorder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
-
 import io.github.rowak.nanoleafapi.Aurora;
-import io.github.rowak.nanoleafapi.AuroraMetadata;
-import io.github.rowak.nanoleafapi.StatusCodeException;
-import io.github.rowak.nanoleafapi.StatusCodeException.UnauthorizedException;
+import io.github.rowak.nanoleafapi.NanoleafCallback;
+import io.github.rowak.nanoleafapi.NanoleafDevice;
+import io.github.rowak.nanoleafapi.NanoleafException;
+import io.github.rowak.nanoleafapi.NanoleafGroup;
+import io.github.rowak.nanoleafapi.NanoleafSearchCallback;
+import io.github.rowak.nanoleafapi.util.NanoleafDeviceMeta;
+import io.github.rowak.nanoleafapi.util.NanoleafSetup;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
 import io.github.rowak.nanoleafdesktop.models.DeviceInfo;
@@ -41,44 +45,36 @@ import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.listener.WindowDragListener;
-import io.github.rowak.nanoleafapi.tools.Setup;
 import net.miginfocom.swing.MigLayout;
 
-public class DeviceChangerDialog extends JDialog
-{
+public class DeviceChangerDialog extends JDialog {
+	
+	private final int SEARCH_TIMEOUT = 10000;
+	
 	private Aurora device;
-	private List<AuroraMetadata> devices;
+	private List<NanoleafDeviceMeta> devices;
 	private DefaultListModel<String> listModel;
 	private Main parent;
 	private JPanel contentPane;
 	private JLabel lblTitle;
 	
-	public DeviceChangerDialog(Main parent)
-	{
+	public DeviceChangerDialog(Main parent) {
 		this.parent = parent;
+		devices = new ArrayList<NanoleafDeviceMeta>();
 		listModel = new DefaultListModel<String>();
 		initUI(parent);
 		
-		EventQueue.invokeLater(() ->
-		{
-			new Thread(() ->
-			{
-				findGroups();
-				findAuroras();
-			}).start();
-		});
+		findGroups();
+		findAuroras();
 	}
 	
-	private AuroraMetadata getMetadataFromListItem(String item)
-	{
-		AuroraMetadata data = null;
+	private NanoleafDeviceMeta getMetadataFromListItem(String item) {
+		NanoleafDeviceMeta data = null;
 		String name = item.substring(0, item.indexOf("(")-1);
 		String ip = item.substring(item.indexOf("(")+1, item.indexOf(")"));
-		for (AuroraMetadata metadata : devices)
-		{
+		for (NanoleafDeviceMeta metadata : devices) {
 			if (metadata.getDeviceName().equals(name) ||
-					metadata.getHostName().equals(ip))
-			{
+					metadata.getHostName().equals(ip)) {
 				data = metadata;
 				break;
 			}
@@ -86,63 +82,32 @@ public class DeviceChangerDialog extends JDialog
 		return data;
 	}
 	
-	private void findAuroras()
-	{
-		if (!findMethod1())
-		{
-			findMethod2();
+	private void findAuroras() {
+		try {
+			NanoleafSetup.findNanoleafDevicesAsync(new NanoleafSearchCallback() {
+				
+				@Override
+				public void onDeviceFound(NanoleafDeviceMeta meta) {
+					addDeviceToList(meta);
+				}
+				
+				@Override
+				public void onTimeout() {
+					if (devices != null && devices.isEmpty()) {
+						new TextDialog(DeviceChangerDialog.this, "Couldn't locate any devices. " +
+								"Please try again or create an issue on GitHub.")
+								.setVisible(true);
+					}
+					lblTitle.setText("Select a Device or Group");
+				}
+			}, SEARCH_TIMEOUT);
 		}
-		
-		for (AuroraMetadata metadata : devices)
-		{
-			addDeviceToList(metadata);
+		catch (java.net.UnknownHostException e) {
+			e.printStackTrace();
 		}
-		
-		if (devices.isEmpty())
-		{
-			new TextDialog(this, "Couldn't locate any devices. " +
-					"Please try again or create an issue on GitHub.")
-					.setVisible(true);
-		}
-		lblTitle.setText("Select a Device or Group");
 	}
 	
-	private boolean findMethod1()
-	{
-		devices = new ArrayList<AuroraMetadata>();
-		try
-		{
-			List<InetSocketAddress> devicesOld = Setup.quickFindAuroras();
-			for (InetSocketAddress addr : devicesOld)
-			{
-				AuroraMetadata metadata = new AuroraMetadata(addr.getHostName(),
-						addr.getPort(), "", addr.getHostName());
-				devices.add(metadata);
-			}
-		}
-		catch (Exception e)
-		{
-			// do nothing
-		}
-		return !devices.isEmpty();
-	}
-	
-	private boolean findMethod2()
-	{
-		devices = new ArrayList<AuroraMetadata>();
-		try
-		{
-			devices = Setup.findAuroras(5000);
-		}
-		catch (Exception e)
-		{
-			// do nothing
-		}
-		return !devices.isEmpty();
-	}
-	
-	private Aurora connectToAurora(String item)
-	{
+	private Aurora connectToAurora(String item) {
 		String text = "Press the power button on your " +
 				  "device for 5-7 seconds until the LED starts flashing.";
 		TextDialog info = new TextDialog(this, text);
@@ -150,34 +115,28 @@ public class DeviceChangerDialog extends JDialog
 		
 		DeviceChangerDialog dialog = this;
 		
-		AuroraMetadata metadata = getMetadataFromListItem(item);
+		NanoleafDeviceMeta metadata = getMetadataFromListItem(item);
 		String hostName = metadata.getHostName();
 		int port = metadata.getPort();
 		
 		Timer timer = new Timer();
-		timer.scheduleAtFixedRate(new TimerTask()
-		{
-			public void run()
-			{
-				try
-				{
-					String accessToken = Setup.createAccessToken(hostName, port, "v1");
+		timer.scheduleAtFixedRate(new TimerTask() {
+			public void run() {
+				try {
+					String accessToken = NanoleafSetup.createAccessToken(hostName, port);
 					System.out.println(accessToken);
-					Aurora device = new Aurora(hostName, port, "v1", accessToken);
-					if (device != null)
-					{
-						parent.setDevices(new Aurora[]{device});
+					Aurora device = new Aurora(hostName, port, accessToken);
+					List<NanoleafDevice> devices = new ArrayList<NanoleafDevice>();
+					devices.add(device);
+					if (device != null) {
+						parent.addDevice(device.getName(), device);
 						writeLastSession(device);
-						{
-							
-						}
 						this.cancel();
 						info.dispose();
 						dialog.dispose();
 					}
 				}
-				catch (Exception e)
-				{
+				catch (Exception e) {
 					// This will be called every second until an api key
 					// can be generated (403 forbidden)
 				}
@@ -186,45 +145,34 @@ public class DeviceChangerDialog extends JDialog
 		return device;
 	}
 	
-	private void writeLastSession(Aurora device)
-	{
+	private void writeLastSession(NanoleafDevice device) {
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 		manager.setProperty("lastSession",
-				device.getHostName() + " " +
+				device.getHostname() + " " +
 				device.getPort() + " v1 " +
 				device.getAccessToken());
 	}
 	
-	private void connectToGroup(DeviceGroup group)
-	{
+	private void connectToGroup(DeviceGroup group) {
 		DeviceInfo[] groupDevices = group.getDevices();
-		Aurora[] auroraDevices = new Aurora[groupDevices.length];
-		for (int i = 0; i < groupDevices.length; i++)
-		{
-			try
-			{
-				auroraDevices[i] = new Aurora(groupDevices[i].getHostName(),
-						groupDevices[i].getPort(), "v1", groupDevices[i].getAccessToken());
+		List<NanoleafDevice> devices = new ArrayList<NanoleafDevice>();
+		for (int i = 0; i < groupDevices.length; i++) {
+			try {
+				NanoleafDevice device = NanoleafDevice.createDevice(groupDevices[i].getHostName(),
+						groupDevices[i].getPort(), groupDevices[i].getAccessToken());
+				devices.add(device);
+				parent.addDevice(device.getName(), device);
 			}
-			catch (HttpRequestException hre)
-			{
+			catch (IOException e) {
 				new TextDialog(this, "The device " + groupDevices[i].getHostName() +
 						" is offline.").setVisible(true);
 			}
-			catch (UnauthorizedException uae)
-			{
-				new TextDialog(this, "The device " + groupDevices[i].getHostName() +
-						" is unauthorized.").setVisible(true);
-			}
-			catch (StatusCodeException sce)
-			{
+			catch (NanoleafException sce) {
 				new TextDialog(this, "Unknown connection error for the device " +
 						groupDevices[i].getHostName() + ".").setVisible(true);
 			}
 		}
-		DeviceChangerDialog.this.parent.setDevices(auroraDevices);
-		EventQueue.invokeLater(() ->
-		{
+		EventQueue.invokeLater(() -> {
 			DeviceChangerDialog.this.parent.setTitle("Connected to " + group.getName());
 		});
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
@@ -232,75 +180,61 @@ public class DeviceChangerDialog extends JDialog
 		this.dispose();
 	}
 	
-	private void addDeviceToList(AuroraMetadata metadata)
-	{
+	private void addDeviceToList(NanoleafDeviceMeta metadata) {
 		Map<String, Object> savedDevices = getDevices();
-		if (savedDevices.containsKey(metadata.getHostName()))
-		{
+		if (savedDevices.containsKey(metadata.getHostName())) {
 			String ip = metadata.getHostName();
 			String name = String.format("%s (%s)",
 					savedDevices.get(ip), ip);
 			listModel.addElement(name);
 		}
-		else
-		{
+		else {
 			String deviceName = metadata.getDeviceName();
-			if (deviceName.isEmpty())
-			{
+			if (deviceName.isEmpty()) {
 				deviceName = "Unknown device";
 			}
 			String name = String.format("%s (%s)",
 					deviceName, metadata.getHostName());
 			listModel.addElement(name);
 		}
+		devices.add(metadata);
 	}
 	
-	private Map<String, Object> getDevices()
-	{
+	private Map<String, Object> getDevices() {
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 		String devicesStr = manager.getProperty("devices");
-		if (devicesStr != null)
-		{
+		if (devicesStr != null) {
 			JSONObject json = new JSONObject(devicesStr);
 			return json.toMap();
 		}
 		return new HashMap<String, Object>();
 	}
 	
-	private void findGroups()
-	{
-		for (DeviceGroup group : getDeviceGroups())
-		{
+	private void findGroups() {
+		for (DeviceGroup group : getDeviceGroups()) {
 			listModel.addElement("GROUP: " + group.getName());
 		}
 	}
 	
-	private DeviceGroup getGroupByName(String name)
-	{
-		if (name.startsWith("GROUP: "))
-		{
+	private DeviceGroup getGroupByName(String name) {
+		if (name.startsWith("GROUP: ")) {
 			name = name.replaceFirst("GROUP: ", "");
 		}
-		for (DeviceGroup group : getDeviceGroups())
-		{
-			if (group.getName().equals(name))
-			{
+		for (DeviceGroup group : getDeviceGroups()) {
+			if (group.getName().equals(name)) {
 				return group;
 			}
 		}
 		return null;
 	}
 	
-	private List<DeviceGroup> getDeviceGroups()
-	{
+	private List<DeviceGroup> getDeviceGroups() {
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 		String devicesStr = manager.getProperty("deviceGroups");
-		if (devicesStr != null)
-		{
+		if (devicesStr != null) {
 			List<DeviceGroup> groups = new ArrayList<DeviceGroup>();
 			JSONArray json = new JSONArray(devicesStr);
-			for (int i = 0; i < json.length(); i++)
-			{
+			for (int i = 0; i < json.length(); i++) {
 				groups.add(DeviceGroup.fromJSON(json.getJSONObject(i).toString()));
 			}
 			return groups;
@@ -308,8 +242,7 @@ public class DeviceChangerDialog extends JDialog
 		return new ArrayList<DeviceGroup>();
 	}
 	
-	private void initUI(Component parent)
-	{
+	private void initUI(Component parent) {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setSize(474, 225);
 		setLocationRelativeTo(parent);
@@ -324,7 +257,7 @@ public class DeviceChangerDialog extends JDialog
 		addMouseListener(wdl);
 		addMouseMotionListener(wdl);
 		
-		lblTitle = new JLabel("Searching for Devices and Groups...");
+		lblTitle = new JLabel("Searching for devices...");
 		lblTitle.setFont(new Font("Tahoma", Font.PLAIN, 22));
 		lblTitle.setForeground(Color.WHITE);
 		contentPane.add(lblTitle, "gapx 15 0, cell 0 0");
@@ -346,20 +279,15 @@ public class DeviceChangerDialog extends JDialog
 		
 		JButton btnConnect = new ModernButton("Connect");
 		btnConnect.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		btnConnect.addActionListener(new ActionListener()
-		{
+		btnConnect.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				String selected = listAuroras.getSelectedValue();
-				if (selected != null)
-				{
-					if (selected.startsWith("GROUP: "))
-					{
+				if (selected != null) {
+					if (selected.startsWith("GROUP: ")) {
 						connectToGroup(getGroupByName(selected));
 					}
-					else
-					{
+					else {
 						connectToAurora(selected);
 					}
 				}
@@ -368,29 +296,23 @@ public class DeviceChangerDialog extends JDialog
 		contentPane.add(btnConnect, "cell 1 2,alignx right");
 		
 		JButton btnAddExternalDevice = new ModernButton("Add External Device");
-		btnAddExternalDevice.setText("Setup New Device");
+		btnAddExternalDevice.setText("Setup External Device");
 		btnAddExternalDevice.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		btnAddExternalDevice.addActionListener(new ActionListener()
-		{
+		btnAddExternalDevice.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				new DoubleEntryDialog(DeviceChangerDialog.this, "IP Address",
-						"Port (Default is 16021)", "Add Device", new ActionListener()
-						{
+						"Port (Default is 16021)", "Add Device", new ActionListener() {
 							@Override
-							public void actionPerformed(ActionEvent e)
-							{
+							public void actionPerformed(ActionEvent e) {
 								JButton button = (JButton)e.getSource();
 								DoubleEntryDialog thisDialog =
 										(DoubleEntryDialog)button.getFocusCycleRootAncestor();
 								String entry1Text = thisDialog.getEntry1().getText();
 								String entry2Text = thisDialog.getEntry2().getText();
 								if (!entry1Text.equals("IP Address") &&
-										!entry2Text.equals("Port (Default is 16021)"))
-								{
-									try
-									{										
+										!entry2Text.equals("Port (Default is 16021)")) {
+									try {										
 										// TODO: Clean up this code
 										String ip = entry1Text;
 										int port = Integer.parseInt(entry2Text);
@@ -399,42 +321,37 @@ public class DeviceChangerDialog extends JDialog
 										TextDialog info = new TextDialog(DeviceChangerDialog.this, text);
 										info.setVisible(true);
 										Timer timer = new Timer();
-										timer.scheduleAtFixedRate(new TimerTask()
-										{
-											public void run()
-											{
-												try
-												{
-													String accessToken = Setup.createAccessToken(ip, port, "v1");
+										timer.scheduleAtFixedRate(new TimerTask() {
+											public void run() {
+												try {
+													String accessToken = NanoleafSetup.createAccessToken(ip, port);
 													System.out.println(accessToken);
 													this.cancel();
-													Aurora aurora = new Aurora(ip, port, "v1", accessToken);
-													if (aurora != null)
-													{
+													NanoleafDevice device = NanoleafDevice.createDevice(ip, port, accessToken);
+													List<NanoleafDevice> devices = new ArrayList<NanoleafDevice>();
+													devices.add(device);
+													if (device != null) {
+														DeviceChangerDialog.this.parent.addDevice(device.getName(), device);
 														info.dispose();
-														DeviceChangerDialog.this.parent.setDevices(new Aurora[]{aurora});
-														writeLastSession(aurora);
+														writeLastSession(device);
 														thisDialog.dispose();
 														DeviceChangerDialog.this.dispose();
 													}
 												}
-												catch (Exception e)
-												{
+												catch (Exception e) {
 													// This will be called every second until an api key
 													// can be generated (403 forbidden)
 												}
 											}
 										}, 1000, 1000);
 									}
-									catch (NumberFormatException nfe)
-									{
+									catch (NumberFormatException nfe) {
 										new TextDialog(DeviceChangerDialog.this,
 												"The port can only consist of numbers.")
 												.setVisible(true);
 									}
 								}
-								else
-								{
+								else {
 									new TextDialog(DeviceChangerDialog.this,
 											"You must fill out all entry fields.")
 											.setVisible(true);

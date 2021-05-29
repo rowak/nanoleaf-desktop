@@ -9,24 +9,20 @@ import io.github.rowak.nanoleafdesktop.ui.listener.ComponentChangeListener;
 import net.miginfocom.swing.MigLayout;
 import java.awt.Color;
 
-public class PalettePicker extends BasicDialog
-{
+public class PalettePicker extends BasicDialog {
+	
 	private Color color;
 	private ColorEntry colorEntry;
 	private ColorWheel wheel;
 	private BrightnessSlider slider;
 	private Palette palette;
 
-	public PalettePicker(Component parent)
-	{
+	public PalettePicker(Component parent) {
 		color = Color.WHITE;
-		
 		wheel = new ColorWheel(200, 200);
-		wheel.addChangeListener(new ComponentChangeListener()
-		{
+		wheel.addChangeListener(new ComponentChangeListener() {
 			@Override
-			public void stateChanged(ChangeEvent e)
-			{
+			public void stateChanged(ChangeEvent e) {
 				ColorWheel wheel = (ColorWheel)e.getSource();
 				color = wheel.getColor();
 				updateBrightnessValues(slider.getValue());
@@ -36,11 +32,9 @@ public class PalettePicker extends BasicDialog
 		wheel.setLayout(new MigLayout("", "[]", "[]"));
 		
 		slider = new BrightnessSlider(30, 200);
-		slider.addChangeListener(new ComponentChangeListener()
-		{
+		slider.addChangeListener(new ComponentChangeListener() {
 			@Override
-			public void stateChanged(ChangeEvent e)
-			{
+			public void stateChanged(ChangeEvent e) {
 				BrightnessSlider slider = (BrightnessSlider)e.getSource();
 				updateBrightnessValues(slider.getValue());
 			}
@@ -48,11 +42,9 @@ public class PalettePicker extends BasicDialog
 		getContentPane().add(slider, "flowx, cell 0 1");
 		
 		colorEntry = new ColorEntry(getContentPane());
-		colorEntry.addChangeListener(new ComponentChangeListener()
-		{
+		colorEntry.addChangeListener(new ComponentChangeListener() {
 			@Override
-			public void stateChanged(ChangeEvent e)
-			{
+			public void stateChanged(ChangeEvent e) {
 				String[] rgb = colorEntry.getRgbTextField()
 						.getText().replace(" ", "").split(",");
 				Color c = new Color(Integer.parseInt(rgb[0]),
@@ -74,33 +66,27 @@ public class PalettePicker extends BasicDialog
 		setSize(getWidth(), getHeight());
 	}
 	
-	public ColorWheel getColorWheel()
-	{
+	public ColorWheel getColorWheel() {
 		return wheel;
 	}
 	
-	public BrightnessSlider getBrightnessSlider()
-	{
+	public BrightnessSlider getBrightnessSlider() {
 		return slider;
 	}
 	
-	public Palette getPalettePanel()
-	{
+	public Palette getPalettePanel() {
 		return palette;
 	}
 	
-	public Color[] getPalette()
-	{
+	public Color[] getPalette() {
 		return palette.getPalette();
 	}
 	
-	public void setPalette(Color[] palette)
-	{
+	public void setPalette(Color[] palette) {
 		this.palette.setPalette(palette);
 	}
 	
-	private void updateColorValues(Color color)
-	{
+	private void updateColorValues(Color color) {
 		String rgb = String.format("%d, %d, %d", color.getRed(),
 				color.getGreen(), color.getBlue());
 		float[] hsbVals = new float[3];
@@ -115,8 +101,7 @@ public class PalettePicker extends BasicDialog
 		colorEntry.getHexTextField().setText(hex);
 	}
 	
-	private void updateBrightnessValues(int brightness)
-	{
+	private void updateBrightnessValues(int brightness) {
 		float[] hsbVals = new float[3];
 		hsbVals = Color.RGBtoHSB(color.getRed(), color.getGreen(),
 				color.getBlue(), hsbVals);

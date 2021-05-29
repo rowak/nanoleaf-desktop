@@ -12,70 +12,56 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
 
-public class MenuButton extends ModernButton
-{
-	public MenuButton(Main main)
-	{
+public class MenuButton extends ModernButton {
+	
+	public MenuButton(Main main) {
 		init(main);
 	}
 	
-	private void init(Main main)
-	{
+	private void init(Main main) {
 		JPopupMenu menu = new ModernPopupMenu();
 		JMenuItem itemChangeDevice = new ModernMenuItem("Change Device");
-		itemChangeDevice.addActionListener(new ActionListener()
-		{
+		itemChangeDevice.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				new DeviceChangerDialog((Main)MenuButton.this.getFocusCycleRootAncestor())
 					.setVisible(true);
 			}
 		});
 		JMenuItem itemResetSettings = new ModernMenuItem("Reset Settings");
-		itemResetSettings.addActionListener(new ActionListener()
-		{
+		itemResetSettings.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				resetSettings();
 			}
 		});
 		JMenuItem itemCreateGroup = new ModernMenuItem("Create Group");
-		itemCreateGroup.addActionListener(new ActionListener()
-		{
+		itemCreateGroup.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				new GroupCreatorDialog(MenuButton.this.getFocusCycleRootAncestor())
 					.setVisible(true);
 			}
 		});
 		JMenuItem itemDeleteGroup = new ModernMenuItem("Delete Group");
-		itemDeleteGroup.addActionListener(new ActionListener()
-		{
+		itemDeleteGroup.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				new GroupDeleterDialog(MenuButton.this.getFocusCycleRootAncestor())
 					.setVisible(true);
 			}
 		});
 		JMenuItem itemHideToTray = new ModernMenuItem("Hide to Tray");
-		itemHideToTray.addActionListener(new ActionListener()
-		{
+		itemHideToTray.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				main.hideToSystemTray();
 			}
 		});
 		JMenuItem itemAbout = new ModernMenuItem("About");
-		itemAbout.addActionListener(new ActionListener()
-		{
+		itemAbout.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				new AboutDialog(MenuButton.this.getFocusCycleRootAncestor(), main.VERSION)
 					.setVisible(true);
 			}
@@ -84,55 +70,53 @@ public class MenuButton extends ModernButton
 		menu.add(itemResetSettings);
 		menu.add(itemCreateGroup);
 		menu.add(itemDeleteGroup);
-		if (SystemTray.isSupported())
-		{
+		if (SystemTray.isSupported()) {
 			menu.add(itemHideToTray);
 		}
 		menu.add(itemAbout);
 
 		URL menuIconUnpressedPath =
 				Main.class.getResource("/images/menu_button_icon_unpressed.png");
+		URL menuIconHighlightedPath =
+				Main.class.getResource("/images/menu_button_icon_highlighted.png");
 		URL menuIconPressedPath =
 				Main.class.getResource("/images/menu_button_icon_pressed.png");
 		setIcon(new ImageIcon(menuIconUnpressedPath));
+		setRolloverIcon(new ImageIcon(menuIconHighlightedPath));
 		setPressedIcon(new ImageIcon(menuIconPressedPath));
 		setBorder(null);
-		addActionListener(new ActionListener()
-		{
+		addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				menu.show(MenuButton.this, getX(), getY());
 			}
 		});
 	}
 	
-	private void resetSettings()
-	{
+	private void resetSettings() {
 		new OptionDialog(this.getFocusCycleRootAncestor(),
-				"Are you sure you want to reset all of your settings?",
-				"Yes", "No", new ActionListener()
-				{
-					@Override
-					public void actionPerformed(ActionEvent e)
-					{
-						PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
-						manager.clearProperties();
-						String message = "Done. This will take effect the next " +
-								"time you open the application.";
-						new TextDialog(MenuButton.this.getFocusCycleRootAncestor(), message)
-							.setVisible(true);
-						JButton source = (JButton)e.getSource();
-						((OptionDialog)source.getFocusCycleRootAncestor()).dispose();
-					}
-				}, new ActionListener()
-				{
-					@Override
-					public void actionPerformed(ActionEvent e)
-					{
-						JButton source = (JButton)e.getSource();
-						((OptionDialog)source.getFocusCycleRootAncestor()).dispose();
-					}
-				}).setVisible(true);
+			"Are you sure you want to reset all of your settings?",
+			"Yes", "No",
+			new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
+					manager.clearProperties();
+					String message = "Done. This will take effect the next " +
+							"time you open the application.";
+					new TextDialog(MenuButton.this.getFocusCycleRootAncestor(), message)
+						.setVisible(true);
+					JButton source = (JButton)e.getSource();
+					((OptionDialog)source.getFocusCycleRootAncestor()).dispose();
+				}
+			},
+			new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					JButton source = (JButton)e.getSource();
+					((OptionDialog)source.getFocusCycleRootAncestor()).dispose();
+				}
+			}
+		).setVisible(true);
 	}
 }

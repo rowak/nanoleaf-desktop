@@ -11,8 +11,8 @@ import io.github.rowak.nanoleafapi.Frame;
 import io.github.rowak.nanoleafapi.Panel;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 
-public class CustomEffectDisplay
-{
+public class CustomEffectDisplay {
+	
 	private int maxFrames;
 	private boolean running;
 	private Effect effect;
@@ -20,116 +20,95 @@ public class CustomEffectDisplay
 	private Map<Integer, List<PanelFrame>> frames;
 	private Thread mainLoop;
 	
-	public CustomEffectDisplay(PanelCanvas canvas)
-	{
+	public CustomEffectDisplay(PanelCanvas canvas) {
 		this.canvas = canvas;
 	}
 	
-	public void changeEffect(Effect effect)
-	{
+	public void changeEffect(Effect effect) {
 		if (effect != null && (this.effect == null ||
-				(this.effect != null && !this.effect.equals(effect))))
-		{
+				(this.effect != null && !this.effect.equals(effect)))) {
 			this.effect = effect;
 			
-			if (running)
-			{
-				new Thread(() ->
-				{
+			if (running) {
+				new Thread(() -> {
 					stop();
-					try
-					{
+					try {
 						Thread.sleep(2000);
 					}
-					catch (InterruptedException e)
-					{
+					catch (InterruptedException e) {
 						// do nothing
 					}
-					parseAnimData(effect.getAnimData());
+//					parseAnimData(effect.getAnimData());
 					start();
 				}).start();
 			}
-			else
-			{
-				parseAnimData(effect.getAnimData());
+			else {
+//				parseAnimData(effect.getAnimData());
 				start();
 			}
 		}
 	}
 	
-	public Effect getEffect()
-	{
+	public Effect getEffect() {
 		return effect;
 	}
 	
-	public boolean isRunning()
-	{
+	public boolean isRunning() {
 		return running;
 	}
 	
-	private void parseAnimData(String animData)
-	{
+	private void parseAnimData(String animData) {
 		frames = new HashMap<Integer, List<PanelFrame>>();
 		
 		final String[] dataTemp = animData.split(" ");
 		final int numPanels = Integer.parseInt(dataTemp[0]);
 		final int[] data = new int[dataTemp.length-1];
-		for (int i = 1; i < dataTemp.length; i++)
-		{
+		for (int i = 1; i < dataTemp.length; i++) {
 			data[i-1] = Integer.parseInt(dataTemp[i]);
 		}
 		
 		maxFrames = 0;
 		int x = 0;
-		while (x < data.length)
-		{
+		while (x < data.length) {
 			int panelId = data[x];
 			int numFrames = data[x+1];
 			if (numFrames > maxFrames)
 				maxFrames = numFrames;
-			for (int i = 0; i < numFrames; i++)
-			{
+			for (int i = 0; i < numFrames; i++) {
 				int r = data[x + 2 + i*5];
 				int g = data[x + 3 + i*5];
 				int b = data[x + 4 + i*5];
 				int w = data[x + 5 + i*5];
 				int t = data[x + 6 + i*5];
 				
-				PanelFrame frame = new PanelFrame(getPanelById(
-						panelId, canvas.getPanels(0)),
-						new Frame(r, g, b, w, t));
-				if (!frames.containsKey(i))
-				{
+//				PanelFrame frame = new PanelFrame(getPanelById(
+//						panelId, canvas.getPanels(0)),
+//						new Frame(r, g, b, w, t));
+				if (!frames.containsKey(i)) {
 					frames.put(i, new ArrayList<PanelFrame>());
 				}
-				frames.get(i).add(frame);
+//				frames.get(i).add(frame);
 			}
 			x += 2 + 5*numFrames;
 		}
 	}
 	
-	public void start()
-	{
-		if (!running)
-		{
+	public void start() {
+		if (!running) {
 			running = true;
 			run();
 		}
 	}
 	
-	public void stop()
-	{
-		if (running)
-		{
+	public void stop() {
+		if (running) {
 			running = false;
 			this.effect = null;
-			try
-			{
+			try {
 				Thread.sleep(1000);
 				mainLoop.interrupt();
 			}
-			catch (InterruptedException ie)
-			{
+			catch (InterruptedException ie) {
 				new TextDialog(canvas.getTopLevelAncestor(),
 						"Failed to stop the previous effect preview. "
 						+ "Please relaunch the application.").setVisible(true);
@@ -137,46 +116,37 @@ public class CustomEffectDisplay
 		}
 	}
 	
-	private void run()
-	{
-		mainLoop = new Thread(() ->
-		{
-			while (running)
-			{
-				for (int i = 0; i < maxFrames; i++)
-				{
+	private void run() {
+		mainLoop = new Thread(() -> {
+			while (running) {
+				for (int i = 0; i < maxFrames; i++) {
 					int numDone = 0;
 					boolean[] doneFrames = new boolean[frames.get(i).size()];
-					for (int k = 0; k < frames.get(i).size(); k++)
-					{
+					for (int k = 0; k < frames.get(i).size(); k++) {
 						doneFrames[k] = false;
 						PanelFrame pf = frames.get(i).get(k);
 						Frame frame = pf.getFrame();
 						Color c = new Color(frame.getRed(),
 								frame.getGreen(), frame.getBlue());
 						final int kf = k;
-						new Thread(() ->
-						{
-							try
-							{
-								canvas.transitionToColor(pf.getPanel(), c,
-										frame.getTransitionTime()*100);
-							}
-							catch (InterruptedException ie)
-							{
-								ie.printStackTrace();
-							}
+						new Thread(() -> {
+//							try
+//							{
+//								canvas.transitionToColor(pf.getPanel(), c,
+//										frame.getTransitionTime()*100);
+//							}
+//							catch (InterruptedException ie)
+//							{
+//								ie.printStackTrace();
+//							}
 							doneFrames[kf] = true;
 						}).start();
 					}
 					
-					while (numDone < frames.get(i).size() && running)
-					{
+					while (numDone < frames.get(i).size() && running) {
 						numDone = 0;
-						for (int k = 0; k < doneFrames.length; k++)
-						{
-							if (doneFrames[k])
-							{
+						for (int k = 0; k < doneFrames.length; k++) {
+							if (doneFrames[k]) {
 								numDone++;
 							}
 						}
@@ -187,12 +157,9 @@ public class CustomEffectDisplay
 		mainLoop.start();
 	}
 	
-	private Panel getPanelById(int id, Panel[] panels)
-	{
-		for (Panel p : panels)
-		{
-			if (p.getId() == id)
-			{
+	private Panel getPanelById(int id, Panel[] panels) {
+		for (Panel p : panels) {
+			if (p.getId() == id) {
 				return p;
 			}
 		}

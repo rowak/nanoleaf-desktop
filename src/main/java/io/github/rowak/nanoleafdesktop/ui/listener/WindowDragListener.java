@@ -6,34 +6,28 @@ import java.awt.event.MouseEvent;
 
 import javax.swing.event.MouseInputAdapter;
 
-public class WindowDragListener extends MouseInputAdapter
-{
+public class WindowDragListener extends MouseInputAdapter {
+	
 	int titleBarWidth;
 	Point location;
 	MouseEvent pressed;
 	
-	public WindowDragListener(int titleBarWidth)
-	{
+	public WindowDragListener(int titleBarWidth) {
 		this.titleBarWidth = titleBarWidth;
 	}
 
-	public void mousePressed(MouseEvent me)
-	{
-		if (me.getY() < titleBarWidth)
-		{
+	public void mousePressed(MouseEvent me) {
+		if (me.getY() < titleBarWidth) {
 			pressed = me;
 		}
 	}
 	
-	public void mouseReleased(MouseEvent me)
-	{
+	public void mouseReleased(MouseEvent me) {
 		pressed = null;
 	}
 
-	public void mouseDragged(MouseEvent me)
-	{
-		if (pressed != null)
-		{
+	public void mouseDragged(MouseEvent me) {
+		if (pressed != null) {
 			Component component = me.getComponent();
 			location = component.getLocation(location);
 			int x = location.x - pressed.getX() + me.getX();

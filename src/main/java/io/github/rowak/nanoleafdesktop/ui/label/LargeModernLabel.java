@@ -4,21 +4,18 @@ import javax.swing.JLabel;
 
 import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 
-public class LargeModernLabel extends JLabel
-{
-	public LargeModernLabel()
-	{
+public class LargeModernLabel extends JLabel {
+	
+	public LargeModernLabel() {
 		init();
 	}
 	
-	public LargeModernLabel(String text)
-	{
+	public LargeModernLabel(String text) {
 		init();
 		setText(text);
 	}
 	
-	private void init()
-	{
+	private void init() {
 		setFont(UIConstants.largeLabelFont);
 		setForeground(UIConstants.textPrimary);
 	}

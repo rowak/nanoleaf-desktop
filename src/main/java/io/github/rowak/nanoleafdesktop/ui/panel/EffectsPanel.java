@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.DefaultListModel;
@@ -12,8 +14,10 @@ import javax.swing.JScrollPane;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 
-import io.github.rowak.nanoleafapi.Aurora;
-import io.github.rowak.nanoleafapi.StatusCodeException;
+import io.github.rowak.nanoleafapi.Effect;
+import io.github.rowak.nanoleafapi.NanoleafDevice;
+import io.github.rowak.nanoleafapi.NanoleafException;
+import io.github.rowak.nanoleafapi.NanoleafGroup;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.models.BasicEffect;
 import io.github.rowak.nanoleafdesktop.tools.BasicEffects;
@@ -24,63 +28,53 @@ import io.github.rowak.nanoleafdesktop.ui.menu.EffectOptionsMenu;
 import io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas.PanelCanvas;
 import io.github.rowak.nanoleafdesktop.ui.scrollbar.ModernScrollBarUI;
 
-public class EffectsPanel extends JScrollPane
-{
+public class EffectsPanel extends JScrollPane {
+	
 	private String label;
-	private Aurora[] devices;
+	private NanoleafGroup group;
 	private Main parent;
 	private PanelCanvas canvas;
 	private JList<String> effects;
 	private DefaultListModel<String> model;
 	
 	public EffectsPanel(String label, Main parent,
-			Aurora[] devices, PanelCanvas canvas)
-	{
+			NanoleafGroup group, PanelCanvas canvas) {
 		this.label = label;
 		this.parent = parent;
-		this.devices = devices;
+		this.group = group;
 		this.canvas = canvas;
 		init();
 	}
 	
-	public void addEffect(String effect)
-	{
-		if (!model.contains(effect))
-		{
+	public void addEffect(String effect) {
+		if (!model.contains(effect)) {
 			model.addElement(effect);
 		}
 	}
 	
-	public void removeEffect(String effect)
-	{
-		if (model.contains(effect))
-		{
+	public void removeEffect(String effect) {
+		if (model.contains(effect)) {
 			model.removeElement(effect);
 		}
 	}
 	
-	public void setAuroras(Aurora[] auroras)
-	{
-		this.devices = auroras;
+	public void setAuroras(NanoleafGroup group) {
+		this.group = group;
 	}
 	
-	public void clearEffects()
-	{
+	public void clearEffects() {
 		model.clear();
 	}
 	
-	public DefaultListModel<String> getModel()
-	{
+	public DefaultListModel<String> getModel() {
 		return model;
 	}
 	
-	public JList<String> getList()
-	{
+	public JList<String> getList() {
 		return effects;
 	}
 	
-	private void init()
-	{
+	private void init() {
 		getVerticalScrollBar().setUI(new ModernScrollBarUI());
 		getHorizontalScrollBar().setUI(new ModernScrollBarUI());
 		setBackground(UIConstants.darkBackground);
@@ -95,26 +89,20 @@ public class EffectsPanel extends JScrollPane
 		effects.setBackground(UIConstants.darkBackground);
 		effects.setForeground(UIConstants.textPrimary);
 		effects.setFont(new Font("Tahoma", Font.PLAIN, 19));
-		effects.addMouseListener(new MouseAdapter()
-		{
+		effects.addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseClicked(MouseEvent e)
-			{
+			public void mouseClicked(MouseEvent e) {
 				JList<String> list = (JList<String>)e.getSource();
 				parent.unselectAllExcept(EffectsPanel.this);
-				if (e.getButton() == MouseEvent.BUTTON1)
-				{
-					if (label.equals("Basic Effects"))
-					{
+				if (e.getButton() == MouseEvent.BUTTON1) {
+					if (label.equals("Basic Effects")) {
 						setBasicEffectForDevices(list.getSelectedValue());
 					}
-					else
-					{
+					else {
 						setEffectForDevices(list.getSelectedValue());
 					}
 				}
-				else if (e.getButton() == MouseEvent.BUTTON3)
-				{
+				else if (e.getButton() == MouseEvent.BUTTON3) {
 					createEffectOptionsMenu();
 				}
 			}
@@ -125,57 +113,57 @@ public class EffectsPanel extends JScrollPane
 		setViewportView(regEffectsSpinner);
 	}
 	
-	private void setEffectForDevices(String effectName)
-	{
-		try
-		{
-			for (Aurora device : devices)
-			{
-				device.effects().setEffect(effectName);
+	private void setEffectForDevices(String effectName) {
+		try {
+			Effect effect = null;
+			List<NanoleafDevice> uninstalled = new ArrayList<NanoleafDevice>();
+			for (NanoleafDevice device : group.getDevices().values()) {
+				try {
+					Effect tempEffect = device.getEffect(effectName);
+					effect = tempEffect;
+					device.setEffect(effectName);
+				}
+				catch (Exception e) {
+					uninstalled.add(device);
+				}
 			}
-			canvas.checkAuroraState();
+			for (NanoleafDevice device : uninstalled) {
+				device.displayEffect(effect);
+			}
+			canvas.checkAuroraStateForAll();
 			parent.loadStateComponents();
 		}
-		catch (StatusCodeException sce)
-		{
+		catch (NanoleafException | IOException e) {
+			e.printStackTrace();
 			new TextDialog(parent,
 					"The requested action could not be completed. " +
 					"Please try again.").setVisible(true);
 		}
 	}
 	
-	private void setBasicEffectForDevices(String effectName)
-	{
-		try
-		{
+	private void setBasicEffectForDevices(String effectName) {
+		try {
 			List<BasicEffect> basicEffects = BasicEffects.getBasicEffects();
-			for (BasicEffect ef : basicEffects)
-			{
-				if (ef.getName().equals(effectName))
-				{
-					for (int i = 0; i < devices.length; i++)
-					{
-						devices[i].state().setHue(ef.getHue());
-						devices[i].state().setSaturation(ef.getSaturation());
-					}
-					canvas.checkAuroraState();
+			for (BasicEffect ef : basicEffects) {
+				if (ef.getName().equals(effectName)) {
+					group.setHueAsync(ef.getHue(), null);
+					group.setSaturationAsync(ef.getSaturation(), null);
+					canvas.checkAuroraStateForAll();
 					parent.loadStateComponents();
 					break;
 				}
 			}
 		}
-		catch (StatusCodeException sce)
-		{
-			sce.printStackTrace();
+		catch (NanoleafException | IOException e) {
+			e.printStackTrace();
 			new TextDialog(parent,
 					"The requested action could not be completed. " +
 					"Please try again.").setVisible(true);
 		}
 	}
 	
-	private void createEffectOptionsMenu()
-	{
+	private void createEffectOptionsMenu() {
 		new EffectOptionsMenu(EffectsPanel.this,
-				label, devices, parent);
+				label, group, parent);
 	}
 }

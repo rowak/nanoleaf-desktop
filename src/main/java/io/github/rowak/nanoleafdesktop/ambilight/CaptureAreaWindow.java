@@ -25,15 +25,14 @@ import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafdesktop.ui.panel.AmbilightPanel;
 
-public class CaptureAreaWindow extends JFrame
-{
+public class CaptureAreaWindow extends JFrame {
+	
 	private int monitor;
 	private Rectangle maxArea;
 	private Rectangle selectedArea;
 	private AmbilightPanel parent;
 	
-	public CaptureAreaWindow(int monitor, AmbilightPanel parent)
-	{
+	public CaptureAreaWindow(int monitor, AmbilightPanel parent) {
 		this.monitor = monitor;
 		this.parent = parent;
 		loadSettings();
@@ -44,14 +43,12 @@ public class CaptureAreaWindow extends JFrame
 	}
 	
 	@Override
-	public void paint(Graphics g)
-	{
+	public void paint(Graphics g) {
 		super.paint(g);
 		drawSelectionBox(g);
 	}
 	
-	private void drawSelectionBox(Graphics g)
-	{
+	private void drawSelectionBox(Graphics g) {
 		Graphics2D g2d = (Graphics2D)g;
 		g2d.setStroke(new BasicStroke(5));
 		g.setColor(Color.RED);
@@ -60,8 +57,7 @@ public class CaptureAreaWindow extends JFrame
 		g2d.setStroke(new BasicStroke(1));
 	}
 	
-	private Rectangle getMaxCaptureArea()
-	{
+	private Rectangle getMaxCaptureArea() {
 		GraphicsEnvironment ge = GraphicsEnvironment
 				.getLocalGraphicsEnvironment();
 		GraphicsDevice[] gs = ge.getScreenDevices();
@@ -69,24 +65,20 @@ public class CaptureAreaWindow extends JFrame
 		return config.getBounds();
 	}
 	
-	private Rectangle getDefaultSelectionArea()
-	{
+	private Rectangle getDefaultSelectionArea() {
 		maxArea = getMaxCaptureArea();
 		return new Rectangle(maxArea.width/2 - 400, maxArea.height/2 - 200, 800, 400);
 	}
 	
-	private void loadSettings()
-	{
+	private void loadSettings() {
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 		String lastSelection = manager.getProperty("ambilightSelection");
 		
 		Rectangle defaultSelection = getDefaultSelectionArea();
 		
-		if (lastSelection != null)
-		{
+		if (lastSelection != null) {
 			String[] data = manager.getProperty("ambilightSelection").split(" ");
-			if (data.length == 4)
-			{
+			if (data.length == 4) {
 				int x = Integer.parseInt(data[0]);
 				int y = Integer.parseInt(data[1]);
 				int width = Integer.parseInt(data[2]);
@@ -98,8 +90,7 @@ public class CaptureAreaWindow extends JFrame
 		selectedArea = defaultSelection;
 	}
 	
-	private void saveChanges()
-	{
+	private void saveChanges() {
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 		String selection = selectedArea.x + " " + selectedArea.y + " " +
 				selectedArea.width + " " + selectedArea.height;
@@ -107,8 +98,7 @@ public class CaptureAreaWindow extends JFrame
 		parent.setCaptureArea(selectedArea);
 	}
 	
-	private void showInfoMessage()
-	{
+	private void showInfoMessage() {
 		EventQueue.invokeLater(() ->
 		{
 			String message = "You can move around and resize the red box to change your selection. " +
@@ -117,18 +107,14 @@ public class CaptureAreaWindow extends JFrame
 		});
 	}
 	
-	private void initUI()
-	{
+	private void initUI() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(maxArea.x, maxArea.y, maxArea.width, maxArea.height);
 		setUndecorated(true);
 		setBackground(new Color(255, 255, 255, 1));
-		addKeyListener(new KeyAdapter()
-		{
-			public void keyPressed(KeyEvent e)
-			{
-				if (e.getKeyChar() == KeyEvent.VK_ESCAPE)
-				{
+		addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
 					saveChanges();
 					dispose();
 				}
@@ -140,8 +126,8 @@ public class CaptureAreaWindow extends JFrame
 		setVisible(true);
 	}
 	
-	private class BoxDragListener extends MouseAdapter
-	{
+	private class BoxDragListener extends MouseAdapter {
+		
 		private boolean inArea;
 		private int edge;
 		private Point mouseLast;
@@ -149,15 +135,13 @@ public class CaptureAreaWindow extends JFrame
 		private Dimension lastSize;
 		private CaptureAreaWindow window;
 		
-		public BoxDragListener(CaptureAreaWindow window)
-		{
+		public BoxDragListener(CaptureAreaWindow window) {
 			this.window = window;
 			lastLocation = new Point(selectedArea.x, selectedArea.y);
 			lastSize = new Dimension(selectedArea.width, selectedArea.height);
 		}
 		
-		private void moveBox(Point mouse)
-		{
+		private void moveBox(Point mouse) {
 			int xdiff = mouse.x - mouseLast.x;
 			int ydiff = mouse.y - mouseLast.y;
 			selectedArea.setLocation(lastLocation.x + xdiff,
@@ -165,8 +149,7 @@ public class CaptureAreaWindow extends JFrame
 			repaint();
 		}
 		
-		private void resizeBox(Point mouse, Dimension direction)
-		{
+		private void resizeBox(Point mouse, Dimension direction) {
 			int xdiff = mouse.x - mouseLast.x;
 			int ydiff = mouse.y - mouseLast.y;
 			int xdirection = direction.width;
@@ -175,18 +158,15 @@ public class CaptureAreaWindow extends JFrame
 			selectedArea.setSize(lastSize.width + xdiff*xdirection,
 					lastSize.height + ydiff*ydirection);
 			
-			if (xdirection == -1 || ydirection == -1)
-			{
+			if (xdirection == -1 || ydirection == -1) {
 				selectedArea.setLocation(lastLocation.x - xdiff * xdirection,
 						lastLocation.y - ydiff * ydirection);
 			}
 			repaint();
 		}
 		
-		private Dimension getResizeXY(int edge)
-		{
-			switch (edge)
-			{
+		private Dimension getResizeXY(int edge) {
+			switch (edge) {
 				case 0:
 					return new Dimension(0, -1);
 				case 1:
@@ -200,8 +180,7 @@ public class CaptureAreaWindow extends JFrame
 			}
 		}
 		
-		private int getEdge(Point mouse)
-		{
+		private int getEdge(Point mouse) {
 			int leftEdge = selectedArea.x;
 			int topEdge = selectedArea.y;
 			int rightEdge = selectedArea.x + selectedArea.width;
@@ -209,29 +188,25 @@ public class CaptureAreaWindow extends JFrame
 			
 			// check top edge
 			if (mouse.x >= leftEdge && mouse.x <= rightEdge &&
-					 mouse.y >= topEdge - 5 && mouse.y <= topEdge + 5)
-			{
+					 mouse.y >= topEdge - 5 && mouse.y <= topEdge + 5) {
 				window.setCursor(new Cursor(Cursor.N_RESIZE_CURSOR));
 				return 0;
 			}
 			// check right edge
 			else if (mouse.x >= rightEdge - 5 && mouse.x <= rightEdge + 5 &&
-					 mouse.y >= topEdge && mouse.y <= bottomEdge)
-			{
+					 mouse.y >= topEdge && mouse.y <= bottomEdge) {
 				window.setCursor(new Cursor(Cursor.E_RESIZE_CURSOR));
 				return 1;
 			}
 			// check bottom edge
 			else if (mouse.x >= leftEdge && mouse.x <= rightEdge &&
-					 mouse.y >= bottomEdge - 5 && mouse.y <= bottomEdge + 5)
-			{
+					 mouse.y >= bottomEdge - 5 && mouse.y <= bottomEdge + 5) {
 				window.setCursor(new Cursor(Cursor.S_RESIZE_CURSOR));
 				return 2;
 			}
 			// check left edge
 			else if (mouse.x >= leftEdge - 5 && mouse.x <= leftEdge + 5 &&
-				mouse.y >= topEdge && mouse.y <= bottomEdge)
-			{
+				mouse.y >= topEdge && mouse.y <= bottomEdge) {
 				window.setCursor(new Cursor(Cursor.W_RESIZE_CURSOR));
 				return 3;
 			}
@@ -239,14 +214,12 @@ public class CaptureAreaWindow extends JFrame
 		}
 		
 		@Override
-		public void mousePressed(MouseEvent e)
-		{
+		public void mousePressed(MouseEvent e) {
 			mouseLast = e.getPoint();
 		}
 		
 		@Override
-		public void mouseReleased(MouseEvent e)
-		{
+		public void mouseReleased(MouseEvent e) {
 			mouseLast = null;
 			inArea = false;
 			edge = -1;
@@ -256,27 +229,21 @@ public class CaptureAreaWindow extends JFrame
 		}
 		
 		@Override
-		public void mouseDragged(MouseEvent e)
-		{
-			if (SwingUtilities.isLeftMouseButton(e))
-			{
-				if (edge != -1)
-				{
+		public void mouseDragged(MouseEvent e) {
+			if (SwingUtilities.isLeftMouseButton(e)) {
+				if (edge != -1) {
 					resizeBox(e.getPoint(), getResizeXY(edge));
 				}
-				else if (inArea)
-				{
+				else if (inArea) {
 					moveBox(e.getPoint());
 				}
 			}
 		}
 		
 		@Override
-		public void mouseMoved(MouseEvent e)
-		{
+		public void mouseMoved(MouseEvent e) {
 			edge = getEdge(e.getPoint());
-			if (selectedArea.contains(e.getPoint()) && edge == -1)
-			{
+			if (selectedArea.contains(e.getPoint()) && edge == -1) {
 				window.setCursor(new Cursor(Cursor.MOVE_CURSOR));
 				inArea = true;
 			}

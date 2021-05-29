@@ -5,88 +5,74 @@ import java.util.List;
 
 import io.github.rowak.nanoleafapi.Aurora;
 import io.github.rowak.nanoleafapi.Effect;
+import io.github.rowak.nanoleafapi.NanoleafGroup;
 
-public class Shortcut
-{
+public class Shortcut {
+	
 	private String name;
 	private List<String> keys;
 	private RunType runType;
 	private Action action;
 	
 	public Shortcut(String name, List<String> keys,
-			RunType runType, Action action)
-	{
+			RunType runType, Action action) {
 		this.name = name;
 		this.keys = keys;
 		this.runType = runType;
 		this.action = action;
 	}
 	
-	public void execute(Aurora[] devices, Effect[] effects)
-	{
-		action.execute(devices, effects);
+	public void execute(NanoleafGroup group, Effect[] effects) {
+		action.execute(group, effects);
 	}
 	
-	public void reset(Aurora[] devices, Effect[] effects)
-	{
-		action.reset(devices, effects);
+	public void reset(NanoleafGroup group, Effect[] effects) {
+		action.reset(group, effects);
 	}
 	
-	public String getName()
-	{
+	public String getName() {
 		return name;
 	}
 	
-	public void setName(String name)
-	{
+	public void setName(String name) {
 		this.name = name;
 	}
 	
-	public List<String> getKeys()
-	{
+	public List<String> getKeys() {
 		return keys;
 	}
 	
-	public void setKeys(List<String> keys)
-	{
+	public void setKeys(List<String> keys) {
 		this.keys = keys;
 	}
 	
-	public RunType getRunType()
-	{
+	public RunType getRunType() {
 		return runType;
 	}
 	
-	public void setRunType(RunType type)
-	{
+	public void setRunType(RunType type) {
 		this.runType = type;
 	}
 	
-	public Action getAction()
-	{
+	public Action getAction() {
 		return action;
 	}
 	
-	public void setAction(Action action)
-	{
+	public void setAction(Action action) {
 		this.action = action;
 	}
 	
 	@Override
-	public String toString()
-	{
-		if (runType == RunType.WHEN_PRESSED || runType == RunType.WHILE_HELD)
-		{
+	public String toString() {
+		if (runType == RunType.WHEN_PRESSED || runType == RunType.WHILE_HELD) {
 			String keysStr = keys.get(0);
-			for (int i = 1; i < keys.size(); i++)
-			{
+			for (int i = 1; i < keys.size(); i++) {
 				keysStr += " + " + keys.get(i);
 			}
 			return String.format("Name: %s    Event: %s    Trigger: %s    Run: %s    Args: %s", name,
 					action.getType(), keysStr, runType, Arrays.asList(action.getArgs()));
 		}
-		else
-		{
+		else {
 			String appName = (String)action.getArgs()[1];
 			return String.format("Name: %s    Event: %s    Trigger: %s    Run: %s    Args: %s", name,
 					action.getType(), appName, runType, Arrays.asList(action.getArgs()));
@@ -94,10 +80,8 @@ public class Shortcut
 	}
 	
 	@Override
-	public boolean equals(Object other)
-	{
-		if (other instanceof Shortcut)
-		{
+	public boolean equals(Object other) {
+		if (other instanceof Shortcut) {
 			Shortcut o = (Shortcut)other;
 			return this.name.equals(o.name) &&
 					this.keys.equals(o.keys) &&

@@ -14,13 +14,12 @@ import javax.swing.border.LineBorder;
 
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 
-public class SingleEntryDialog extends BasicDialog
-{
+public class SingleEntryDialog extends BasicDialog {
+	
 	private JTextField entry;
 	
 	public SingleEntryDialog(Component parent, String entryLabel,
-			String buttonLabel, ActionListener buttonListener)
-	{
+			String buttonLabel, ActionListener buttonListener) {
 		super();
 		
 		entry = new JTextField(entryLabel);
@@ -45,36 +44,30 @@ public class SingleEntryDialog extends BasicDialog
 		btnConfirm.requestFocus();
 	}
 	
-	public JTextField getEntryField()
-	{
+	public JTextField getEntryField() {
 		return entry;
 	}
 	
-	private class TextFieldFocusListener extends FocusAdapter
-	{
+	private class TextFieldFocusListener extends FocusAdapter {
+		
 		String defaultText;
 		
-		public TextFieldFocusListener(JTextField parent)
-		{
+		public TextFieldFocusListener(JTextField parent) {
 			defaultText = parent.getText();
 		}
 		
 		@Override
-		public void focusGained(FocusEvent e)
-		{
+		public void focusGained(FocusEvent e) {
 			JTextField entry = (JTextField)e.getSource();
-			if (entry.getText().equals(defaultText))
-			{
+			if (entry.getText().equals(defaultText)) {
 				entry.setText("");
 			}
 		}
 		
 		@Override
-		public void focusLost(FocusEvent e)
-		{
+		public void focusLost(FocusEvent e) {
 			JTextField entry = (JTextField)e.getSource();
-			if (entry.getText().equals(""))
-			{
+			if (entry.getText().equals("")) {
 				entry.setText(defaultText);
 			}
 		}

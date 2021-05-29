@@ -11,12 +11,11 @@ import javax.swing.JSlider;
 import javax.swing.UIManager;
 import javax.swing.plaf.basic.BasicSliderUI;
 
-public class ModernSliderUI extends BasicSliderUI
-{
+public class ModernSliderUI extends BasicSliderUI {
+	
 	private Color thumbColor;
 	
-	public ModernSliderUI(JSlider b)
-	{
+	public ModernSliderUI(JSlider b) {
 		super(b);
 		thumbColor = Color.GRAY;
 		UIManager.put("Slider.shadow", Color.DARK_GRAY);
@@ -24,8 +23,7 @@ public class ModernSliderUI extends BasicSliderUI
 	}
 	
 	@Override
-	protected void paintHorizontalLabel(Graphics g, int value, Component label)
-	{
+	protected void paintHorizontalLabel(Graphics g, int value, Component label) {
 		int labelCenter = xPositionForValue(value);
         int labelLeft = labelCenter - (label.getPreferredSize().width / 2);
         g.translate(labelLeft, 0);
@@ -36,20 +34,17 @@ public class ModernSliderUI extends BasicSliderUI
 	
 	// Ripped from the paintThumb method in BasicSliderUI
 	@Override
-	public void paintThumb(Graphics g)
-	{
+	public void paintThumb(Graphics g) {
 		Rectangle knobBounds = thumbRect;
         int w = knobBounds.width;
         int h = knobBounds.height;
 
         g.translate(knobBounds.x, knobBounds.y);
 
-        if (slider.isEnabled())
-        {
+        if (slider.isEnabled()) {
             g.setColor(thumbColor);
         }
-        else
-        {
+        else {
             g.setColor(thumbColor.darker());
         }
 
@@ -57,8 +52,7 @@ public class ModernSliderUI extends BasicSliderUI
             (Boolean)slider.getClientProperty("Slider.paintThumbArrowShape");
 
         if ((!slider.getPaintTicks() && paintThumbArrowShape == null) ||
-            paintThumbArrowShape == Boolean.FALSE)
-        {
+            paintThumbArrowShape == Boolean.FALSE) {
             // "plain" version
             g.fillRect(0, 0, w, h);
 
@@ -74,8 +68,7 @@ public class ModernSliderUI extends BasicSliderUI
             g.drawLine(1, h-2, w-2, h-2);
             g.drawLine(w-2, 1, w-2, h-3);
         }
-        else if (slider.getOrientation() == JSlider.HORIZONTAL)
-        {
+        else if (slider.getOrientation() == JSlider.HORIZONTAL) {
             int cw = w / 2;
             g.fillRect(1, 1, w-3, h-1-cw);
             Polygon p = new Polygon();
@@ -97,11 +90,9 @@ public class ModernSliderUI extends BasicSliderUI
             g.drawLine(w-2, 1, w-2, h-2-cw);
             g.drawLine(w-2, h-1-cw, w-1-cw, h-2);
         }
-        else
-        {  // vertical
+        else {  // vertical
             int cw = h / 2;
-            if ((slider.getOrientation() & 4) != 0)
-            {
+            if ((slider.getOrientation() & 4) != 0) {
                   g.fillRect(1, 1, w-1-cw, h-3);
                   Polygon p = new Polygon();
                   p.addPoint(w-cw-1, 0);
@@ -119,11 +110,10 @@ public class ModernSliderUI extends BasicSliderUI
                   g.drawLine(w-1-cw, h-1, w-1, h-1-cw);        // bottom slant
 
                   g.setColor(getShadowColor());
-                  g.drawLine(1, h-2, w-2-cw,  h-2 );         // bottom
-                  g.drawLine(w-1-cw, h-2, w-2, h-cw-1 );     // bottom slant
+                  g.drawLine(1, h-2, w-2-cw,  h-2 );           // bottom
+                  g.drawLine(w-1-cw, h-2, w-2, h-cw-1 );       // bottom slant
             }
-            else
-            {
+            else {
                   g.fillRect(5, 1, w-1-cw, h-3);
                   Polygon p = new Polygon();
                   p.addPoint(cw, 0);

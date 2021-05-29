@@ -1,7 +1,7 @@
 package io.github.rowak.nanoleafdesktop.shortcuts;
 
-public enum ActionType
-{
+public enum ActionType {
+	
 	DEVICE_ON, DEVICE_OFF, DEVICE_TOGGLE,
 	INCREASE_BRIGHTNESS, DECREASE_BRIGHTNESS, SET_BRIGHTNESS,
 	INCREASE_COLOR_TEMP, DECREASE_COLOR_TEMP, SET_COLOR_TEMP,

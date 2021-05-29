@@ -16,10 +16,9 @@ import javax.swing.border.LineBorder;
 import io.github.rowak.nanoleafapi.Color;
 import io.github.rowak.nanoleafdesktop.discovery.EffectMetadata;
 
-public class DiscoveryCellRenderer extends JLabel implements ListCellRenderer<EffectMetadata>
-{
-	public DiscoveryCellRenderer()
-	{
+public class DiscoveryCellRenderer extends JLabel implements ListCellRenderer<EffectMetadata> {
+	
+	public DiscoveryCellRenderer() {
 		setOpaque(true);
 		setBorder(new CompoundBorder(
 				new LineBorder(java.awt.Color.GRAY, 1),
@@ -33,8 +32,7 @@ public class DiscoveryCellRenderer extends JLabel implements ListCellRenderer<Ef
 	
 	@Override
 	public Component getListCellRendererComponent(JList<? extends EffectMetadata> list,
-			EffectMetadata value, int index, boolean isSelected, boolean cellHasFocus)
-	{
+			EffectMetadata value, int index, boolean isSelected, boolean cellHasFocus) {
 		EffectMetadata effect = (EffectMetadata)value;
 		Color[] palette = effect.getPalette();
 		final int RECT_HEIGHT = 10;
@@ -42,8 +40,7 @@ public class DiscoveryCellRenderer extends JLabel implements ListCellRenderer<Ef
 				RECT_HEIGHT, BufferedImage.TYPE_INT_RGB);
 		Graphics g = img.getGraphics();
 		final int RECT_WIDTH = img.getWidth()/palette.length;
-		for (int i = 0; i < palette.length; i++)
-		{
+		for (int i = 0; i < palette.length; i++) {
 			Color c = palette[i];
 			g.setColor(new java.awt.Color(c.getRed(), c.getGreen(), c.getBlue()));
 			g.fillRect(i*RECT_WIDTH, 0, RECT_WIDTH, RECT_HEIGHT);
@@ -55,12 +52,10 @@ public class DiscoveryCellRenderer extends JLabel implements ListCellRenderer<Ef
 		setText(String.format("<html><font size=6>%s<font size=5> (%d downloads)</html>", effect.getName(), effect.getDownloads()));
 		list.setSelectionBackground(java.awt.Color.GRAY);
 		
-		if (isSelected)
-		{
+		if (isSelected) {
 			setBackground(list.getSelectionBackground());
 		}
-		else
-		{
+		else {
 			setBackground(list.getBackground());
 		}
 		

@@ -13,10 +13,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-public class AboutDialog extends BasicDialog
-{
-	public AboutDialog(Component parent, Version version)
-	{
+public class AboutDialog extends BasicDialog {
+	
+	public AboutDialog(Component parent, Version version) {
 		super();
 		
 		JLabel lblTitle = new JLabel("Nanoleaf for Desktop by Ethan Rowan (rowak)");
@@ -24,7 +23,7 @@ public class AboutDialog extends BasicDialog
 		lblTitle.setFont(new Font("Tahoma", Font.PLAIN, 25));
 		getContentPane().add(lblTitle, "flowy,cell 0 1,alignx center,gapx 5 0");
 		
-		JLabel lblGithubUrl = new JLabel("github.com/rowak/nanoleaf-desktop\r\n");
+		JLabel lblGithubUrl = new JLabel("https://github.com/rowak/nanoleaf-desktop\r\n");
 		lblGithubUrl.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		lblGithubUrl.setForeground(Color.WHITE);
 		getContentPane().add(lblGithubUrl, "cell 0 1,alignx center");
@@ -54,30 +53,25 @@ public class AboutDialog extends BasicDialog
 		finalize(parent);
 	}
 	
-	private void openDonationWebpage()
-	{
-		if (Desktop.isDesktopSupported())
-		{
+	private void openDonationWebpage() {
+		if (Desktop.isDesktopSupported()) {
 			Desktop desktop = Desktop.getDesktop();
-		    if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE))
-		    {
-		        try
-		        {
+		    if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+		        try {
 		        	final String paypalDonationLink = "https://paypal.me/rowak";
 		            desktop.browse(new URI(paypalDonationLink));
 		        }
-		        catch (IOException | URISyntaxException iourie)
-		        {
+		        catch (IOException | URISyntaxException e) {
+		        	e.printStackTrace();
 		        	String errorMessage = "Failed to open the web browser. " +
-							"Please navigate to https://paypal.me/rowak manually.";
+							"You can alternatively navigate to https://paypal.me/rowak manually.";
 		            new TextDialog(AboutDialog.this, errorMessage).setVisible(true);
 		        }
 		    }
 		}
-		else
-		{
+		else {
 			String errorMessage = "Your computer doesn't seem to support this feature. " +
-					"Please navigate to https://paypal.me/rowak manually.";
+					"You can alternatively navigate to https://paypal.me/rowak manually.";
             new TextDialog(AboutDialog.this, errorMessage).setVisible(true);
 		}
 	}

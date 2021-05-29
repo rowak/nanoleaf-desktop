@@ -14,9 +14,9 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import io.github.rowak.nanoleafapi.Aurora;
-import io.github.rowak.nanoleafapi.StatusCodeException;
-import io.github.rowak.nanoleafapi.Effect.Direction;
+import io.github.rowak.nanoleafapi.Direction;
+import io.github.rowak.nanoleafapi.NanoleafException;
+import io.github.rowak.nanoleafapi.NanoleafGroup;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyAuthenticator;
 import io.github.rowak.nanoleafdesktop.spotify.SpotifyEffectType;
@@ -24,6 +24,7 @@ import io.github.rowak.nanoleafdesktop.spotify.SpotifyPlayer;
 import io.github.rowak.nanoleafdesktop.spotify.UserOption;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyFireworksEffect;
+import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPartyMixEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyStreakingNotesEffect;
@@ -48,8 +49,8 @@ import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JButton;
 
-public class SpotifyPanel extends JPanel
-{
+public class SpotifyPanel extends JPanel {
+	
 	private final int DEFAULT_SENSITIVITY = 9;
 	private final int MAX_SENSITIVITY = 10;
 	private final int MIN_SENSITIVITY = 0;
@@ -57,23 +58,22 @@ public class SpotifyPanel extends JPanel
 	private final int MAX_AUDIO_OFFSET = 1000;
 	private final int MIN_AUDIO_OFFSET = -1000;
 	
-	private Color[] palette =
-		{
-			new Color(0, 0, 255),
-			new Color(0, 255, 255),
-			new Color(0, 255, 0),
-			new Color(255, 255, 0),
-			new Color(255, 100, 0),
-			new Color(255, 0, 0),
-			new Color(255, 0, 255)
-		};
+	private Color[] palette = {
+		new Color(0, 0, 255),
+		new Color(0, 255, 255),
+		new Color(0, 255, 0),
+		new Color(255, 255, 0),
+		new Color(255, 100, 0),
+		new Color(255, 0, 0),
+		new Color(255, 0, 255)
+	};
 	
 	private boolean adjustingPalette;
 	private int audioOffset;
 	private int sensitivity;
 	private SpotifyAuthenticator authenticator;
 	private SpotifyPlayer player;
-	private Aurora[] auroras;
+	private NanoleafGroup group;
 	private Map<String, Object> userOptionArgs;
 	
 	private JToggleButton btnEnableDisable;
@@ -87,46 +87,38 @@ public class SpotifyPanel extends JPanel
 	private JSlider audioOffsetSlider;
 	private PanelCanvas canvas;
 	
-	public SpotifyPanel(Aurora[] auroras, PanelCanvas canvas)
-	{
-		this.auroras = auroras;
+	public SpotifyPanel(NanoleafGroup group, PanelCanvas canvas) {
+		this.group = group;
 		this.canvas = canvas;
 		userOptionArgs = new HashMap<String, Object>();
 		initUI();
 		loadUserSettings();
 	}
 	
-	public void setAuroras(Aurora[] auroras)
-	{
-		this.auroras = auroras;
-		if (player != null)
-		{
-			player.setAuroras(auroras);
+	public void setAuroras(NanoleafGroup group) {
+		this.group = group;
+		if (player != null) {
+			player.setAuroras(group);
 		}
 	}
 	
-	public void setPalette(Color[] palette)
-	{
+	public void setPalette(Color[] palette) {
 		this.palette = palette;
 	}
 	
-	public void setTrackInfoText(String text)
-	{
+	public void setTrackInfoText(String text) {
 		lblTrackInfo.setText(text);
 	}
 	
-	public void setTrackProgressText(String text)
-	{
+	public void setTrackProgressText(String text) {
 		lblTrackProgress.setText(text);
 	}
 	
-	public Map<String, Object> getUserOptionArgs()
-	{
+	public Map<String, Object> getUserOptionArgs() {
 		return userOptionArgs;
 	}
 	
-	private void initUI()
-	{
+	private void initUI() {
 		setBorder(new LineBorder(Color.GRAY, 1, true));
 		setBackground(Color.DARK_GRAY);
 		setLayout(new MigLayout("", "[][grow][]", "[][][][][][]"));
@@ -138,17 +130,13 @@ public class SpotifyPanel extends JPanel
 		add(lblStatus, "cell 0 0,gapx 0 15");
 		
 		btnEnableDisable = new ModernToggleButton("Enable");
-		btnEnableDisable.addActionListener(new ActionListener()
-		{
+		btnEnableDisable.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				if (getSelectedEffect() != null)
-				{
+			public void actionPerformed(ActionEvent e) {
+				if (getSelectedEffect() != null) {
 					toggleEnabled();
 				}
-				else if (btnEnableDisable.getText().equals("Enable"))
-				{
+				else if (btnEnableDisable.getText().equals("Enable")) {
 					new TextDialog(SpotifyPanel.this.getFocusCycleRootAncestor(),
 							"You must select an effect before enabling the visualizer.")
 							.setVisible(true);
@@ -162,33 +150,25 @@ public class SpotifyPanel extends JPanel
 		
 		cmbxEffect = new ModernComboBox<String>(
 				new DefaultComboBoxModel<String>(getEffectTypes()));
-		cmbxEffect.addActionListener(new ActionListener()
-		{
+		cmbxEffect.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				new Thread(() ->
-				{
-					if (player != null)
-					{
-						try
-						{
+			public void actionPerformed(ActionEvent e) {
+				new Thread(() -> {
+					if (player != null) {
+						try {
 							showEffectOptions(false);
 							player.setEffect(getSelectedEffect());
 							player.initEffect();
 							showEffectOptions(true);
 						}
-						catch (StatusCodeException sce)
-						{
-							sce.printStackTrace();
+						catch (NanoleafException e1) {
+							e1.printStackTrace();
 						}
-						catch (IOException ioe)
-						{
+						catch (IOException ioe) {
 							ioe.printStackTrace();
 						}
 					}
-					else
-					{
+					else {
 						showEffectOptions(false);
 						showEffectOptions(true);
 					}
@@ -198,11 +178,9 @@ public class SpotifyPanel extends JPanel
 		add(cmbxEffect, "cell 1 1,growx");
 		
 		JButton btnPalette = new ModernButton("Palette");
-		btnPalette.addActionListener(new ActionListener()
-		{
+		btnPalette.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				setPalette();
 			}
 		});
@@ -217,17 +195,13 @@ public class SpotifyPanel extends JPanel
 		sensitivitySlider.setMinimum(MIN_SENSITIVITY);
 		sensitivitySlider.setBackground(UIConstants.darkBackground);
 		sensitivitySlider.setUI(new ModernSliderUI(sensitivitySlider));
-		sensitivitySlider.addChangeListener(new ChangeListener()
-		{
+		sensitivitySlider.addChangeListener(new ChangeListener() {
 			@Override
-			public void stateChanged(ChangeEvent e)
-			{
-				if (!sensitivitySlider.getValueIsAdjusting())
-				{
+			public void stateChanged(ChangeEvent e) {
+				if (!sensitivitySlider.getValueIsAdjusting()) {
 					sensitivity = sensitivitySlider.getValue();
 					setProperty("spotifySensitivity", sensitivity);
-					if (player != null)
-					{
+					if (player != null) {
 						player.setSensitivity(sensitivity);
 					}
 				}
@@ -248,17 +222,13 @@ public class SpotifyPanel extends JPanel
 		audioOffsetSlider.setFont(UIConstants.smallLabelFont);
 		audioOffsetSlider.setMajorTickSpacing(500);
 		audioOffsetSlider.setUI(new ModernSliderUI(audioOffsetSlider));
-		audioOffsetSlider.addChangeListener(new ChangeListener()
-		{
+		audioOffsetSlider.addChangeListener(new ChangeListener() {
 			@Override
-			public void stateChanged(ChangeEvent e)
-			{
-				if (!audioOffsetSlider.getValueIsAdjusting())
-				{
+			public void stateChanged(ChangeEvent e) {
+				if (!audioOffsetSlider.getValueIsAdjusting()) {
 					audioOffset = audioOffsetSlider.getValue();
 					setProperty("spotifyAudioOffset", audioOffset);
-					if (player != null)
-					{
+					if (player != null) {
 						player.setAudioOffset(audioOffset);
 					}
 				}
@@ -273,57 +243,44 @@ public class SpotifyPanel extends JPanel
 		add(lblTrackProgress, "cell 0 5 3 1,alignx center");
 	}
 	
-	private void toggleEnabled()
-	{
-		if (btnEnableDisable.getText().equals("Enable"))
-		{
-			new Thread(() ->
-			{
-				if (player != null)
-				{
+	private void toggleEnabled() {
+		if (btnEnableDisable.getText().equals("Enable")) {
+			new Thread(() -> {
+				if (player != null) {
 					player.start();
 					btnEnableDisable.setText("Disable");
 				}
-				else
-				{
+				else {
 					String message = "You will now be prompted to login with your " +
 							"Spotify account through your web browser.";
 					OptionDialog spotifyAuth = new OptionDialog(
 							SpotifyPanel.this.getFocusCycleRootAncestor(),
 							message, "Ok", "Cancel",
-							new ActionListener()
-							{
+							new ActionListener() {
 								@Override
-								public void actionPerformed(ActionEvent e)
-								{
+								public void actionPerformed(ActionEvent e) {
 									OptionDialog dialog = (OptionDialog)((JButton)e.getSource())
 											.getTopLevelAncestor();
 									dialog.dispose();
-									new Thread(() ->
-									{
+									new Thread(() -> {
 										trySetupPlayer();
 										btnEnableDisable.setText("Disable");
 										// authenticated
 									}).start();
 								}
-							}, new ActionListener()
-							{
+							}, new ActionListener() {
 								@Override
-								public void actionPerformed(ActionEvent e)
-								{
+								public void actionPerformed(ActionEvent e) {
 									OptionDialog dialog = (OptionDialog)((JButton)e.getSource())
 											.getTopLevelAncestor();
 									dialog.dispose();
 								}
 							});
-					if (SpotifyAuthenticator.getSavedAccessToken() == null)
-					{
+					if (SpotifyAuthenticator.getSavedAccessToken() == null) {
 						spotifyAuth.setVisible(true);
 					}
-					else
-					{
-						new Thread(() ->
-						{
+					else {
+						new Thread(() -> {
 							trySetupPlayer();
 							btnEnableDisable.setText("Disable");
 							// authenticated
@@ -332,67 +289,54 @@ public class SpotifyPanel extends JPanel
 				}
 			}).start();
 		}
-		else if (btnEnableDisable.getText().equals("Disable"))
-		{
+		else if (btnEnableDisable.getText().equals("Disable")) {
 			player.stop();
 			btnEnableDisable.setText("Enable");
 		}
 	}
 	
-	private boolean trySetupPlayer()
-	{
-		try
-		{
+	private boolean trySetupPlayer() {
+		try {
 			authenticator = new SpotifyAuthenticator();
 			player = new SpotifyPlayer(authenticator.getSpotifyApi(),
-					getSelectedEffect(), convertPalette(palette), auroras, this, canvas);
+					getSelectedEffect(), convertPalette(palette), group, this, canvas);
 			player.setSensitivity(sensitivity);
 			player.setAudioOffset(audioOffset);
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			e.printStackTrace();
 			return false;
 		}
 		return true;
 	}
 	
-	private void showEffectOptions(boolean visible)
-	{
+	private void showEffectOptions(boolean visible) {
 		SpotifyEffect effect = getEffectFromType(getSelectedEffect());
-		if (visible && effect != null)
-		{
+		if (visible && effect != null) {
 			remove(lblTrackInfo);
 			remove(lblTrackProgress);
 			
 			List<UserOption> options = effect.getUserOptions();
-			for (int i = 0; i < options.size(); i++)
-			{
+			for (int i = 0; i < options.size(); i++) {
 				UserOption option = options.get(i);
 				JLabel lblOption = new LargeModernLabel(option.getName());
 				lblOptions.add(lblOption);
 				JComboBox<String> cmbxOption = new ModernComboBox<String>(
 						new DefaultComboBoxModel<String>(option.getOptions()));
-				cmbxOption.addActionListener(new ActionListener()
-				{
+				cmbxOption.addActionListener(new ActionListener() {
 					@Override
-					public void actionPerformed(ActionEvent e)
-					{
+					public void actionPerformed(ActionEvent e) {
 						userOptionArgs.put(option.getName().toLowerCase(),
 								cmbxOption.getSelectedItem());
-						if (player != null)
-						{
-							try
-							{
+						if (player != null) {
+							try {
 								player.setEffect(getSelectedEffect());
 								player.initEffect();
 							}
-							catch (StatusCodeException sce)
-							{
-								sce.printStackTrace();
+							catch (NanoleafException e1) {
+								e1.printStackTrace();
 							}
-							catch (IOException ioe)
-							{
+							catch (IOException ioe) {
 								ioe.printStackTrace();
 							}
 						}
@@ -410,17 +354,14 @@ public class SpotifyPanel extends JPanel
 			
 			revalidate();
 		}
-		else if (!lblOptions.isEmpty() && !cmbxOptions.isEmpty())
-		{
+		else if (!lblOptions.isEmpty() && !cmbxOptions.isEmpty()) {
 			remove(lblTrackInfo);
 			remove(lblTrackProgress);
 			
-			for (int i = 0; i < lblOptions.size(); i++)
-			{
+			for (int i = 0; i < lblOptions.size(); i++) {
 				remove(lblOptions.get(i));
 			}
-			for (int i = 0; i < cmbxOptions.size(); i++)
-			{
+			for (int i = 0; i < cmbxOptions.size(); i++) {
 				remove(cmbxOptions.get(i));
 			}
 			
@@ -433,60 +374,52 @@ public class SpotifyPanel extends JPanel
 		}
 	}
 	
-	private SpotifyEffect getEffectFromType(SpotifyEffectType type)
-	{
-		if (type != null)
-		{
-			try
-			{
-				switch (type)
-				{
+	private SpotifyEffect getEffectFromType(SpotifyEffectType type) {
+		if (type != null) {
+			try {
+				switch (type) {
 					case PULSE_BEATS:
 						return new SpotifyPulseBeatsEffect(
-								convertPalette(palette), auroras);
+								convertPalette(palette), group);
 					case SOUNDBAR:
 						return new SpotifySoundBarEffect(
 								convertPalette(palette), Direction.RIGHT,
-								auroras, canvas);
+								group, canvas);
 					case FIREWORKS:
 						return new SpotifyFireworksEffect(
-								convertPalette(palette), auroras);
+								convertPalette(palette), group);
 					case STREAKING_NOTES:
 						return new SpotifyStreakingNotesEffect(
 								convertPalette(palette),
-								auroras, canvas);
+								group, canvas);
+					case PARTY_MIX:
+						return new SpotifyPartyMixEffect(
+								convertPalette(palette), group);
 				}
 			}
-			catch (StatusCodeException sce)
-			{
-				sce.printStackTrace();
+			catch (NanoleafException e) {
+				e.printStackTrace();
 			}
 		}
 		return null;
 	}
 	
-	private SpotifyEffectType getSelectedEffect()
-	{
+	private SpotifyEffectType getSelectedEffect() {
 		int index = cmbxEffect.getSelectedIndex()-1;
-		if (index != -1)
-		{
+		if (index != -1) {
 			return SpotifyEffectType.values()[index];
 		}
 		return null;
 	}
 	
-	private String[] getEffectTypes()
-	{
+	private String[] getEffectTypes() {
 		String[] types = new String[SpotifyEffectType.values().length+1];
 		types[0] = "Select an effect...";
-		for (int i = 0; i < SpotifyEffectType.values().length; i++)
-		{
+		for (int i = 0; i < SpotifyEffectType.values().length; i++) {
 			char[] type = SpotifyEffectType.values()[i].toString().toLowerCase().toCharArray();
 			type[0] = (type[0] + "").toUpperCase().charAt(0);
-			for (int j = 0; j < type.length; j++)
-			{
-				if (type[j] == '_')
-				{
+			for (int j = 0; j < type.length; j++) {
+				if (type[j] == '_') {
 					type[j+1] = (type[j+1] + "").toUpperCase().charAt(0);
 				}
 			}
@@ -495,31 +428,23 @@ public class SpotifyPanel extends JPanel
 		return types;
 	}
 	
-	private void setPalette()
-	{
+	private void setPalette() {
 		PalettePicker palettePicker = new PalettePicker(this.getFocusCycleRootAncestor());
 		palettePicker.setPalette(palette);
 		palettePicker.setVisible(true);
-		palettePicker.getPalettePanel().addChangeListener(new ComponentChangeListener()
-		{
+		palettePicker.getPalettePanel().addChangeListener(new ComponentChangeListener() {
 			@Override
-			public void stateChanged(ChangeEvent e)
-			{
-				if (!adjustingPalette)
-				{
+			public void stateChanged(ChangeEvent e) {
+				if (!adjustingPalette) {
 					adjustingPalette = true;
-					new Thread(() ->
-					{
-						if (player != null)
-						{
-							try
-							{
+					new Thread(() -> {
+						if (player != null) {
+							try {
 								player.setUsingDefaultPalette(false);
 								player.setPalette(convertPalette(
 										palettePicker.getPalette()));
 							}
-							catch (Exception e1)
-							{
+							catch (Exception e1) {
 								e1.printStackTrace();
 							}
 						}
@@ -531,12 +456,10 @@ public class SpotifyPanel extends JPanel
 		});
 	}
 	
-	private io.github.rowak.nanoleafapi.Color[] convertPalette(java.awt.Color[] awtPalette)
-	{
+	private io.github.rowak.nanoleafapi.Color[] convertPalette(java.awt.Color[] awtPalette) {
 		io.github.rowak.nanoleafapi.Color[] palette =
 				new io.github.rowak.nanoleafapi.Color[awtPalette.length];
-		for (int i = 0; i < awtPalette.length; i++)
-		{
+		for (int i = 0; i < awtPalette.length; i++) {
 			Color c = awtPalette[i];
 			palette[i] = io.github.rowak.nanoleafapi.Color.fromRGB(c.getRed(),
 					c.getGreen(), c.getBlue());
@@ -544,34 +467,28 @@ public class SpotifyPanel extends JPanel
 		return palette;
 	}
 	
-	private void loadUserSettings()
-	{
+	private void loadUserSettings() {
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 		
 		String lastSensitivity = manager.getProperty("spotifySensitivity");
-		try
-		{
+		try {
 			sensitivity = Integer.parseInt(lastSensitivity);
 		}
-		catch (NumberFormatException | NullPointerException e)
-		{
+		catch (NumberFormatException | NullPointerException e) {
 			sensitivity = DEFAULT_SENSITIVITY;
 		}
 		sensitivitySlider.setValue(sensitivity);
 		String lastAudioOffset = manager.getProperty("spotifyAudioOffset");
-		try
-		{
+		try {
 			audioOffset = Integer.parseInt(lastAudioOffset);
 		}
-		catch (NumberFormatException | NullPointerException e)
-		{
+		catch (NumberFormatException | NullPointerException e) {
 			audioOffset = DEFAULT_AUDIO_OFFSET;
 		}
 		audioOffsetSlider.setValue(audioOffset);
 	}
 	
-	private void setProperty(String key, Object value)
-	{
+	private void setProperty(String key, Object value) {
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 		manager.setProperty(key, value);
 	}

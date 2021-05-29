@@ -1,9 +1,8 @@
 package io.github.rowak.nanoleafdesktop.ui.panel.panelcanvas;
 
-public class SquarePanel extends PanelShape
-{
-	public SquarePanel(int x, int y, int rotation)
-	{
+public class SquarePanel extends PanelShape {
+	
+	public SquarePanel(int x, int y, int rotation) {
 		super(rotation);
 		
 		//top-left

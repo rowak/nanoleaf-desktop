@@ -7,46 +7,39 @@ import java.util.TimerTask;
 
 import javax.swing.JFrame;
 
-public class WindowOpeningListener extends WindowAdapter
-{
-	JFrame frame;
+public class WindowOpeningListener extends WindowAdapter {
 	
-	public WindowOpeningListener(JFrame frame)
-	{
+	private JFrame frame;
+	
+	public WindowOpeningListener(JFrame frame) {
 		this.frame = frame;
 	}
 	
 	@Override
-	public void windowDeiconified(WindowEvent e)
-	{
+	public void windowDeiconified(WindowEvent e) {
 		final int TIME = 200;
 	    final int MILLIS_PER_FRAME = 33;
 	    final float DELTA = MILLIS_PER_FRAME / (float)TIME;
 		frame.setOpacity(0f);
         frame.setState(JFrame.NORMAL); 
         final Timer timer = new Timer();
-        TimerTask timerTask = new TimerTask()
-        {
+        TimerTask timerTask = new TimerTask() {
             float opacity = 0f;
 
             @Override
-            public void run()
-            {
+            public void run() {
                 opacity += DELTA;
                 
-                if (opacity < 0)
-                {
+                if (opacity < 0) {
                     frame.setState(JFrame.ICONIFIED);
                     frame.setOpacity(1f);
                     timer.cancel();
                 }
-                else if (opacity > 1)
-                {
+                else if (opacity > 1) {
                     frame.setOpacity(1f);
                     timer.cancel();
                 }
-                else
-                {
+                else {
                     frame.setOpacity(opacity);
                 }
             }

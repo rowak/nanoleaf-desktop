@@ -13,13 +13,12 @@ import javax.swing.JTextField;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.textfield.ModernTextField;
 
-public class DoubleEntryDialog extends BasicDialog
-{
+public class DoubleEntryDialog extends BasicDialog {
+	
 	private JTextField entry1, entry2;
 
 	public DoubleEntryDialog(Component parent, String entry1Label,
-			String entry2Label, String buttonLabel, ActionListener buttonListener)
-	{
+			String entry2Label, String buttonLabel, ActionListener buttonListener) {
 		super();
 		
 		entry1 = new ModernTextField(entry1Label);
@@ -43,41 +42,34 @@ public class DoubleEntryDialog extends BasicDialog
 		btnConfirm.requestFocus();
 	}
 	
-	public JTextField getEntry1()
-	{
+	public JTextField getEntry1() {
 		return entry1;
 	}
 	
-	public JTextField getEntry2()
-	{
+	public JTextField getEntry2() {
 		return entry2;
 	}
 	
-	private class TextFieldFocusListener extends FocusAdapter
-	{
+	private class TextFieldFocusListener extends FocusAdapter {
+		
 		String defaultText;
 		
-		public TextFieldFocusListener(JTextField parent)
-		{
+		public TextFieldFocusListener(JTextField parent) {
 			defaultText = parent.getText();
 		}
 		
 		@Override
-		public void focusGained(FocusEvent e)
-		{
+		public void focusGained(FocusEvent e) {
 			JTextField entry = (JTextField)e.getSource();
-			if (entry.getText().equals(defaultText))
-			{
+			if (entry.getText().equals(defaultText)) {
 				entry.setText("");
 			}
 		}
 		
 		@Override
-		public void focusLost(FocusEvent e)
-		{
+		public void focusLost(FocusEvent e) {
 			JTextField entry = (JTextField)e.getSource();
-			if (entry.getText().equals(""))
-			{
+			if (entry.getText().equals("")) {
 				entry.setText(defaultText);
 			}
 		}

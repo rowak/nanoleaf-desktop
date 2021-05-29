@@ -14,13 +14,12 @@ import javax.swing.JPanel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-public class BrightnessSlider extends JPanel
-{
+public class BrightnessSlider extends JPanel {
+	
 	private int width, height;
 	private SliderTracker tracker;
 	
-	public BrightnessSlider(int width, int height)
-	{
+	public BrightnessSlider(int width, int height) {
 		this.width = width;
 		this.height = height;
 		add(Box.createRigidArea(new Dimension(width, height)));
@@ -28,18 +27,15 @@ public class BrightnessSlider extends JPanel
 		tracker = new SliderTracker();
 	}
 	
-	public int getValue()
-	{
+	public int getValue() {
 		return getValue(tracker.getY());
 	}
 	
-	public void setValue(int value)
-	{
+	public void setValue(int value) {
 		tracker.setY(value);
 	}
 	
-	public void setColor(Color color)
-	{
+	public void setColor(Color color) {
 		float[] hsbVals = new float[3];
 		hsbVals = Color.RGBtoHSB(color.getRed(), color.getGreen(),
 				color.getBlue(), hsbVals);
@@ -47,39 +43,32 @@ public class BrightnessSlider extends JPanel
 		tracker.setY(value);
 	}
 	
-	public void addChangeListener(ChangeListener listener)
-	{
+	public void addChangeListener(ChangeListener listener) {
 	    listenerList.add(ChangeListener.class, listener);
 	}
 
-	public void removeChangeListener(ChangeListener listener)
-	{
+	public void removeChangeListener(ChangeListener listener) {
 	    listenerList.remove(ChangeListener.class, listener);
 	}
 
-	public ChangeListener[] getChangeListeners()
-	{
+	public ChangeListener[] getChangeListeners() {
 	    return listenerList.getListeners(ChangeListener.class);
 	}
 
-	protected void fireChangeListeners()
-	{
+	protected void fireChangeListeners() {
 	    ChangeEvent event = new ChangeEvent(this);
-	    for (ChangeListener listener : getChangeListeners())
-	    {
+	    for (ChangeListener listener : getChangeListeners()) {
 	        listener.stateChanged(event);
 	    }
 	}
 	
-	private int getValue(int height)
-	{
+	private int getValue(int height) {
 		height = this.height - height;
 		return (int)((height/(float)this.height)*100);
 	}
 	
 	@Override
-	public void paint(Graphics g)
-	{
+	public void paint(Graphics g) {
 		super.paint(g);
 		
 		paintGradient(g);
@@ -88,70 +77,58 @@ public class BrightnessSlider extends JPanel
 		tracker.paint(g);
 	}
 	
-	public void paintGradient(Graphics g)
-	{
+	public void paintGradient(Graphics g) {
 		int THICKNESS = height/100;
 		
-		for (int y = 0; y < 100; y++)
-		{
+		for (int y = 0; y < 100; y++) {
 			g.setColor(Color.getHSBColor(0, 0, y/100f));
 			g.fillRect(0, height - y*THICKNESS, width, THICKNESS);
 		}
 	}
 	
-	private class SliderTracker
-	{
+	private class SliderTracker {
+		
 		private int y;
 		private Color borderColor, trackerColor;
 		
-		public SliderTracker()
-		{
+		public SliderTracker() {
 			this.y = height/2;
 			borderColor = Color.DARK_GRAY;
 			trackerColor = Color.WHITE;
 
-			addMouseListener(new MouseAdapter()
-			{
+			addMouseListener(new MouseAdapter() {
 				@Override
-				public void mousePressed(MouseEvent e)
-				{
+				public void mousePressed(MouseEvent e) {
 					updatePosition(e.getY());
 				}
 			});
-			addMouseMotionListener(new MouseAdapter()
-			{
+			addMouseMotionListener(new MouseAdapter() {
 				@Override
-				public void mouseDragged(MouseEvent e)
-				{
+				public void mouseDragged(MouseEvent e) {
 					updatePosition(e.getY());
 				}
 			});
 		}
 		
-		private void updatePosition(int y)
-		{
-			if (y > 0 && y < height)
-			{
+		private void updatePosition(int y) {
+			if (y > 0 && y < height) {
 				this.y = y;
 				fireChangeListeners();
 				repaint();
 			}
 		}
 		
-		public int getY()
-		{
+		public int getY() {
 			return this.y;
 		}
 		
-		public void setY(int y)
-		{
+		public void setY(int y) {
 			int THICKNESS = height/100;
 			this.y = height - y*THICKNESS;
 			repaint();
 		}
 		
-		public void paint(Graphics g)
-		{
+		public void paint(Graphics g) {
 			final int THICKNESS = 10;
 			Graphics2D g2d = (Graphics2D)g;
 			g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,

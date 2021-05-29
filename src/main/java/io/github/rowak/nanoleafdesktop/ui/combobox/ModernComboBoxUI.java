@@ -8,23 +8,19 @@ import javax.swing.plaf.metal.MetalComboBoxUI;
 
 import io.github.rowak.nanoleafdesktop.ui.scrollbar.ModernScrollBarUI;
 
-public class ModernComboBoxUI extends MetalComboBoxUI
-{
+public class ModernComboBoxUI extends MetalComboBoxUI {
+	
 	private JComboBox comboBox;
 	
-	public ModernComboBoxUI(JComboBox comboBox)
-	{
+	public ModernComboBoxUI(JComboBox comboBox) {
 		this.comboBox = comboBox;
 	}
 	
 	@Override
-	protected ComboPopup createPopup()
-	{
-		return new BasicComboPopup(comboBox)
-		{
+	protected ComboPopup createPopup() {
+		return new BasicComboPopup(comboBox) {
 			@Override
-			protected JScrollPane createScroller()
-			{
+			protected JScrollPane createScroller() {
 				// Override the default Metal scrollbar
 				JScrollPane scroller = super.createScroller();
 				scroller.getVerticalScrollBar().setUI(new ModernScrollBarUI());

@@ -1,3 +1,7 @@
+/**
+ * Source: http://www.camick.com/java/source/ComponentResizer.java
+ */
+
 package io.github.rowak.nanoleafdesktop.ui.listener;
 
 import java.awt.*;

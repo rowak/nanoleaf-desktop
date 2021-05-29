@@ -6,21 +6,18 @@ import java.awt.Font;
 import javax.swing.JTextField;
 import javax.swing.border.LineBorder;
 
-public class ModernTextField extends JTextField
-{
-	public ModernTextField()
-	{
+public class ModernTextField extends JTextField {
+	
+	public ModernTextField() {
 		init();
 	}
 	
-	public ModernTextField(String defaultText)
-	{
+	public ModernTextField(String defaultText) {
 		init();
 		setText(defaultText);
 	}
 	
-	private void init()
-	{
+	private void init() {
 		setForeground(Color.WHITE);
 		setBackground(Color.DARK_GRAY);
 		setBorder(new LineBorder(Color.GRAY));

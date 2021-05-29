@@ -14,26 +14,23 @@ import javax.swing.event.ChangeListener;
 
 import net.miginfocom.swing.MigLayout;
 
-public class ColorEntry extends JPanel
-{
+public class ColorEntry extends JPanel {
+	
 	private JTextField txtRgb;
 	private JTextField txtHsb;
 	private JTextField txtHex;
 	
-	public ColorEntry(Container contentPane)
-	{
+	public ColorEntry(Container contentPane) {
 		initUI(contentPane);
 	}
 	
-	public Color getColor()
-	{
+	public Color getColor() {
 		String[] rgb = txtRgb.getText().replace(" ", "").split(",");
 		return new Color(Integer.parseInt(rgb[0]),
 				Integer.parseInt(rgb[1]), Integer.parseInt(rgb[2]));
 	}
 	
-	public int[] getHSB()
-	{
+	public int[] getHSB() {
 		String[] hsb = txtHsb.getText().replace(" ", "").split(",");
 		int[] hsbVals = new int[3];
 		hsbVals[0] = Integer.parseInt(hsb[0]);
@@ -42,23 +39,19 @@ public class ColorEntry extends JPanel
 		return hsbVals;
 	}
 	
-	public JTextField getRgbTextField()
-	{
+	public JTextField getRgbTextField() {
 		return txtRgb;
 	}
 	
-	public JTextField getHsbTextField()
-	{
+	public JTextField getHsbTextField() {
 		return txtHsb;
 	}
 
-	public JTextField getHexTextField()
-	{
+	public JTextField getHexTextField() {
 		return txtHex;
 	}
 	
-	private void initUI(Container contentPane)
-	{
+	private void initUI(Container contentPane) {
 		JPanel panel = new JPanel();
 		panel.setBackground(Color.DARK_GRAY);
 		contentPane.add(panel, "flowx, cell 0 1");
@@ -110,52 +103,42 @@ public class ColorEntry extends JPanel
 		panel.add(txtHex, "cell 0 2,gapx 15 0");
 	}
 	
-	public void addChangeListener(ChangeListener listener)
-	{
+	public void addChangeListener(ChangeListener listener) {
 	    listenerList.add(ChangeListener.class, listener);
 	}
 
-	public void removeChangeListener(ChangeListener listener)
-	{
+	public void removeChangeListener(ChangeListener listener) {
 	    listenerList.remove(ChangeListener.class, listener);
 	}
 
-	public ChangeListener[] getChangeListeners()
-	{
+	public ChangeListener[] getChangeListeners() {
 	    return listenerList.getListeners(ChangeListener.class);
 	}
 
-	protected void fireChangeListeners()
-	{
+	protected void fireChangeListeners() {
 	    ChangeEvent event = new ChangeEvent(this);
-	    for (ChangeListener listener : getChangeListeners())
-	    {
+	    for (ChangeListener listener : getChangeListeners()) {
 	        listener.stateChanged(event);
 	    }
 	}
 	
-	private class EnterColorListener extends KeyAdapter
-	{
+	private class EnterColorListener extends KeyAdapter {
+		
 		public static final int RGB = 0;
 		public static final int HSB = 1;
 		public static final int HEX = 2;
 		
 		private int colorType;
 		
-		public EnterColorListener(int colorType)
-		{
+		public EnterColorListener(int colorType) {
 			this.colorType = colorType;
 		}
 		
 		@Override
-		public void keyPressed(KeyEvent e)
-		{
-			if (e.getKeyCode() == KeyEvent.VK_ENTER)
-			{
-				try
-				{
-					switch (colorType)
-					{
+		public void keyPressed(KeyEvent e) {
+			if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+				try {
+					switch (colorType) {
 						case RGB:
 							String[] rgb = txtRgb.getText().replace(" ", "").split(",");
 							Color c = new Color(Integer.parseInt(rgb[0]),
@@ -176,16 +159,14 @@ public class ColorEntry extends JPanel
 					}
 					fireChangeListeners();
 				}
-				catch (NumberFormatException nfe)
-				{
+				catch (NumberFormatException nfe) {
 					nfe.printStackTrace();
 				}
 			}
 			super.keyPressed(e);
 		}
 		
-		private void updateColorValues(Color color)
-		{
+		private void updateColorValues(Color color) {
 			String rgb = String.format("%d, %d, %d", color.getRed(),
 					color.getGreen(), color.getBlue());
 			float[] hsbVals = new float[3];

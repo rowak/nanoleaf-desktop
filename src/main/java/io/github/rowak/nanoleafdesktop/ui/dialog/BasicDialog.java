@@ -6,7 +6,6 @@ import java.awt.Font;
 
 import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.LineBorder;
 
@@ -14,14 +13,13 @@ import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
 import io.github.rowak.nanoleafdesktop.ui.listener.WindowDragListener;
 import net.miginfocom.swing.MigLayout;
 
-public class BasicDialog extends JDialog
-{
+public class BasicDialog extends JDialog {
+	
 	protected static final Font FONT = new Font("Tahoma", Font.PLAIN, 20);
 	
 	protected JPanel contentPanel = new JPanel();
 	
-	public BasicDialog()
-	{
+	public BasicDialog() {
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 		setUndecorated(true);
 		contentPanel.setLayout(new MigLayout("", "[432.00,grow]", "[][]"));
@@ -34,11 +32,10 @@ public class BasicDialog extends JDialog
 		addMouseMotionListener(wdl);
 		
 		CloseButton btnClose = new CloseButton(this, JFrame.DISPOSE_ON_CLOSE);
-		contentPanel.add(btnClose, "cell 0 0,alignx right,gapx 0 15");
+		contentPanel.add(btnClose, "cell 0 0,alignx right,gapx 0 15,gapy 15");
 	}
 	
-	protected void finalize(Component parent)
-	{
+	protected void finalize(Component parent) {
 		pack();
 		
 		setSize(getWidth() + 15, getHeight());

@@ -12,13 +12,14 @@ import javax.swing.border.LineBorder;
 import org.json.JSONObject;
 
 import io.github.rowak.nanoleafapi.Aurora;
-import io.github.rowak.nanoleafapi.AuroraMetadata;
+import io.github.rowak.nanoleafapi.NanoleafDevice;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
 import io.github.rowak.nanoleafdesktop.ui.listener.WindowDragListener;
-import io.github.rowak.nanoleafapi.tools.Setup;
+import io.github.rowak.nanoleafapi.util.NanoleafDeviceMeta;
+import io.github.rowak.nanoleafapi.util.NanoleafSetup;
 
 import javax.swing.JScrollPane;
 import javax.swing.JList;
@@ -39,56 +40,45 @@ import javax.swing.ListSelectionModel;
 import javax.swing.JButton;
 
 @Deprecated
-public class AuroraFinder extends JDialog
-{
+public class AuroraFinder extends JDialog {
+	
 	private String hostName, accessToken;
 	private int port;
 	private Aurora device;
-	private List<AuroraMetadata> devices;
+	private List<NanoleafDeviceMeta> devices;
 	private DefaultListModel<String> listModel;
 	private JPanel contentPane;
 	private JLabel lblTitle;
 
-	public AuroraFinder(Component parent)
-	{
+	public AuroraFinder(Component parent) {
 		listModel = new DefaultListModel<String>();
 		initUI(parent);
 		
-		new Thread(() ->
-		{
+		new Thread(() -> {
 			findAuroras();
 		}).start();
 	}
 	
-	public String getHostName()
-	{
+	public String getHostName() {
 		return this.hostName;
 	}
 	
-	public int getPort()
-	{
+	public int getPort() {
 		return this.port;
 	}
 	
-	public String getAccessToken()
-	{
+	public String getAccessToken() {
 		return this.accessToken;
 	}
 	
-	private void findAuroras()
-	{
-		if (!findMethod1())
-		{
-			findMethod2();
-		}
+	private void findAuroras() {
+		findMethod1();
 		
-		for (AuroraMetadata metadata : devices)
-		{
+		for (NanoleafDeviceMeta metadata : devices) {
 			addDeviceToList(metadata);
 		}
 		
-		if (devices.isEmpty())
-		{
+		if (devices.isEmpty()) {
 			new TextDialog(this, "Couldn't locate any devices. " +
 					"Please try again or create an issue on GitHub.")
 					.setVisible(true);
@@ -96,42 +86,38 @@ public class AuroraFinder extends JDialog
 		lblTitle.setText("Select a Device");
 	}
 	
-	private boolean findMethod1()
-	{
-		devices = new ArrayList<AuroraMetadata>();
-		try
-		{
-			devices = Setup.findAuroras(5000);
+	private boolean findMethod1() {
+		devices = new ArrayList<NanoleafDeviceMeta>();
+		try {
+			devices = NanoleafSetup.findNanoleafDevices(5000);
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			// do nothing
 		}
 		return !devices.isEmpty();
 	}
 	
-	private boolean findMethod2()
-	{
-		devices = new ArrayList<AuroraMetadata>();
-		try
-		{
-			List<InetSocketAddress> devicesOld = Setup.quickFindAuroras();
-			for (InetSocketAddress addr : devicesOld)
-			{
-				AuroraMetadata metadata = new AuroraMetadata(addr.getHostName(),
-						addr.getPort(), "", "");
-				devices.add(metadata);
-			}
-		}
-		catch (Exception e)
-		{
-			// do nothing
-		}
-		return !devices.isEmpty();
-	}
+//	private boolean findMethod2()
+//	{
+//		devices = new ArrayList<AuroraMetadata>();
+//		try
+//		{
+//			List<InetSocketAddress> devicesOld = NanoleafSetup.quickFindAuroras();
+//			for (InetSocketAddress addr : devicesOld)
+//			{
+//				NanoleafDeviceMeta metadata = new NanoleafDeviceMeta(addr.getHostName(),
+//						addr.getPort(), "", "");
+//				devices.add(metadata);
+//			}
+//		}
+//		catch (Exception e)
+//		{
+//			// do nothing
+//		}
+//		return !devices.isEmpty();
+//	}
 	
-	private Aurora connectToAurora(String item)
-	{
+	private Aurora connectToAurora(String item) {
 		String text = "Press the power button on your " +
 				  "device for 5-7 seconds until the LED starts flashing.";
 		TextDialog info = new TextDialog(this, text);
@@ -139,25 +125,21 @@ public class AuroraFinder extends JDialog
 		
 		AuroraFinder finder = this;
 		
-		AuroraMetadata metadata = getMetadataFromListItem(item);
+		NanoleafDeviceMeta metadata = getMetadataFromListItem(item);
 		hostName = metadata.getHostName();
 		port = metadata.getPort();
 		
 		Timer timer = new Timer();
-		timer.scheduleAtFixedRate(new TimerTask()
-		{
-			public void run()
-			{
-				try
-				{
-					accessToken = Setup.createAccessToken(hostName, port, "v1");
+		timer.scheduleAtFixedRate(new TimerTask() {
+			public void run() {
+				try {
+					accessToken = NanoleafSetup.createAccessToken(hostName, port);
 					System.out.println(accessToken);
 					this.cancel();
 					info.dispose();
 					finder.dispose();
 				}
-				catch (Exception e)
-				{
+				catch (Exception e) {
 					// This will be called every second until an api key
 					// can be generated (403 forbidden)
 				}
@@ -166,14 +148,11 @@ public class AuroraFinder extends JDialog
 		return device;
 	}
 	
-	private AuroraMetadata getMetadataFromListItem(String item)
-	{
-		AuroraMetadata data = null;
+	private NanoleafDeviceMeta getMetadataFromListItem(String item) {
+		NanoleafDeviceMeta data = null;
 		String ip = item.substring(item.indexOf("(")+1, item.indexOf(")"));
-		for (AuroraMetadata metadata : devices)
-		{
-			if (metadata.getHostName().equals(ip))
-			{
+		for (NanoleafDeviceMeta metadata : devices) {
+			if (metadata.getHostName().equals(ip)) {
 				data = metadata;
 				break;
 			}
@@ -181,21 +160,17 @@ public class AuroraFinder extends JDialog
 		return data;
 	}
 	
-	private void addDeviceToList(AuroraMetadata metadata)
-	{
+	private void addDeviceToList(NanoleafDeviceMeta metadata) {
 		Map<String, Object> savedDevices = getDevices();
-		if (savedDevices.containsKey(metadata.getHostName()))
-		{
+		if (savedDevices.containsKey(metadata.getHostName())) {
 			String ip = metadata.getHostName();
 			String name = String.format("%s (%s)",
 					savedDevices.get(ip), ip);
 			listModel.addElement(name);
 		}
-		else
-		{
+		else {
 			String deviceName = metadata.getDeviceName();
-			if (deviceName.isEmpty())
-			{
+			if (deviceName.isEmpty()) {
 				deviceName = "Unknown device";
 			}
 			String name = String.format("%s (%s)",
@@ -204,20 +179,17 @@ public class AuroraFinder extends JDialog
 		}
 	}
 	
-	private Map<String, Object> getDevices()
-	{
+	private Map<String, Object> getDevices() {
 		PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
 		String devicesStr = manager.getProperty("devices");
-		if (devicesStr != null)
-		{
+		if (devicesStr != null) {
 			JSONObject json = new JSONObject(devicesStr);
 			return json.toMap();
 		}
 		return new HashMap<String, Object>();
 	}
 	
-	private void initUI(Component parent)
-	{
+	private void initUI(Component parent) {
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setSize(474, 225);
 		setLocationRelativeTo(parent);
@@ -254,13 +226,10 @@ public class AuroraFinder extends JDialog
 		
 		JButton btnConnect = new ModernButton("Connect");
 		btnConnect.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		btnConnect.addActionListener(new ActionListener()
-		{
+		btnConnect.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				if (listAuroras.getSelectedValue() != null)
-				{
+			public void actionPerformed(ActionEvent e) {
+				if (listAuroras.getSelectedValue() != null) {
 					connectToAurora(listAuroras.getSelectedValue());
 				}
 			}
@@ -269,29 +238,23 @@ public class AuroraFinder extends JDialog
 		
 		JButton btnAddExternalDevice = new ModernButton("Add External Device");
 		btnAddExternalDevice.setFont(new Font("Tahoma", Font.PLAIN, 18));
-		btnAddExternalDevice.addActionListener(new ActionListener()
-		{
+		btnAddExternalDevice.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e)
-			{
+			public void actionPerformed(ActionEvent e) {
 				DoubleEntryDialog entryDialog = new DoubleEntryDialog(AuroraFinder.this, "IP Address",
-						"Port (Default is 16021)", "Add Device", new ActionListener()
-						{
+						"Port (Default is 16021)", "Add Device", new ActionListener() {
 							@Override
-							public void actionPerformed(ActionEvent e)
-							{
+							public void actionPerformed(ActionEvent e) {
 								JButton button = (JButton)e.getSource();
 								DoubleEntryDialog thisDialog =
 										(DoubleEntryDialog)button.getFocusCycleRootAncestor();
 								String entry1Text = thisDialog.getEntry1().getText();
 								String entry2Text = thisDialog.getEntry2().getText();
 								if (!entry1Text.equals("IP Address") &&
-										!entry2Text.equals("Port (Default is 16021)"))
-								{
+										!entry2Text.equals("Port (Default is 16021)")) {
 									String ip = entry1Text;
 									int port = -1;
-									try
-									{
+									try {
 										// TODO: Clean up this code
 										port = Integer.parseInt(entry2Text);
 										AuroraFinder.this.hostName = ip;
@@ -301,40 +264,33 @@ public class AuroraFinder extends JDialog
 										TextDialog info = new TextDialog(AuroraFinder.this, text);
 										info.setVisible(true);
 										Timer timer = new Timer();
-										timer.scheduleAtFixedRate(new TimerTask()
-										{
-											public void run()
-											{
-												try
-												{
-													accessToken = Setup.createAccessToken(hostName, AuroraFinder.this.port, "v1");
+										timer.scheduleAtFixedRate(new TimerTask() {
+											public void run() {
+												try {
+													accessToken = NanoleafSetup.createAccessToken(hostName, AuroraFinder.this.port);
 													System.out.println(accessToken);
 													this.cancel();
-													Aurora aurora = new Aurora(ip, AuroraFinder.this.port, "v1", accessToken);
-													if (aurora != null)
-													{
+													NanoleafDevice aurora = NanoleafDevice.createDevice(ip, AuroraFinder.this.port, accessToken);
+													if (aurora != null) {
 														info.dispose();
 														thisDialog.dispose();
 														AuroraFinder.this.dispose();
 													}
 												}
-												catch (Exception e)
-												{
+												catch (Exception e) {
 													// This will be called every second until an api key
 													// can be generated (403 forbidden)
 												}
 											}
 										}, 1000, 1000);
 									}
-									catch (NumberFormatException nfe)
-									{
+									catch (NumberFormatException nfe) {
 										new TextDialog(AuroraFinder.this,
 												"The port can only consist of numbers.")
 												.setVisible(true);
 									}
 								}
-								else
-								{
+								else {
 									new TextDialog(AuroraFinder.this,
 											"You must fill out all entry fields.")
 											.setVisible(true);

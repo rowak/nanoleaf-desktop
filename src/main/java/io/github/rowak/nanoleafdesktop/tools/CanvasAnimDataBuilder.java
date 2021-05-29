@@ -1,5 +1,6 @@
 package io.github.rowak.nanoleafdesktop.tools;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,23 +8,24 @@ import java.util.Map;
 
 import io.github.rowak.nanoleafapi.Aurora;
 import io.github.rowak.nanoleafapi.Frame;
+import io.github.rowak.nanoleafapi.NanoleafException;
 import io.github.rowak.nanoleafapi.Panel;
-import io.github.rowak.nanoleafapi.StatusCodeException;
-import io.github.rowak.nanoleafapi.StatusCodeException.UnauthorizedException;
 
+@Deprecated
 public class CanvasAnimDataBuilder {
-    private Panel[] panels;
+	
+    private List<Panel> panels;
     private Map<Integer, List<Frame>> frames;
 
     public CanvasAnimDataBuilder(Aurora controller)
-            throws StatusCodeException, UnauthorizedException {
-        panels = controller.panelLayout().getPanels();
+            throws NanoleafException, IOException {
+        panels = controller.getPanels();
         frames = new HashMap<>();
         for (Panel panel : panels)
             frames.put(panel.getId(), new ArrayList<>());
     }
 
-    public CanvasAnimDataBuilder(Panel[] panels) {
+    public CanvasAnimDataBuilder(List<Panel> panels) {
         this.panels = panels;
         frames = new HashMap<>();
         for (Panel panel : panels)
@@ -34,7 +36,7 @@ public class CanvasAnimDataBuilder {
         return frames;
     }
 
-    public String build() throws StatusCodeException, UnauthorizedException {
+    public String build() throws NanoleafException, IOException {
         int numPanels = 0;
         for (Panel p : panels) {
             if (frames.get(p.getId()).size() > 0) {
@@ -43,8 +45,8 @@ public class CanvasAnimDataBuilder {
         }
         StringBuilder data = new StringBuilder();
         data.append(intToBigEndian(numPanels));
-        for (int i = 0; i < panels.length; i++) {
-            Panel panel = panels[i];
+        for (int i = 0; i < panels.size(); i++) {
+            Panel panel = panels.get(i);
             int numFrames = frames.get(panel.getId()).size();
             if (numFrames > 0) {
                 data.append(" " + intToBigEndian(panel.getId()));
@@ -55,7 +57,7 @@ public class CanvasAnimDataBuilder {
                                         frame.getRed() + " " +
                                         frame.getGreen() + " " +
                                         frame.getBlue() + " " +
-                                        frame.getWhite() + " " +
+                                        0 + " " +
                                         intToBigEndian(frame.getTransitionTime()));
                 }
             }

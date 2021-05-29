@@ -1,14 +1,12 @@
 package io.github.rowak.nanoleafdesktop;
 
-import com.github.kevinsawicki.http.HttpRequest.HttpRequestException;
-import io.github.rowak.nanoleafapi.Aurora;
 import io.github.rowak.nanoleafapi.Effect;
-import io.github.rowak.nanoleafapi.StatusCodeException;
-import io.github.rowak.nanoleafapi.StatusCodeException.UnauthorizedException;
+import io.github.rowak.nanoleafapi.NanoleafDevice;
+import io.github.rowak.nanoleafapi.NanoleafException;
+import io.github.rowak.nanoleafapi.NanoleafGroup;
+import io.github.rowak.nanoleafapi.PluginEffect;
 import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
 import io.github.rowak.nanoleafdesktop.models.DeviceInfo;
-import io.github.rowak.nanoleafdesktop.shortcuts.Action;
-import io.github.rowak.nanoleafdesktop.shortcuts.ActionType;
 import io.github.rowak.nanoleafdesktop.tools.*;
 import io.github.rowak.nanoleafdesktop.ui.button.CloseButton;
 import io.github.rowak.nanoleafdesktop.ui.button.HideButton;
@@ -18,7 +16,6 @@ import io.github.rowak.nanoleafdesktop.ui.dialog.DeviceChangerDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.OptionDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.SingleEntryDialog;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
-import io.github.rowak.nanoleafdesktop.ui.listener.AuroraNullListener;
 import io.github.rowak.nanoleafdesktop.ui.listener.ComponentResizer;
 import io.github.rowak.nanoleafdesktop.ui.listener.WindowDragListener;
 import io.github.rowak.nanoleafdesktop.ui.listener.WindowOpeningListener;
@@ -47,7 +44,8 @@ import java.util.List;
 import java.util.Map;
 
 public class Main extends JFrame {
-    public static final Version VERSION = new Version("v0.8.6", true);
+	
+    public static final Version VERSION = new Version("v0.9.0", true);
     public static final String VERSION_HOST =
             "https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
     public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
@@ -60,7 +58,8 @@ public class Main extends JFrame {
 
     boolean uiEnabled;
 
-    private Aurora[] devices;
+    private List<NanoleafDevice> devices;
+    private NanoleafGroup group;
 
     private SystemTray systemTray;
     private TrayIcon trayIcon;
@@ -77,21 +76,25 @@ public class Main extends JFrame {
     private EffectsPanel regEffectsPanel;
     private EffectsPanel rhythEffectsPanel;
 
-    public Main(Action action) {
+    public Main(CLICommand command) {
         migrateOldProperties();
 
         PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
         String lastSession = manager.getProperty("lastSession");
+        
+        group = new NanoleafGroup();
 
         // Use the device from the last session
-        if (lastSession != null && action == null) {
+        if (lastSession != null && command == null) {
             uiEnabled = true;
             setupOldAurora(lastSession);
         }
 
-        if (action != null) {
-            new ActionHandler(action);
-        } else {
+        if (command != null) {
+        	uiEnabled = false;
+            new CLICommandHandler(command);
+        }
+        else {
             uiEnabled = true;
             initUI();
 
@@ -109,10 +112,12 @@ public class Main extends JFrame {
         final String os = System.getProperty("os.name").toLowerCase();
         if (os.contains("win")) {
             dir = System.getenv("APPDATA") + "/Nanoleaf for Desktop";
-        } else if (os.contains("mac")) {
+        }
+        else if (os.contains("mac")) {
             dir = System.getProperty("user.home") +
                     "/Library/Application Support/Nanoleaf for Desktop";
-        } else if (os.contains("nux")) {
+        }
+        else if (os.contains("nux")) {
             dir = System.getProperty("user.home") + "/.Nanoleaf for Desktop";
         }
 
@@ -138,9 +143,11 @@ public class Main extends JFrame {
                     data += line + "\n";
                 }
                 writer.write(data);
-            } catch (IOException ioe) {
+            }
+            catch (IOException ioe) {
                 ioe.printStackTrace();
-            } finally {
+            }
+            finally {
                 try {
                     if (reader != null) {
                         reader.close();
@@ -151,7 +158,8 @@ public class Main extends JFrame {
                     oldProperties.renameTo(new File(
                             System.getProperty("user.home") +
                                     "/propertiesOLD.txt"));
-                } catch (IOException ioe) {
+                }
+                catch (IOException ioe) {
                     ioe.printStackTrace();
                 }
             }
@@ -159,21 +167,18 @@ public class Main extends JFrame {
     }
 
     private void checkForUpdate() {
-        new Thread(() ->
-                   {
-                       try {
-                           UpdateManager manager = new UpdateManager(VERSION_HOST, GIT_REPO);
-                           if (manager.updateAvailable(VERSION)) {
-                               manager.showUpdateMessage(this);
-                           }
-                       } catch (HttpRequestException hre) {
-                           /*
-                            * If the update server cannot be reached, ignore it (don't notify the user).
-                            * The user will be notified about an update the next time they
-                            * connect to the network and open the application.
-                            */
-                       }
-                   }).start();
+        new Thread(() -> {
+        	try {
+        		UpdateManager manager = new UpdateManager(VERSION_HOST, GIT_REPO);
+        		if (manager.updateAvailable(VERSION)) {
+        			manager.showUpdateMessage(this);
+        		}
+        	}
+        	catch (IOException e) {
+        		e.printStackTrace();
+        		System.err.println("ERROR: Failed to check for updates.");
+        	}
+        }).start();
     }
 
     private int getUserWindowWidth() {
@@ -202,7 +207,8 @@ public class Main extends JFrame {
         try {
             systemTray.add(trayIcon);
             setVisible(false);
-        } catch (AWTException awte) {
+        }
+        catch (AWTException awte) {
             awte.printStackTrace();
         }
     }
@@ -212,92 +218,93 @@ public class Main extends JFrame {
         setVisible(true);
     }
 
-    public void setDevices(Aurora[] devices) {
-        EventQueue.invokeLater(() ->
-                               {
-                                   this.devices = devices;
-                                   if (devices.length > 1) {
-                                       new TextDialog(this,
-                                                      "You are now in group mode. Your devices are displayed ON TOP " +
-                                                              "of each other in the preview window. You can move your devices around " +
-                                                              "to match your actual layout by dragging the panels in the preview window. " +
-                                                              "By doing this, your devices will sync together to simulate having " +
-                                                              "a single device.\n\n\n\n\n\n\n")
-                                               .setVisible(true);
-                                   }
-                                   loadAuroraData();
-                                   loadDeviceName();
-                                   canvas.setAuroras(devices);
-                                   canvas.repaint();
-                                   infoPanel.setAuroras(devices);
-                                   regEffectsPanel.setAuroras(devices);
-                                   rhythEffectsPanel.setAuroras(devices);
-                                   discoveryPanel.setAuroras(devices);
-                                   ambilightPanel.setAuroras(devices);
-                                   spotifyPanel.setAuroras(devices);
-                                   shortcutsPanel.setAuroras(devices);
-                               });
+    public void setDevices(List<NanoleafDevice> devices) {
+        EventQueue.invokeLater(() -> {
+        	this.devices = devices;
+        	loadAuroraData();
+        	loadDeviceName();
+        	canvas.setAuroras(group);
+        	devices.forEach((device) -> {
+        		DeviceEventHandler handler = new DeviceEventHandler(device, canvas);
+        		device.registerEventListener(handler, true, true, false, false);
+        	});
+        });
+    }
+    
+    public void addDevice(String name, NanoleafDevice device) {
+    	group.addDevice(name, device);
+    }
+    
+    public void removeAllDevices() {
+    	group.removeAllDevices();
     }
 
-    public void loadEffects() throws StatusCodeException {
+    public void loadEffects() throws NanoleafException {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 regEffectsPanel.clearEffects();
                 rhythEffectsPanel.clearEffects();
-                new Thread(() ->
-                           {
-                               try {
-                                   for (Aurora device : devices) {
-                                       for (Effect effect : device.effects().getAllEffects()) {
-                                           if (effect.getAnimType() == Effect.Type.PLUGIN &&
-                                                   effect.getPluginType().equals("rhythm")) {
-                                               rhythEffectsPanel.addEffect(effect.getName());
-                                           } else {
-                                               regEffectsPanel.addEffect(effect.getName());
-                                           }
-                                       }
-                                   }
-                               } catch (StatusCodeException sce) {
-                                   sce.printStackTrace();
-                               }
+                new Thread(() -> {
+                	try {
+                		for (NanoleafDevice device : devices) {
+                			for (Effect effect : device.getAllEffects()) {
+                				if (effect.getEffectType().equals("plugin")) {
+                					if (((PluginEffect)effect).getPlugin().getType().equals("rhythm")) {
+                						rhythEffectsPanel.addEffect(effect.getName());
+                					}
+                					else {
+                    					regEffectsPanel.addEffect(effect.getName());
+                    				}
+                				}
+                				else {
+                					regEffectsPanel.addEffect(effect.getName());
+                				}
+                			}
+                		}
+                	}
+                	catch (NanoleafException | IOException e) {
+                		e.printStackTrace();
+                	}
 
-                               BasicEffects.initializeBasicEffects();
-                               try {
-                                   List<Effect> effects = BasicEffects.getBasicEffects(devices).get(0);
-                                   for (Effect ef : effects) {
-                                       basicEffectsPanel.addEffect(ef.getName());
-                                   }
-                               } catch (StatusCodeException sce) {
-                                   sce.printStackTrace();
-                               }
+                	BasicEffects.initializeBasicEffects();
+                	try {
+                		List<Effect> effects = BasicEffects.getBasicEffects(devices).get(0);
+                		for (Effect ef : effects) {
+                			basicEffectsPanel.addEffect(ef.getName());
+                		}
+                	}
+                	catch (NanoleafException | IOException e) {
+                		e.printStackTrace();
+                	}
 
-                               if (regEffectsPanel.getModel().size() > 0) {
-                                   regEffectsPanel.setViewportView(regEffectsPanel.getList());
-                               }
-                               if (rhythEffectsPanel.getModel().size() > 0) {
-                                   rhythEffectsPanel.setViewportView(rhythEffectsPanel.getList());
-                               }
-                               basicEffectsPanel.setViewportView(basicEffectsPanel.getList());
-                           }).start();
+                	if (regEffectsPanel.getModel().size() > 0) {
+                		regEffectsPanel.setViewportView(regEffectsPanel.getList());
+                	}
+                	if (rhythEffectsPanel.getModel().size() > 0) {
+                		rhythEffectsPanel.setViewportView(rhythEffectsPanel.getList());
+                	}
+                	basicEffectsPanel.setViewportView(basicEffectsPanel.getList());
+                }).start();
             }
         });
     }
 
-    public void loadStateComponents() throws StatusCodeException {
-        if (devices[0].state().getOn()) {
+    public void loadStateComponents() throws NanoleafException, IOException {
+        if (devices.get(0).getOn()) {
             infoPanel.getBtnOnOff().setText("Turn Off");
-        } else {
+        }
+        else {
             infoPanel.getBtnOnOff().setText("Turn On");
         }
 
-        infoPanel.setSliderBrightness(devices[0].state().getBrightness());
-        infoPanel.setSliderColorTemp(devices[0].state().getColorTemperature());
+        infoPanel.setSliderBrightness(devices.get(0).getBrightness());
+        infoPanel.setSliderColorTemp(devices.get(0).getColorTemperature());
 
         loadActiveScene();
     }
 
-    public void loadActiveScene() throws StatusCodeException {
-        String currentEffect = devices[0].effects().getCurrentEffectName();
+    public void loadActiveScene() throws NanoleafException, IOException {
+        String currentEffect = devices.get(0).getCurrentEffectName();
         infoPanel.setScene(currentEffect);
     }
 
@@ -317,8 +324,9 @@ public class Main extends JFrame {
         try {
             loadEffects();
             loadStateComponents();
-        } catch (StatusCodeException sce) {
-            sce.printStackTrace();
+        }
+        catch (NanoleafException | IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -336,36 +344,39 @@ public class Main extends JFrame {
             if (group != null) {
                 connectToGroup(group);
                 if (uiEnabled) {
-                    EventQueue.invokeLater(() ->
-                                           {
-                                               lblTitle.setText("Connected to " + groupName);
-                                               loadAuroraData();
-                                           });
+                    EventQueue.invokeLater(() -> {
+                    	lblTitle.setText("Connected to " + groupName);
+                    	loadAuroraData();
+                    });
                 }
-            } else {
+            }
+            else {
                 if (uiEnabled) {
                     resetDataFile();
                 }
             }
-        } else {
+        }
+        else {
             String[] data = lastSession.split(" ");
             try {
-                devices = new Aurora[1];
-                devices[0] = new Aurora(data[0],
-                                        Integer.parseInt(data[1]),
-                                        data[2], data[3]);
+            	NanoleafDevice device = NanoleafDevice.createDevice(data[0],
+                        Integer.parseInt(data[1]), data[3]);
+                devices = new ArrayList<NanoleafDevice>();
+                devices.add(device);
+                group.addDevice(device.getName(), device);
                 if (uiEnabled) {
-                    EventQueue.invokeLater(() ->
-                                           {
-                                               loadDeviceName();
-                                           });
+                    EventQueue.invokeLater(() -> {
+                    	loadDeviceName();
+                    });
                 }
-            } catch (StatusCodeException | HttpRequestException schre) {
+            }
+            catch (NanoleafException | IOException schre) {
                 if (uiEnabled) {
                     new TextDialog(Main.this, "Failed to connect to the device. " +
                             "Please try again.").setVisible(true);
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 e.printStackTrace();
                 if (uiEnabled) {
                     resetDataFile();
@@ -375,16 +386,15 @@ public class Main extends JFrame {
     }
 
     private void setupNewAurora() {
-        EventQueue.invokeLater(() ->
-                               {
-                                   DeviceChangerDialog finder = new DeviceChangerDialog(this);
-                                   finder.setVisible(true);
-                               });
+        EventQueue.invokeLater(() -> {
+        	DeviceChangerDialog finder = new DeviceChangerDialog(this);
+        	finder.setVisible(true);
+        });
     }
 
     public void setupDeviceName(String message) {
         OptionDialog nameDeviceDialog = new OptionDialog(Main.this,
-                                                         message, "Yes", "No", new ActionListener() {
+        		message, "Yes", "No", new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JButton okButton = (JButton) e.getSource();
@@ -397,89 +407,84 @@ public class Main extends JFrame {
                         SingleEntryDialog entryDialog =
                                 (SingleEntryDialog) okButton.getFocusCycleRootAncestor();
                         String name = entryDialog.getEntryField().getText();
-                        setDeviceName(devices[0].getHostName(), name);
+                        setDeviceName(devices.get(0).getHostname(), name);
                         lblTitle.setText("Connected to " + name);
                         entryDialog.dispose();
                         optionDialog.dispose();
                     }
                 })
-                        .setVisible(true);
+                .setVisible(true);
             }
         },
-                                                         new ActionListener() {
-                                                             @Override
-                                                             public void actionPerformed(ActionEvent e) {
-                                                                 JButton button = (JButton) e.getSource();
-                                                                 OptionDialog thisDialog =
-                                                                         (OptionDialog) button.getFocusCycleRootAncestor();
-                                                                 thisDialog.dispose();
-                                                             }
-                                                         });
+        new ActionListener() {
+        	@Override
+        	public void actionPerformed(ActionEvent e) {
+        		JButton button = (JButton) e.getSource();
+        		OptionDialog thisDialog =
+        				(OptionDialog) button.getFocusCycleRootAncestor();
+        		thisDialog.dispose();
+        	}
+        });
         nameDeviceDialog.setVisible(true);
     }
 
     private void connectToGroup(DeviceGroup group) {
         DeviceInfo[] groupDevices = group.getDevices();
-        Aurora[] auroraDevices = new Aurora[groupDevices.length];
+        List<NanoleafDevice> devices = new ArrayList<NanoleafDevice>();
         for (int i = 0; i < groupDevices.length; i++) {
             try {
-                auroraDevices[i] = new Aurora(groupDevices[i].getHostName(),
-                                              groupDevices[i].getPort(), "v1", groupDevices[i].getAccessToken());
-            } catch (HttpRequestException hre) {
-                new TextDialog(this, "The device " + groupDevices[i].getHostName() +
-                        " is offline.").setVisible(true);
-            } catch (UnauthorizedException uae) {
-                new TextDialog(this, "The device " + groupDevices[i].getHostName() +
-                        " is unauthorized.").setVisible(true);
-            } catch (StatusCodeException sce) {
+            	NanoleafDevice device = NanoleafDevice.createDevice(groupDevices[i].getHostName(),
+                        groupDevices[i].getPort(), groupDevices[i].getAccessToken());
+                devices.add(device);
+                this.group.addDevice(device.getName(), device);
+            }
+            catch (NanoleafException | IOException e) {
                 new TextDialog(this, "Unknown connection error for device " +
                         groupDevices[i].getHostName() + ".").setVisible(true);
             }
         }
-        setDevices(auroraDevices);
+        setDevices(devices);
     }
 
     private void resetDataFile() {
         OptionDialog errorDialog = new OptionDialog(this,
-                                                    "The data file has been modified or has become corrupt. " +
-                                                            "Would you like to fix this now?", "Yes", "No",
-                                                    new ActionListener() {
-                                                        @Override
-                                                        public void actionPerformed(ActionEvent e) {
-                                                            new PropertyManager(PROPERTIES_FILEPATH)
-                                                                    .removeProperty("lastSession");
-                                                            OptionDialog dialog
-                                                                    = (OptionDialog) ((JButton) e.getSource())
-                                                                    .getTopLevelAncestor();
-                                                            dialog.dispose();
-                                                            new TextDialog(Main.this,
-                                                                           "Relaunch the application to setup a new device.")
-                                                                    .setVisible(true);
-                                                        }
-                                                    },
-                                                    new ActionListener() {
-                                                        @Override
-                                                        public void actionPerformed(ActionEvent e) {
-                                                            OptionDialog dialog
-                                                                    = (OptionDialog) ((JButton) e.getSource())
-                                                                    .getTopLevelAncestor();
-                                                            dialog.dispose();
-                                                        }
-                                                    });
+        		"The data file has been modified or has become corrupt. " +
+        				"Would you like to fix this now?", "Yes", "No",
+        				new ActionListener() {
+        					@Override
+        					public void actionPerformed(ActionEvent e) {
+        						new PropertyManager(PROPERTIES_FILEPATH)
+        							.removeProperty("lastSession");
+        						OptionDialog dialog = (OptionDialog) ((JButton) e.getSource())
+        								.getTopLevelAncestor();
+        						dialog.dispose();
+        						new TextDialog(Main.this,
+        								"Relaunch the application to setup a new device.")
+        							.setVisible(true);
+        					}
+        				},
+        				new ActionListener() {
+        					@Override
+        					public void actionPerformed(ActionEvent e) {
+        						OptionDialog dialog = (OptionDialog) ((JButton) e.getSource())
+        								.getTopLevelAncestor();
+        						dialog.dispose();
+        					}
+        				});
         errorDialog.setVisible(true);
-        EventQueue.invokeLater(() ->
-                               {
-                                   errorDialog.requestFocus();
-                               });
+        EventQueue.invokeLater(() -> {
+        	errorDialog.requestFocus();
+        });
     }
 
     private void loadDeviceName() {
-        if (devices.length == 1) {
-            String deviceName = getDeviceName(devices[0].getHostName());
+        if (devices.size() == 1) {
+            String deviceName = getDeviceName(devices.get(0).getHostname());
             if (deviceName != null) {
                 lblTitle.setText("Connected to " + deviceName);
-            } else {
-                lblTitle.setText("Connected to " + devices[0].getName());
+            }
+            else {
+                lblTitle.setText("Connected to " + devices.get(0).getName());
                 setupDeviceName("It looks like you haven't set a name for your device yet. " +
                                         "Do you want to do this now?");
             }
@@ -489,7 +494,6 @@ public class Main extends JFrame {
     private void setDeviceName(String ip, String name) {
         Map<String, Object> devices = getDevices();
         devices.put(ip, name);
-
         JSONObject json = new JSONObject(devices);
         PropertyManager manager = new PropertyManager(PROPERTIES_FILEPATH);
         manager.setProperty("devices", json.toString());
@@ -584,7 +588,7 @@ public class Main extends JFrame {
     }
 
     private void initPanelCanvas() {
-        canvas = new PanelCanvas(devices);
+        canvas = new PanelCanvas(group);
         canvas.setLayout(new GridBagLayout());
         canvas.setBorder(new TitledBorder(new LineBorder(Color.GRAY),
                                           "Preview", TitledBorder.LEFT, TitledBorder.TOP, null, Color.WHITE));
@@ -594,13 +598,13 @@ public class Main extends JFrame {
     }
 
     private void initEffectsPanels() {
-        basicEffectsPanel = new EffectsPanel("Basic Effects", this, devices, canvas);
+        basicEffectsPanel = new EffectsPanel("Basic Effects", this, group, canvas);
         getContentPane().add(basicEffectsPanel, "cell 0 1,grow");
 
-        regEffectsPanel = new EffectsPanel("Color Effects", this, devices, canvas);
+        regEffectsPanel = new EffectsPanel("Color Effects", this, group, canvas);
         getContentPane().add(regEffectsPanel, "cell 0 2,grow");
 
-        rhythEffectsPanel = new EffectsPanel("Rhythm Effects", this, devices, canvas);
+        rhythEffectsPanel = new EffectsPanel("Rhythm Effects", this, group, canvas);
         getContentPane().add(rhythEffectsPanel, "cell 0 3,grow");
     }
 
@@ -617,36 +621,35 @@ public class Main extends JFrame {
             public void stateChanged(ChangeEvent e) {
                 JTabbedPane editor = (JTabbedPane) e.getSource();
                 if (editor.getSelectedComponent().equals(discoveryPanel)) {
-                    EventQueue.invokeLater(() ->
-                                           {
-                                               discoveryPanel.addTopEffects(1, new ArrayList<String>());
-                                           });
+                    EventQueue.invokeLater(() -> {
+                    	discoveryPanel.addTopEffects(1, new ArrayList<String>());
+                    });
                 }
             }
         });
         contentPane.add(editor_1, "cell 1 3,grow");
 
-        infoPanel = new InformationPanel(this, devices, canvas);
+        infoPanel = new InformationPanel(this, group, canvas);
         editor_1.setFont(new Font("Tahoma", Font.BOLD, 17));
         editor_1.addTab("Control", null, infoPanel, null);
 
-        discoveryPanel = new DiscoveryPanel(devices);
+        discoveryPanel = new DiscoveryPanel(group);
         editor_1.addTab("Discovery", null, discoveryPanel, null);
 
-        ambilightPanel = new AmbilightPanel(canvas);
+        ambilightPanel = new AmbilightPanel(group, canvas);
         editor_1.addTab("Ambient Lighting", null, ambilightPanel, null);
 
-        spotifyPanel = new SpotifyPanel(devices, canvas);
+        spotifyPanel = new SpotifyPanel(group, canvas);
         editor_1.addTab("Spotify Visualizer", null, spotifyPanel, null);
 
-        shortcutsPanel = new KeyShortcutsPanel(devices);
+        shortcutsPanel = new KeyShortcutsPanel(group);
         shortcutsPanel.setBorder(new LineBorder(Color.GRAY, 1, true));
         editor_1.addTab("Shortcuts", null, shortcutsPanel, null);
 
-        AuroraNullListener anl = new AuroraNullListener(20, null,
-                                                        infoPanel, canvas, discoveryPanel, ambilightPanel,
-                                                        spotifyPanel, shortcutsPanel);
-        anl.start();
+//        AuroraNullListener anl = new AuroraNullListener(20, null,
+//                                                        infoPanel, canvas, discoveryPanel, ambilightPanel,
+//                                                        spotifyPanel, shortcutsPanel);
+//        anl.start();
     }
 
     private void initUIPrefs() {
@@ -680,16 +683,15 @@ public class Main extends JFrame {
                 manager.setProperty("windowHeight", getHeight());
 
                 if (canvas != null) {
-                    EventQueue.invokeLater(() ->
-                                           {
-                                               canvas.initCanvas();
-                                               canvas.repaint();
-                                           });
+                    EventQueue.invokeLater(() -> {
+                    	canvas.initCanvas();
+                    	canvas.repaint();
+                    });
                 }
             }
         });
 
-        if (devices != null && devices[0] != null) {
+        if (devices != null && devices.get(0) != null) {
             EventQueue.invokeLater(new Runnable() {
                 public void run() {
                     loadAuroraData();
@@ -707,49 +709,49 @@ public class Main extends JFrame {
             PopupMenu menu = new PopupMenu();
             MenuItem itemOpen = new MenuItem("Open");
             itemOpen.setFont(UIConstants.smallLabelFont);
-            itemOpen.addActionListener((e) ->
-                                       {
-                                           setVisible(true);
-                                           setExtendedState(JFrame.NORMAL);
-                                           openFromSystemTray();
-                                       });
+            itemOpen.addActionListener((e) -> {
+            	setVisible(true);
+            	setExtendedState(JFrame.NORMAL);
+            	openFromSystemTray();
+            });
             menu.add(itemOpen);
             MenuItem itemExit = new MenuItem("Exit");
             itemExit.setFont(UIConstants.smallLabelFont);
-            itemExit.addActionListener((e) ->
-                                       {
-                                           System.exit(0);
-                                       });
+            itemExit.addActionListener((e) -> {
+            	System.exit(0);
+            });
             menu.add(itemExit);
             trayIcon = new TrayIcon(img,
                                     "Nanoleaf for Desktop", menu);
             trayIcon.setImageAutoSize(true);
 
-            addWindowStateListener((e) ->
-                                   {
-                                       if (e.getNewState() == JFrame.ICONIFIED) {
-                                           hideToSystemTray();
-                                       } else if (e.getNewState() == JFrame.NORMAL ||
-                                               e.getNewState() == JFrame.MAXIMIZED_BOTH) {
-                                           openFromSystemTray();
-                                       }
-                                   });
-        } else {
+            addWindowStateListener((e) -> {
+            	if (e.getNewState() == JFrame.ICONIFIED) {
+            		hideToSystemTray();
+            	}
+            	else if (e.getNewState() == JFrame.NORMAL ||
+            			e.getNewState() == JFrame.MAXIMIZED_BOTH) {
+            		openFromSystemTray();
+            	}
+            });
+        }
+        else {
             System.err.println("INFO: System tray not supported by OS. " +
                                        "Minimize to tray feature has been disabled.\n");
         }
     }
 
     public static void main(String[] args) {
-        Action action = getAction(args);
+        CLICommand cmd = parseCommand(args);
         boolean help = hasArg("--help", null, false, args);
         if (!help) {
 	        EventQueue.invokeLater(new Runnable() {
 	            public void run() {
 	                try {
-	                    Main frame = new Main(action);
+	                    Main frame = new Main(cmd);
 	                    frame.setVisible(true);
-	                } catch (Exception e) {
+	                }
+	                catch (Exception e) {
 	                    e.printStackTrace();
 	                }
 	            }
@@ -762,39 +764,32 @@ public class Main extends JFrame {
     
     private static void showHelp() {
     	System.out.println("Nanoleaf for Desktop (NFD) -- GUI and CLI interface for Nanoleaf Aurora and Canvas\n" +
-    					   "usage: nfd [action [mode [value]]]\n\n" +
+    					   "usage: nfd [action [value]]\n\n" +
     					   "Actions:\n" +
-    					   "  on           turns on the device(s)\n" +
-    					   "  off          turns off the device(s)\n" +
-    					   "  toggle       toggles the device(s) on or off\n" +
-    					   "  brightness   changes the master brightness (up/down/set)\n" +
-    					   "  temp         changes the color temperature (up/down/set)\n" +
-    					   "  effect       sets the effect by name (set)\n" +
-    					   "  hue          sets the hue HSB component for the current color (set)\n" +
-    					   "  saturation   sets the saturation HSB component for the current color (set)\n" +
-    					   "  red          sets the red RGB component for the current color (set)\n" +
-    					   "  green        sets the green RGB component for the current color (set)\n" +
-    					   "  blue         sets the blue RGB component for the current color (set)\n" +
-    					   "  rgb          displays a static RGB color (set)\n" +
-    					   "  hsb          displays a static HSB color (set)\n\n" +
-    					   "Modes:\n" +
-    					   "  up      increases by a value\n" +
-    					   "  down    decreases by a value\n" +
-    					   "  set     sets to a specific value or name");
+    					   "  on                    turns on the device(s)\n" +
+    					   "  off                   turns off the device(s)\n" +
+    					   "  toggle                toggles the device(s) on or off\n" +
+    					   "  brightness [x/+x/-x]  changes the master brightness (set/up/down)\n" +
+    					   "  temp [x/+x/-x]        changes the color temperature (set/up/down)\n" +
+    					   "  effect [name]         sets the effect by name");
     }
 
-    private class ActionHandler {
-        public ActionHandler(Action action) {
+    private class CLICommandHandler {
+    	
+        public CLICommandHandler(CLICommand command) {
             init();
-            if (action != null) {
+            if (command != null) {
                 try {
-                    action.execute(devices, new Effect[0]);
-                } catch (Exception e) {
+                    command.execute(group);
+                    group.closeAsyncForAll();
+                }
+                catch (Exception e) {
                     e.printStackTrace();
                     System.out.println("Error: failed to execute action");
                     System.exit(4);
                 }
-            } else {
+            }
+            else {
                 System.out.println("Error: invalid action");
                 System.exit(2);
             }
@@ -807,48 +802,35 @@ public class Main extends JFrame {
 
             if (lastSession != null) {
                 setupOldAurora(lastSession);
-            } else {
-                System.out.println("error - device not set up");
+            }
+            else {
+                System.out.println("Error: device not set up");
                 System.exit(1);
             }
         }
     }
-
-    private static Action getAction(String[] args) {
-        for (int i = 0; i < args.length; i++) {
-        	if (isAction(args[i])) {
-        		try {
-        			String mode = i+1 != args.length ? args[i+1] : null;
-        			String data = i+2 < args.length ? args[i+2] : null;
-        			Action action = new Action(args[i], mode, data);
-        			return action;
-        		} catch (IllegalArgumentException e) {
-        			
-        		}
-        	}
-        }
-        return null;
-    }
+    
+    private static CLICommand parseCommand(String[] args) {
+		int commandId = -1;
+		String arg = null;
+		for (int i = 0; i < args.length; i++) {
+			String argTemp = i+1 < args.length ? args[i+1] : null;
+			int id = CLICommand.getCommandId(args[i], argTemp);
+			if (id != -1) {
+				commandId = id;
+				arg = argTemp;
+			}
+		}
+		return commandId != -1 ? new CLICommand(commandId, arg) : null;
+	}
     
     private static boolean hasArg(String arg, String shortArg,
 			boolean defaultArg, String[] args) {
-		for (String a : args)
-		{
-			if ((arg != null && a.equals(arg)) || a.equals(shortArg))
-			{
+		for (String a : args) {
+			if ((arg != null && a.equals(arg)) || a.equals(shortArg)) {
 				return true;
 			}
 		}
 		return defaultArg;
 	}
-    
-    private static boolean isAction(String str) {
-    	return str.equalsIgnoreCase("on") || str.equalsIgnoreCase("off") ||
-    			str.equalsIgnoreCase("toggle") || str.equalsIgnoreCase("brightness") ||
-    			str.equalsIgnoreCase("temp") || str.equalsIgnoreCase("effect") ||
-    			str.equalsIgnoreCase("hue") || str.equalsIgnoreCase("saturation") ||
-    			str.equalsIgnoreCase("red") || str.equalsIgnoreCase("green") ||
-    			str.equalsIgnoreCase("blue") || str.equalsIgnoreCase("rgb") ||
-    			str.equalsIgnoreCase("hsb");
-    }
 }
