@@ -63,7 +63,7 @@ public class DeviceChangerDialog extends JDialog {
 		devices = new ArrayList<NanoleafDeviceMeta>();
 		listModel = new DefaultListModel<String>();
 		initUI(parent);
-		
+
 		findGroups();
 		findAuroras();
 	}
@@ -95,8 +95,7 @@ public class DeviceChangerDialog extends JDialog {
 				public void onTimeout() {
 					if (devices != null && devices.isEmpty()) {
 						new TextDialog(DeviceChangerDialog.this, "Couldn't locate any devices. " +
-								"Please try again or create an issue on GitHub.")
-								.setVisible(true);
+								"Please try again.").setVisible(true);
 					}
 					lblTitle.setText("Select a Device or Group");
 				}

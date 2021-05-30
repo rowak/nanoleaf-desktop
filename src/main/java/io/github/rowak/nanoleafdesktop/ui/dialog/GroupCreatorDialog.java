@@ -26,6 +26,7 @@ import org.json.JSONObject;
 
 import io.github.rowak.nanoleafapi.Aurora;
 import io.github.rowak.nanoleafapi.NanoleafDevice;
+import io.github.rowak.nanoleafapi.NanoleafSearchCallback;
 import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.models.DeviceGroup;
 import io.github.rowak.nanoleafdesktop.models.DeviceInfo;
@@ -42,72 +43,43 @@ import javax.swing.JButton;
 
 public class GroupCreatorDialog extends JDialog {
 	
-	private static List<NanoleafDeviceMeta> devices;
+	private final int SEARCH_TIMEOUT = 10000;
+	
+	private List<NanoleafDeviceMeta> devices;
 	private DefaultListModel<String> devicesModel;
 	private DefaultListModel<String> groupDevicesModel;
 	private JLabel lblTitle;
 	
 	public GroupCreatorDialog(Component parent) {
+		devices = new ArrayList<NanoleafDeviceMeta>();
 		initUI(parent);
-		new Thread(() -> {
-			getDevices();
-		}).start();
+		getDevices();
 	}
 	
 	private void getDevices() {
-		findMethod1();
-		
-		for (NanoleafDeviceMeta metadata : devices) {
-			addDeviceToList(metadata);
-		}
-		
-		if (devices.isEmpty()) {
-			new TextDialog(this, "Couldn't locate any devices. " +
-					"Please try again or create an issue on GitHub.")
-					.setVisible(true);
-		}
-		lblTitle.setText("Create a Group");
-	}
-	
-	private boolean findMethod1() {
-		devices = new ArrayList<NanoleafDeviceMeta>();
 		try {
-			devices = NanoleafSetup.findNanoleafDevices(5000);
+			NanoleafSetup.findNanoleafDevicesAsync(new NanoleafSearchCallback() {
+				
+				@Override
+				public void onDeviceFound(NanoleafDeviceMeta meta) {
+					System.out.println("FOUND: " + meta.getDeviceName() + " " + meta.getHostName() + " " + meta.getPort());
+					addDeviceToList(meta);
+				}
+				
+				@Override
+				public void onTimeout() {
+					if (devices != null && devices.isEmpty()) {
+						new TextDialog(GroupCreatorDialog.this, "Couldn't locate any devices. " +
+								"Please try again.").setVisible(true);
+					}
+					lblTitle.setText("Create a Group");
+				}
+			}, SEARCH_TIMEOUT);
 		}
-		catch (Exception e) {
-			// do nothing
+		catch (java.net.UnknownHostException e) {
+			e.printStackTrace();
 		}
-		return !devices.isEmpty();
 	}
-	
-//	private boolean findMethod2()
-//	{
-//		devices = new ArrayList<NanoleafDeviceMeta>();
-//		try
-//		{
-//			List<InetSocketAddress> devicesOld = NanoleafSetup.quickFindAuroras();
-//			for (InetSocketAddress addr : devicesOld)
-//			{
-//				AuroraMetadata metadata = new AuroraMetadata(addr.getHostName(),
-//						addr.getPort(), "", "");
-//				devices.add(metadata);
-//			}
-//		}
-//		catch (Exception e)
-//		{
-//			// do nothing
-//		}
-//		return !devices.isEmpty();
-//	}
-	
-//	private void fillDevicesModel()
-//	{
-//		for (AuroraMetadata metadata : devices)
-//		{
-//			addDeviceToList(metadata);
-//			System.out.println(metadata.getHostName());
-//		}
-//	}
 	
 	private void addDeviceToList(NanoleafDeviceMeta metadata) {
 		Map<String, Object> savedDevices = getLocalDeviceData();
@@ -126,6 +98,7 @@ public class GroupCreatorDialog extends JDialog {
 					deviceName, metadata.getHostName());
 			devicesModel.addElement(name);
 		}
+		devices.add(metadata);
 	}
 	
 	private Map<String, Object> getLocalDeviceData() {
@@ -164,8 +137,7 @@ public class GroupCreatorDialog extends JDialog {
 		new Thread(() -> {
 			NanoleafDevice[] connectedDevices = new NanoleafDevice[groupDevicesModel.size()];
 			for (int i = 0; i < groupDevicesModel.size(); i++) {
-				connectedDevices[i] = connectToDevice(
-						groupDevicesModel.getElementAt(i));
+				connectedDevices[i] = connectToDevice(groupDevicesModel.getElementAt(i));
 			}
 			
 			PropertyManager manager = new PropertyManager(Main.PROPERTIES_FILEPATH);
@@ -178,8 +150,9 @@ public class GroupCreatorDialog extends JDialog {
 			deviceGroups.add(new DeviceGroup(name, info));
 			manager.setProperty("deviceGroups",
 					new JSONArray(deviceGroups).toString());
-			
-			new TextDialog(GroupCreatorDialog.this, name + " was created.").setVisible(true);
+			manager.setProperty("lastSession", "GROUP: " + name);
+			new TextDialog(GroupCreatorDialog.this, name + " was created." +
+					"Restart the app to connect to the group.").setVisible(true);
 		}).start();
 	}
 	

@@ -39,6 +39,7 @@ import java.awt.event.ComponentEvent;
 import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -245,19 +246,21 @@ public class Main extends JFrame {
                 regEffectsPanel.clearEffects();
                 rhythEffectsPanel.clearEffects();
                 new Thread(() -> {
+                	List<String> regEffects = new ArrayList<String>();
+                	List<String> rhythmEffects = new ArrayList<String>();
                 	try {
                 		for (NanoleafDevice device : devices) {
                 			for (Effect effect : device.getAllEffects()) {
                 				if (effect.getEffectType().equals("plugin")) {
                 					if (((PluginEffect)effect).getPlugin().getType().equals("rhythm")) {
-                						rhythEffectsPanel.addEffect(effect.getName());
+                						rhythmEffects.add(effect.getName());
                 					}
                 					else {
-                    					regEffectsPanel.addEffect(effect.getName());
+                						regEffects.add(effect.getName());
                     				}
                 				}
                 				else {
-                					regEffectsPanel.addEffect(effect.getName());
+                					regEffects.add(effect.getName());
                 				}
                 			}
                 		}
@@ -265,6 +268,21 @@ public class Main extends JFrame {
                 	catch (NanoleafException | IOException e) {
                 		e.printStackTrace();
                 	}
+                	
+                	regEffects.sort(new Comparator<String>() {
+						@Override
+						public int compare(String ef1, String ef2) {
+							return ef1.compareTo(ef2);
+						}
+                	});
+                	rhythmEffects.sort(new Comparator<String>() {
+						@Override
+						public int compare(String ef1, String ef2) {
+							return ef1.compareTo(ef2);
+						}
+                	});
+                	regEffectsPanel.addEffects(regEffects);
+                	rhythEffectsPanel.addEffects(rhythmEffects);
 
                 	BasicEffects.initializeBasicEffects();
                 	try {
