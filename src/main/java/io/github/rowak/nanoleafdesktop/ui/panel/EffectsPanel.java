@@ -46,6 +46,14 @@ public class EffectsPanel extends JScrollPane {
 		init();
 	}
 	
+	public void addEffects(List<String> effects) {
+		for (String effect : effects) {
+			if (!model.contains(effect)) {
+				model.addElement(effect);
+			}
+		}
+	}
+	
 	public void addEffect(String effect) {
 		if (!model.contains(effect)) {
 			model.addElement(effect);
