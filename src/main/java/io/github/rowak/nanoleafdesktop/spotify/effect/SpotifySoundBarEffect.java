@@ -33,7 +33,8 @@ public class SpotifySoundBarEffect extends SpotifyEffect
 	public SpotifySoundBarEffect(Color[] palette, Direction direction,
 			NanoleafGroup group, PanelCanvas canvas) throws NanoleafException
 	{
-		super(SpotifyEffectType.SOUNDBAR, palette, group);
+//		super(SpotifyEffectType.SOUNDBAR, palette, group);
+		super(null, palette, group);
 		userOptions.add(new UserOption("Direction",
 				new String[]{"Right", "Up", "Down", "Left"}));
 		requiresExtControl = true;

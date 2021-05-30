@@ -376,29 +376,24 @@ public class SpotifyPanel extends JPanel {
 	
 	private SpotifyEffect getEffectFromType(SpotifyEffectType type) {
 		if (type != null) {
-			try {
-				switch (type) {
-					case PULSE_BEATS:
-						return new SpotifyPulseBeatsEffect(
-								convertPalette(palette), group);
-					case SOUNDBAR:
-						return new SpotifySoundBarEffect(
-								convertPalette(palette), Direction.RIGHT,
-								group, canvas);
-					case FIREWORKS:
-						return new SpotifyFireworksEffect(
-								convertPalette(palette), group);
-					case STREAKING_NOTES:
-						return new SpotifyStreakingNotesEffect(
-								convertPalette(palette),
-								group, canvas);
-					case PARTY_MIX:
-						return new SpotifyPartyMixEffect(
-								convertPalette(palette), group);
-				}
-			}
-			catch (NanoleafException e) {
-				e.printStackTrace();
+			switch (type) {
+				case PULSE_BEATS:
+					return new SpotifyPulseBeatsEffect(
+							convertPalette(palette), group);
+	//			case SOUNDBAR:
+	//				return new SpotifySoundBarEffect(
+	//						convertPalette(palette), Direction.RIGHT,
+	//						group, canvas);
+				case FIREWORKS:
+					return new SpotifyFireworksEffect(
+							convertPalette(palette), group);
+				case STREAKING_NOTES:
+					return new SpotifyStreakingNotesEffect(
+							convertPalette(palette),
+							group, canvas);
+				case PARTY_MIX:
+					return new SpotifyPartyMixEffect(
+							convertPalette(palette), group);
 			}
 		}
 		return null;

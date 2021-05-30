@@ -174,16 +174,16 @@ public class SpotifyPlayer {
 			case PULSE_BEATS:
 				effect = new SpotifyPulseBeatsEffect(palette, group);
 				break;
-			case SOUNDBAR:
-				if (palette.length > 1 &&
-						(Arrays.asList(palette).equals(Arrays.asList(defaultPalette)) ||
-								usingDefaultPalette)) {
-					palette[0] = Color.fromRGB(0, 0, 0);
-				}
-				String directionStr = (String)getUserOptionArgs().get("direction");
-				Direction direction = getDirectionFromStr(directionStr);
-				effect = new SpotifySoundBarEffect(palette, direction, group, canvas);
-				break;
+//			case SOUNDBAR:
+//				if (palette.length > 1 &&
+//						(Arrays.asList(palette).equals(Arrays.asList(defaultPalette)) ||
+//								usingDefaultPalette)) {
+//					palette[0] = Color.fromRGB(0, 0, 0);
+//				}
+//				String directionStr = (String)getUserOptionArgs().get("direction");
+//				Direction direction = getDirectionFromStr(directionStr);
+//				effect = new SpotifySoundBarEffect(palette, direction, group, canvas);
+//				break;
 			case FIREWORKS:
 				effect = new SpotifyFireworksEffect(palette, group);
 				break;
