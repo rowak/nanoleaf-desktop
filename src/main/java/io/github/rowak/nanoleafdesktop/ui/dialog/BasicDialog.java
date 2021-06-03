@@ -37,7 +37,6 @@ public class BasicDialog extends JDialog {
 	
 	protected void finalize(Component parent) {
 		pack();
-		
 		setSize(getWidth() + 15, getHeight());
 		setLocationRelativeTo(parent);
 	}

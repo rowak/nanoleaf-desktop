@@ -18,10 +18,17 @@ public class TextDialog extends BasicDialog {
 		JLabel spacer = new JLabel(" ");
 		contentPanel.add(spacer, "cell 0 3");
 		
-		finalize(parent);
+		finalize(parent, text);
 	}
 	
 	private String addLineBreaks(String text) {
 		return "<html>" + text.replace("\n", "<br>") + "</html>";
+	}
+	
+	protected void finalize(Component parent, String text) {
+		pack();
+		int extraHeight = (text.split("<br>").length)*15;
+		setSize(getWidth() + 15, getHeight() + extraHeight);
+		setLocationRelativeTo(parent);
 	}
 }
