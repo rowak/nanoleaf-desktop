@@ -110,15 +110,15 @@ public class ShortcutCreatorDialog extends JDialog {
 			txtAppName.setText((String)shortcut.getAction().getArgs()[1]);
 		}
 		
-		if (cmbxEffect != null) {
+		if (extraUI.contains(txtNumberField)) {
+			int value = (int)shortcut.getAction().getArgs()[0];
+			txtNumberField.setText(value + "");
+		}
+		else if (extraUI.contains(cmbxEffect)) {
 			String effect = (String)shortcut.getAction().getArgs()[0];
 			List<String> effects = Arrays.asList(getEffects());
 			int effectIndex = effects.indexOf(effect);
 			cmbxEffect.setSelectedIndex(effectIndex);
-		}
-		else if (txtNumberField != null) {
-			int value = (int)shortcut.getAction().getArgs()[0];
-			txtNumberField.setText(value + "");
 		}
 	}
 	
@@ -263,13 +263,13 @@ public class ShortcutCreatorDialog extends JDialog {
 		
 		if (userInputValid()) {
 			Object[] args = null;
-			if (cmbxEffect != null) {
-				String effect = (String)cmbxEffect.getSelectedItem();
-				args = new Object[]{effect};
-			}
-			else if (txtNumberField != null) {
+			if (extraUI.contains(txtNumberField)) {
 				int value = getNumberFieldValue();
 				args = new Object[]{value};
+			}
+			else if (extraUI.contains(cmbxEffect)) {
+				String effect = (String)cmbxEffect.getSelectedItem();
+				args = new Object[]{effect};
 			}
 			
 			if (runType == RunType.WHEN_APP_RUN ||

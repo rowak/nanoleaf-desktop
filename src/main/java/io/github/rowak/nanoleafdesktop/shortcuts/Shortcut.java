@@ -62,20 +62,48 @@ public class Shortcut {
 		this.action = action;
 	}
 	
+	private String getActionString(Object arg) {
+		switch (action.getType()) {
+			case DEVICE_ON: return "Turn on";
+			case DEVICE_OFF: return "Turn off";
+			case DEVICE_TOGGLE: return "Toggle on";
+			case SET_BRIGHTNESS: return "Set brightness to " + arg + "%";
+			case INCREASE_BRIGHTNESS: return "Increase brightness by " + arg + "%";
+			case DECREASE_BRIGHTNESS: return "Decrease brightness by " + arg + "%";
+			case SET_COLOR_TEMP: return "Set color temperature to " + arg + "K";
+			case INCREASE_COLOR_TEMP: return "Increase color temperature by " + arg + "K";
+			case DECREASE_COLOR_TEMP: return "Decrease color temperature by " + arg + "K";
+			case SET_EFFECT: return "Set effect to \"" + arg + "\"";
+			case NEXT_EFFECT: return "Switch to next effect";
+			case PREVIOUS_EFFECT: return "Switch to last effect";
+			case SET_HUE: return "Set hue to " + arg;
+			case SET_SATURATION: return "Set saturation to " + arg;
+			case SET_RED: return "Set RGB red value to " + arg;
+			case SET_GREEN: return "Set RGB green value to " + arg;
+			case SET_BLUE: return "Set RGB blue value to " + arg;
+			case SET_RGB: return "Set RGB color to " + arg;
+			case SET_HSB: return "Set HSB color to " + arg;
+			default: return "";
+		}
+	}
+	
 	@Override
 	public String toString() {
+		Object arg = action.getArgs().length > 0 ? action.getArgs()[0] : null;
 		if (runType == RunType.WHEN_PRESSED || runType == RunType.WHILE_HELD) {
 			String keysStr = keys.get(0);
 			for (int i = 1; i < keys.size(); i++) {
 				keysStr += " + " + keys.get(i);
 			}
-			return String.format("Name: %s    Event: %s    Trigger: %s    Run: %s    Args: %s", name,
-					action.getType(), keysStr, runType, Arrays.asList(action.getArgs()));
+			String run = runType == RunType.WHEN_PRESSED ? "when pressing" : "while holding";
+			return String.format("%s (%s %s \"%s\")", name,
+					getActionString(arg), run, keysStr);
 		}
 		else {
+			String run = runType == RunType.WHEN_APP_RUN ? "when running" : "when closing";
 			String appName = (String)action.getArgs()[1];
-			return String.format("Name: %s    Event: %s    Trigger: %s    Run: %s    Args: %s", name,
-					action.getType(), appName, runType, Arrays.asList(action.getArgs()));
+			return String.format("%s (%s %s %s)", name,
+					getActionString(arg), run, appName);
 		}
 	}
 	
