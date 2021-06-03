@@ -1,4 +1,4 @@
-# Nanoleaf for Desktop <img src = "images/logo.png" width=48></img>
+# Nanoleaf for Desktop <img src="images/logo.png" width=48></img>
 Looking for a desktop alternative to the Nanoleaf mobile app? Look no further. Now you can control your devices from your computer on Windows, Mac, and Linux.
 
 ## Installation
@@ -6,7 +6,7 @@ No installation necessary! Simply download the latest release from the [releases
 
 ## Features
 - Select regular and rhythm scenes, set solid colors, and modify the brightness and color temperature
-- Control both Aurora and Canvas devices
+- Control Aurora, Canvas, and Hexagon devices
 - Live and responsive preview of the panels to show what is currently displayed on the physical device
 - Discover new scenes and plugins created by other Nanoleaf users
 - Control devices from a computer outside your local network
@@ -20,18 +20,18 @@ The ambient lighting feature allows your panels to display what is currently on 
 
 Ambient lighting has two modes:
 - **Average**: Displays the average color of your screen/zone.
-- **Selection**: Maps the device's panels to the screen/zone and sets each panel color based on its mapped location (you have to try it to understand).
+- **Selection**: Maps the device's panels to the screen/zone and sets each panel color based on its mapped location.
 
 ## Spotify Integration
 This feature allows you to synchronize your Spotify music with your Nanoleaf lights in real time. This feature does *not* require the rhythm module to function, and it does *not* support rhythm effects downloaded from the Nanoleaf mobile app.
 
 The currently available effects include:
 - **Pulse Beats**: Changes the color of a single panel for each beat and creates a ripple around that panel that radiates outward to all other panels.
-- **Soundbar**: Creates a pulsating bar emanating from the top, bottom, left, or right. Reacts to changes in rhythm.
 - **Fireworks**: Creates multiple randomly colored pulses for each beat that quickly flash in then fade out.
 - **Streaking Notes**: Creates streaks of colorful light from one edge of the panels to the other. Reacts best to songs with prominent  notes and no overwhelming "noise".
+- **Party Mix**: Very similar to Fireworks, but there is a higher chance that all the panels will flash, rather than only some of them flashing.
 
-More effects will be added soon.
+More effects may eventually be added.
 
 ## Panel Preview
 The panel preview displays a live* preview of your device's panels. The preview panels can be **moved around**, **rotated**, and **zoomed** on the screen. Move the panels by holding down left click and dragging the mouse anywhere in the preview window. Rotate the panels by holding down right click in the preview window and moving the mouse right or left. Zoom in or out using the mouse scroll wheel.
@@ -43,6 +43,8 @@ _*This is a work in progress. The panel preview can currently only display "stat
 
 ![](images/app_main_canvas.png)
 
+![](images/app_main_hexagons.png)
+
 An example of a custom effect being displayed on the live preview (below).
 ![](https://media.giphy.com/media/1rL3wxupQ6YqNoqT4Q/giphy.gif)
 
@@ -50,7 +52,7 @@ An example of a custom effect being displayed on the live preview (below).
 [Donate (Paypal)](https://paypal.me/rowak)
 
 ## Used Libraries
-- [nanoleaf-aurora](https://github.com/rowak/nanoleaf-aurora)
+- [nanoleaf-api](https://github.com/rowak/nanoleaf-api)
 - [http-request](https://github.com/kevinsawicki/http-request)
 - [nanohttpd](https://github.com/NanoHttpd/nanohttpd)
 - [spotify-web-api-java](https://github.com/thelinmichael/spotify-web-api-java)
