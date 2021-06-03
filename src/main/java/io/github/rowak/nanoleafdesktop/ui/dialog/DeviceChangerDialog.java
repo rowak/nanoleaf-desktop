@@ -120,7 +120,7 @@ public class DeviceChangerDialog extends JDialog {
 				try {
 					String accessToken = NanoleafSetup.createAccessToken(hostName, port);
 					System.out.println(accessToken);
-					Aurora device = new Aurora(hostName, port, accessToken);
+					NanoleafDevice device = NanoleafDevice.createDevice(hostName, port, accessToken);
 					List<NanoleafDevice> devices = new ArrayList<NanoleafDevice>();
 					devices.add(device);
 					if (device != null) {

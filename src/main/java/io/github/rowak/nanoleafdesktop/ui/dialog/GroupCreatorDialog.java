@@ -205,7 +205,7 @@ public class GroupCreatorDialog extends JDialog {
 			}
 		}
 		try {
-			return new Aurora(hostName, port, accessToken);
+			return NanoleafDevice.createDevice(hostName, port, accessToken);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
