@@ -7,8 +7,6 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.rmi.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,10 +29,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import io.github.rowak.nanoleafapi.Aurora;
-import io.github.rowak.nanoleafapi.NanoleafCallback;
 import io.github.rowak.nanoleafapi.NanoleafDevice;
 import io.github.rowak.nanoleafapi.NanoleafException;
-import io.github.rowak.nanoleafapi.NanoleafGroup;
 import io.github.rowak.nanoleafapi.NanoleafSearchCallback;
 import io.github.rowak.nanoleafapi.util.NanoleafDeviceMeta;
 import io.github.rowak.nanoleafapi.util.NanoleafSetup;
@@ -180,6 +176,11 @@ public class DeviceChangerDialog extends JDialog {
 	}
 	
 	private void addDeviceToList(NanoleafDeviceMeta metadata) {
+		for (int i = 0; i < devices.size(); i++) {
+			if (devices.get(i).equals(metadata)) {
+				return;
+			}
+		}
 		Map<String, Object> savedDevices = getDevices();
 		if (savedDevices.containsKey(metadata.getHostName())) {
 			String ip = metadata.getHostName();

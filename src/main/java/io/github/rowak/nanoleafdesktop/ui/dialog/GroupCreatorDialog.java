@@ -5,7 +5,6 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,7 +61,6 @@ public class GroupCreatorDialog extends JDialog {
 				
 				@Override
 				public void onDeviceFound(NanoleafDeviceMeta meta) {
-					System.out.println("FOUND: " + meta.getDeviceName() + " " + meta.getHostName() + " " + meta.getPort());
 					addDeviceToList(meta);
 				}
 				
@@ -82,6 +80,11 @@ public class GroupCreatorDialog extends JDialog {
 	}
 	
 	private void addDeviceToList(NanoleafDeviceMeta metadata) {
+		for (int i = 0; i < devices.size(); i++) {
+			if (devices.get(i).equals(metadata)) {
+				return;
+			}
+		}
 		Map<String, Object> savedDevices = getLocalDeviceData();
 		if (savedDevices.containsKey(metadata.getHostName())) {
 			String ip = metadata.getHostName();
@@ -150,8 +153,8 @@ public class GroupCreatorDialog extends JDialog {
 			deviceGroups.add(new DeviceGroup(name, info));
 			manager.setProperty("deviceGroups",
 					new JSONArray(deviceGroups).toString());
-			manager.setProperty("lastSession", "GROUP: " + name);
-			new TextDialog(GroupCreatorDialog.this, name + " was created." +
+			manager.setProperty("lastSession", "GROUP:" + name);
+			new TextDialog(GroupCreatorDialog.this, name + " was created. " +
 					"Restart the app to connect to the group.").setVisible(true);
 		}).start();
 	}

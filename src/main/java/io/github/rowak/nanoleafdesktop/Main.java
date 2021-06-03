@@ -84,6 +84,7 @@ public class Main extends JFrame {
         String lastSession = manager.getProperty("lastSession");
         
         group = new NanoleafGroup();
+        devices = new ArrayList<NanoleafDevice>();
 
         // Use the device from the last session
         if (lastSession != null && command == null) {
@@ -220,20 +221,31 @@ public class Main extends JFrame {
     }
 
     public void setDevices(List<NanoleafDevice> devices) {
-        EventQueue.invokeLater(() -> {
-        	this.devices = devices;
-        	loadAuroraData();
-        	loadDeviceName();
-        	canvas.setAuroras(group);
-        	devices.forEach((device) -> {
-        		DeviceEventHandler handler = new DeviceEventHandler(device, canvas);
-        		device.registerEventListener(handler, true, true, false, false);
-        	});
-        });
+    	if (uiEnabled) {
+	        EventQueue.invokeLater(() -> {
+	        	this.devices = devices;
+	        	loadAuroraData();
+	        	loadDeviceName();
+	        	canvas.setAuroras(group);
+	        	devices.forEach((device) -> {
+	        		DeviceEventHandler handler = new DeviceEventHandler(device, canvas);
+	        		device.registerEventListener(handler, true, true, false, false);
+	        	});
+	        });
+    	}
     }
     
     public void addDevice(String name, NanoleafDevice device) {
-    	group.addDevice(name, device);
+    	try {
+	    	group.addDevice(name, device);
+	    	devices.add(device);
+	    	canvas.reinitialize();
+	    	loadAuroraData();
+	    	loadDeviceName();
+    	}
+    	catch (Exception e) {
+    		e.printStackTrace();
+    	}
     }
     
     public void removeAllDevices() {
@@ -709,7 +721,7 @@ public class Main extends JFrame {
             }
         });
 
-        if (devices != null && devices.get(0) != null) {
+        if (devices != null && devices.size() > 0 && devices.get(0) != null) {
             EventQueue.invokeLater(new Runnable() {
                 public void run() {
                     loadAuroraData();
@@ -763,17 +775,24 @@ public class Main extends JFrame {
         CLICommand cmd = parseCommand(args);
         boolean help = hasArg("--help", null, false, args);
         if (!help) {
-	        EventQueue.invokeLater(new Runnable() {
-	            public void run() {
-	                try {
-	                    Main frame = new Main(cmd);
-	                    frame.setVisible(true);
-	                }
-	                catch (Exception e) {
-	                    e.printStackTrace();
-	                }
-	            }
-	        });
+        	if (cmd == null) {
+        		// Start with GUI
+		        EventQueue.invokeLater(new Runnable() {
+		            public void run() {
+		                try {
+		                    Main frame = new Main(cmd);
+		                    frame.setVisible(true);
+		                }
+		                catch (Exception e) {
+		                    e.printStackTrace();
+		                }
+		            }
+		        });
+        	}
+        	else {
+        		// Start with CLI
+        		new Main(cmd);
+        	}
         }
         else {
         	showHelp();
@@ -781,7 +800,8 @@ public class Main extends JFrame {
     }
     
     private static void showHelp() {
-    	System.out.println("Nanoleaf for Desktop (NFD) -- GUI and CLI interface for Nanoleaf Aurora and Canvas\n" +
+    	System.out.println("Nanoleaf for Desktop (NFD) " + VERSION.getName() +
+    					   " -- GUI and CLI for Nanoleaf Aurora, Canvas, and Hexagons\n" +
     					   "usage: nfd [action [value]]\n\n" +
     					   "Actions:\n" +
     					   "  on                    turns on the device(s)\n" +
@@ -799,7 +819,8 @@ public class Main extends JFrame {
             if (command != null) {
                 try {
                     command.execute(group);
-                    group.closeAsyncForAll();
+                    Thread.sleep(1000);
+                	group.closeAsyncForAll();
                 }
                 catch (Exception e) {
                     e.printStackTrace();

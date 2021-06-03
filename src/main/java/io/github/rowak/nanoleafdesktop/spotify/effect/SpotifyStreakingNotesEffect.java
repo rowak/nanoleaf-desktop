@@ -38,6 +38,7 @@ public class SpotifyStreakingNotesEffect extends SpotifyEffect {
 	public void init() {
 		random = new Random();
 		times = new ArrayList<Float>();
+		getEdgePanels();
 	}
 	
 	@Override
@@ -101,8 +102,7 @@ public class SpotifyStreakingNotesEffect extends SpotifyEffect {
 		return path;
 	}
 	
-	private boolean isEdgePanel(NanoleafDevice device, Panel p, List<Panel> panels)
-	{
+	private boolean isEdgePanel(NanoleafDevice device, Panel p, List<Panel> panels) {
 		return device.getNeighborPanels(p, panels).size() < 2;
 	}
 	
@@ -117,7 +117,6 @@ public class SpotifyStreakingNotesEffect extends SpotifyEffect {
 					localEdges.add(p);
 				}
 			}
-			System.out.println(localEdges.size());
 			edges.put(device, localEdges);
 		});
 	}

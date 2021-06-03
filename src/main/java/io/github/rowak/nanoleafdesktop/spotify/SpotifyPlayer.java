@@ -7,6 +7,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -89,6 +90,7 @@ public class SpotifyPlayer {
 		this.group = group;
 		this.panel = panel;
 		this.canvas = canvas;
+		previousEffects = new HashMap<NanoleafDevice, String>();
 		setEffect(defaultEffect);
 		if (group != null) {
 			enableExternalStreaming();
@@ -215,7 +217,7 @@ public class SpotifyPlayer {
     		try {
     			previousEffects.put(device, device.getCurrentEffectName());
     		}
-    		catch (NanoleafException | IOException e) {
+    		catch (Exception e) {
     			return false;
     		}
     	}
@@ -224,10 +226,14 @@ public class SpotifyPlayer {
 
     private void loadPreviousEffect() {
         for (NanoleafDevice device : group.getDevices().values()) {
+        	String previous = previousEffects.get(device);
+        	if (previous == null || previous.equals("*Dynamic*") || previous.equals("*Solid*")) {
+        		continue;
+        	}
 			device.setEffectAsync(previousEffects.get(device), (status, data, caller) -> {
 				if (status != NanoleafCallback.SUCCESS) {
-					new TextDialog(panel.getFocusCycleRootAncestor(),
-							"The previous effect could not be loaded (Error " + status + ").").setVisible(true);
+//					new TextDialog(panel.getFocusCycleRootAncestor(),
+//							"The previous effect could not be loaded (Error " + status + ").").setVisible(true);
 				}
 			});
     	}

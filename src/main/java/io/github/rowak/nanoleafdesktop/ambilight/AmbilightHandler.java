@@ -238,9 +238,13 @@ public class AmbilightHandler {
 
     private void loadPreviousEffect() {
         for (NanoleafDevice device : group.getDevices().values()) {
+        	String previous = previousEffects.get(device);
+        	if (previous == null || previous.equals("*Dynamic*") || previous.equals("*Solid*")) {
+        		continue;
+        	}
 			device.setEffectAsync(previousEffects.get(device), (status, data, caller) -> {
 				if (status != NanoleafCallback.SUCCESS) {
-					showMessageBox("The previous effect could not be loaded.");
+//					showMessageBox("The previous effect could not be loaded.");
 				}
 			});
     	}
