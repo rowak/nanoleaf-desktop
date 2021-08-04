@@ -19,6 +19,7 @@ public abstract class SpotifyEffect {
 	
 	protected boolean requiresExtControl;
 	protected int paletteIndex;
+	protected Color currentColor;
 	protected SpotifyEffectType type;
 	protected NanoleafGroup group;
 	protected Map<NanoleafDevice, List<Panel>> panels;
@@ -41,6 +42,9 @@ public abstract class SpotifyEffect {
 			}
 		});
 		userOptions = new ArrayList<UserOption>();
+		if (palette.length > 0) {
+			currentColor = palette[0];
+		}
 	}
 	
 	// Called when the effect is first created or needs to be hard-reset
@@ -70,6 +74,12 @@ public abstract class SpotifyEffect {
 			throws IOException, NanoleafException {
 		this.palette = palette;
 		paletteIndex = palette.length > 1 ? 1 : 0;
+		if (paletteIndex < palette.length) {
+			int h = palette[paletteIndex].getHue();
+			int s = palette[paletteIndex].getSaturation();
+			int b = palette[paletteIndex].getBrightness();
+			currentColor = Color.fromHSB(h, s, b);
+		}
 		init();
 	}
 	

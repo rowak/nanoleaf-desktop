@@ -28,6 +28,7 @@ import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPartyMixEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyStreakingNotesEffect;
+import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySwipeBeatsEffect;
 import io.github.rowak.nanoleafdesktop.tools.PropertyManager;
 import io.github.rowak.nanoleafdesktop.tools.UIConstants;
 import io.github.rowak.nanoleafdesktop.ui.button.ModernButton;
@@ -58,7 +59,7 @@ public class SpotifyPanel extends JPanel {
 	private final int MAX_AUDIO_OFFSET = 1000;
 	private final int MIN_AUDIO_OFFSET = -1000;
 	
-	private Color[] palette = {
+	public static Color[] palette = {
 		new Color(0, 0, 255),
 		new Color(0, 255, 255),
 		new Color(0, 255, 0),
@@ -393,6 +394,9 @@ public class SpotifyPanel extends JPanel {
 							group, canvas);
 				case PARTY_MIX:
 					return new SpotifyPartyMixEffect(
+							convertPalette(palette), group);
+				case SWIPE_BEATS:
+					return new SpotifySwipeBeatsEffect(
 							convertPalette(palette), group);
 			}
 		}

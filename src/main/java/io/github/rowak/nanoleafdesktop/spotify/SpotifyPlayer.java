@@ -54,6 +54,7 @@ import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPartyMixEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyPulseBeatsEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySoundBarEffect;
 import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifyStreakingNotesEffect;
+import io.github.rowak.nanoleafdesktop.spotify.effect.SpotifySwipeBeatsEffect;
 import io.github.rowak.nanoleafdesktop.tools.CanvasExtStreaming;
 import io.github.rowak.nanoleafdesktop.tools.PanelTableSort;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
@@ -194,6 +195,9 @@ public class SpotifyPlayer {
 				break;
 			case PARTY_MIX:
 				effect = new SpotifyPartyMixEffect(palette, group);
+				break;
+			case SWIPE_BEATS:
+				effect = new SpotifySwipeBeatsEffect(palette, group);
 				break;
 		}
 	}
