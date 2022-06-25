@@ -28,8 +28,9 @@ This feature allows you to synchronize your Spotify music with your Nanoleaf lig
 The currently available effects include:
 - **Pulse Beats**: Changes the color of a single panel for each beat and creates a ripple around that panel that radiates outward to all other panels.
 - **Fireworks**: Creates multiple randomly colored pulses for each beat that quickly flash in then fade out.
-- **Streaking Notes**: Creates streaks of colorful light from one edge of the panels to the other. Reacts best to songs with prominent  notes and no overwhelming "noise".
+- **Streaking Notes**: Creates streaks of colorful light from one edge of the panels to the other. Reacts best to songs with prominent notes and no overwhelming "noise".
 - **Party Mix**: Very similar to Fireworks, but there is a higher chance that all the panels will flash, rather than only some of them flashing.
+- **Swipe Beats**: Creates a swipe in a single direction across all panels on each beat. The swipe will occur randomly in one of eight directions. This effect works best with slow and medium-tempo songs (&lt;140bpm)
 
 More effects may eventually be added.
 
