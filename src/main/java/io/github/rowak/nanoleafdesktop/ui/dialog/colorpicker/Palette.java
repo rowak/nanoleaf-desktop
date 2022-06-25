@@ -11,15 +11,21 @@ import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.swing.Box;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import io.github.rowak.nanoleafdesktop.Main;
 import io.github.rowak.nanoleafdesktop.ui.scrollbar.ModernScrollBarUI;
 import net.miginfocom.swing.MigLayout;
 
@@ -30,11 +36,13 @@ public class Palette extends JPanel {
 	private List<Color> palette;
 	private ColorEntry colorEntry;
 	private JScrollBar scrollBar;
+	private BufferedImage deleteButtonImg;
 	
 	public Palette(int width, int height, ColorEntry colorEntry) {
 		this.width = width;
 		this.height = height;
 		this.colorEntry = colorEntry;
+		deleteButtonImg = createDeleteButtonImg();
 		initUI();
 	}
 	
@@ -50,10 +58,9 @@ public class Palette extends JPanel {
 		scrollBar = new JScrollBar(JScrollBar.HORIZONTAL);
 		scrollBar.setUI(new ModernScrollBarUI());
 		scrollBar.setPreferredSize(new Dimension(width, 20));
-		scrollBar.setMaximum(11);
 		scrollBar.setMinimum(0);
 		scrollBar.setValue(0);
-		scrollBar.setVisible(false);
+		updateScrollBar();
 		scrollBar.addAdjustmentListener(new AdjustmentListener() {
 			@Override
 			public void adjustmentValueChanged(AdjustmentEvent e) {
@@ -62,7 +69,9 @@ public class Palette extends JPanel {
 		});
 		add(scrollBar, "cell 0 1");
 		
-		addMouseListener(new MouseHandler());
+		MouseHandler mouseHandler = new MouseHandler();
+		addMouseListener(mouseHandler);
+		addMouseWheelListener(mouseHandler);
 	}
 	
 	public Color[] getPalette() {
@@ -74,6 +83,7 @@ public class Palette extends JPanel {
 		for (Color c : palette) {
 			this.palette.add(c);
 		}
+		updateScrollBar();
 	}
 	
 	private Color getCurrentColor() {
@@ -122,6 +132,7 @@ public class Palette extends JPanel {
 			}
 			g2d.drawOval(x, y, DIAMETER, DIAMETER);
 			g2d.setStroke(new BasicStroke(1));
+			
 			colorNum++;
 		}
 		int cx = colorNum*60 + OFFSET - scrollFactor;
@@ -154,17 +165,27 @@ public class Palette extends JPanel {
 	    }
 	}
 	
-	private class MouseHandler extends MouseAdapter {
-		private void updateScrollBar() {
-			if (palette.size()*6 - 20 > 0) {
-				scrollBar.setVisible(true);
-				scrollBar.setMaximum(palette.size()*6 - 20);
-			}
-			else {
-				scrollBar.setVisible(false);
-			}
+	private void updateScrollBar() {
+		if (palette.size() > 7) {
+			scrollBar.setVisible(true);
+			scrollBar.setMaximum(palette.size()*6 - 30);
 		}
-		
+		else {
+			scrollBar.setVisible(false);
+		}
+	}
+	
+	private BufferedImage createDeleteButtonImg() {
+		URL iconPath = Main.class.getResource("/images/delete.png");
+		try {
+			return ImageIO.read(iconPath);
+		}
+		catch (IOException e) {
+			return null;
+		}
+	}
+	
+	private class MouseHandler extends MouseAdapter {
 		@Override
 		public void mousePressed(MouseEvent e) {
 			Point mouse = e.getPoint();
@@ -185,6 +206,9 @@ public class Palette extends JPanel {
 						palette.remove(color);
 						fireChangeListeners();
 						updateScrollBar();
+						if (palette.size() < 8) {
+							scrollBar.setValue(0);
+						}
 						repaint();
 					}
 				}
@@ -200,6 +224,11 @@ public class Palette extends JPanel {
 				updateScrollBar();
 				repaint();
 			}
+		}
+		
+		@Override
+		public void mouseWheelMoved(MouseWheelEvent e) {
+			scrollBar.setValue((int)(scrollBar.getValue() + e.getWheelRotation()*2));
 		}
 	}
 }

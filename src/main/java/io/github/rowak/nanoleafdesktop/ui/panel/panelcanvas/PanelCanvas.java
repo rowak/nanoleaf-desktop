@@ -26,6 +26,7 @@ import io.github.rowak.nanoleafapi.CustomEffect;
 import io.github.rowak.nanoleafdesktop.ui.dialog.LoadingSpinner;
 import io.github.rowak.nanoleafdesktop.ui.dialog.TextDialog;
 import io.github.rowak.nanoleafapi.Panel;
+import io.github.rowak.nanoleafapi.ShapeType;
 import io.github.rowak.nanoleafapi.Shapes;
 import io.github.rowak.nanoleafapi.StaticEffect;
 import io.github.rowak.nanoleafapi.util.AnimationParser;
@@ -752,37 +753,33 @@ public class PanelCanvas extends JPanel {
 						
 						buffG.setColor(panelColors.get(panel.getId()));
 						
-						if (device instanceof Aurora) {
+						Polygon shape = null;
+						if (device instanceof Aurora ||
+								(device instanceof Shapes &&
+								device.getShapeType().equals(ShapeType.triangleShapes()))) {
 							// Create the AURORA panel outline shapes (regular and inverted)
-							Polygon tri = new Polygon();
 							if (o == 0 || Math.abs(o) % 120 == 0) {
-								tri = new UprightPanel(x, y, localRotation);
+								shape = new UprightPanel(x, y, localRotation);
 							}
 							else {
-								tri = new InvertedPanel(x, y, localRotation);
+								shape = new InvertedPanel(x, y, localRotation);
 							}
-							fillTransformedPanel(tri, device, g2d);
-							buffG.setColor(Color.BLACK);
-							g2d.setStroke(new BasicStroke(4));
-							drawTransformedPanel(tri, device, g2d);
-							g2d.setStroke(new BasicStroke(1));
 						}
 						else if (device instanceof Canvas) {
 							// Create the CANVAS panel outline shape
-							SquarePanel sq = new SquarePanel(x, y, localRotation);
-							fillTransformedPanel(sq, device, g2d);
-							buffG.setColor(Color.BLACK);
-							g2d.setStroke(new BasicStroke(4));
-							drawTransformedPanel(sq, device, g2d);
-							g2d.setStroke(new BasicStroke(1));
+							shape = new SquarePanel(x, y, localRotation);
 						}
-						else if (device instanceof Shapes) {
+						else if (device instanceof Shapes &&
+								device.getShapeType().equals(ShapeType.hexagon())) {
 							// Create the SHAPES (hexagon) panel outline shape
-							HexagonPanel hex = new HexagonPanel(x, y, localRotation);
-							fillTransformedPanel(hex, device, g2d);
+							shape = new HexagonPanel(x, y, localRotation);
+						}
+						
+						if (shape != null) {
+							fillTransformedPanel(shape, device, g2d);
 							buffG.setColor(Color.BLACK);
 							g2d.setStroke(new BasicStroke(4));
-							drawTransformedPanel(hex, device, g2d);
+							drawTransformedPanel(shape, device, g2d);
 							g2d.setStroke(new BasicStroke(1));
 						}
 					}

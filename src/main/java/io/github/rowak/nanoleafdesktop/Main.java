@@ -46,7 +46,7 @@ import java.util.Map;
 
 public class Main extends JFrame {
 	
-    public static final Version VERSION = new Version("v0.9.1", true); // release > pre-release
+    public static final Version VERSION = new Version("v0.9.1", false); // release > pre-release
     public static final String VERSION_HOST =
             "https://api.github.com/repos/rowak/nanoleaf-desktop/releases";
     public static final String GIT_REPO = "https://github.com/rowak/nanoleaf-desktop";
