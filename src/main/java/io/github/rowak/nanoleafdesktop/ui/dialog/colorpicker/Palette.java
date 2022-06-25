@@ -36,13 +36,11 @@ public class Palette extends JPanel {
 	private List<Color> palette;
 	private ColorEntry colorEntry;
 	private JScrollBar scrollBar;
-	private BufferedImage deleteButtonImg;
 	
 	public Palette(int width, int height, ColorEntry colorEntry) {
 		this.width = width;
 		this.height = height;
 		this.colorEntry = colorEntry;
-		deleteButtonImg = createDeleteButtonImg();
 		initUI();
 	}
 	
@@ -172,16 +170,6 @@ public class Palette extends JPanel {
 		}
 		else {
 			scrollBar.setVisible(false);
-		}
-	}
-	
-	private BufferedImage createDeleteButtonImg() {
-		URL iconPath = Main.class.getResource("/images/delete.png");
-		try {
-			return ImageIO.read(iconPath);
-		}
-		catch (IOException e) {
-			return null;
 		}
 	}
 	
